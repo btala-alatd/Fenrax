@@ -951,18 +951,25 @@ function PromptDock({
       </div>
 
       <ChipRow label="Product">
-        {PRODUCTS.map((item) => (
-          <Chip
-            key={item.id}
-            pressed={productId === item.id}
-            onClick={() => {
-              setProductId(item.id);
-              setAspectRatio(printifyPreset(item.id).aspect);
-            }}
-          >
-            {item.label}
-          </Chip>
-        ))}
+        {PRODUCTS.map((item) => {
+          const preset = printifyPreset(item.id);
+          return (
+            <Chip
+              key={item.id}
+              pressed={productId === item.id}
+              title={`${preset.label} · ${preset.inches} in · ${preset.note}`}
+              onClick={() => {
+                setProductId(item.id);
+                setAspectRatio(preset.aspect);
+              }}
+            >
+              {item.label}
+              <span className="ml-1.5 text-[10px] font-medium opacity-70">
+                {preset.inches}
+              </span>
+            </Chip>
+          );
+        })}
       </ChipRow>
 
       <Textarea
@@ -1121,16 +1128,19 @@ function ChipRow({
 function Chip({
   pressed,
   onClick,
+  title,
   children,
 }: {
   pressed: boolean;
   onClick: () => void;
+  title?: string;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       aria-pressed={pressed}
+      title={title}
       onClick={onClick}
       className={cn(
         "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-[background-color,color,box-shadow,transform] duration-[var(--motion-fast)] ease-[var(--ease-out)] active:scale-[0.96] sm:h-10 sm:gap-2 sm:px-3.5 sm:text-sm",

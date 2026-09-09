@@ -1,39 +1,45 @@
 import { loadImage } from "@/lib/image-file";
-import { prepareArt, PRINTIFY_PRESETS } from "@/lib/printify";
+import { prepareArt, printifyPreset } from "@/lib/printify";
 import type { ProductId } from "@/lib/studio-data";
 
 type Place = {
   cx: number;
-  cy: number;
-  width: number;
   taper: number;
   collar: number;
   hem: number;
+  surfaceIn: number;
+  body: number;
 };
 
 const PLACE: Record<ProductId, Place> = {
-  tee: { cx: 0.5, cy: 0.51, width: 0.54, taper: 0.93, collar: 0.24, hem: 0.84 },
-  long: { cx: 0.5, cy: 0.51, width: 0.52, taper: 0.93, collar: 0.24, hem: 0.84 },
-  tank: { cx: 0.5, cy: 0.5, width: 0.48, taper: 0.94, collar: 0.26, hem: 0.82 },
-  hoodie: { cx: 0.5, cy: 0.46, width: 0.5, taper: 0.92, collar: 0.26, hem: 0.7 },
-  crew: { cx: 0.5, cy: 0.5, width: 0.52, taper: 0.93, collar: 0.25, hem: 0.8 },
-  chest: { cx: 0.37, cy: 0.4, width: 0.18, taper: 0.97, collar: 0.28, hem: 0.55 },
-  back: { cx: 0.5, cy: 0.5, width: 0.56, taper: 0.93, collar: 0.22, hem: 0.84 },
-  baby: { cx: 0.5, cy: 0.52, width: 0.42, taper: 0.95, collar: 0.28, hem: 0.82 },
-  tote: { cx: 0.5, cy: 0.54, width: 0.5, taper: 1, collar: 0.22, hem: 0.88 },
-  hat: { cx: 0.5, cy: 0.42, width: 0.28, taper: 0.86, collar: 0.28, hem: 0.62 },
-  mug: { cx: 0.48, cy: 0.5, width: 0.34, taper: 0.9, collar: 0.28, hem: 0.78 },
-  tumbler: { cx: 0.5, cy: 0.5, width: 0.28, taper: 0.92, collar: 0.22, hem: 0.82 },
-  sticker: { cx: 0.5, cy: 0.5, width: 0.55, taper: 1, collar: 0.12, hem: 0.9 },
-  poster: { cx: 0.5, cy: 0.5, width: 0.48, taper: 1, collar: 0.12, hem: 0.9 },
-  pillow: { cx: 0.5, cy: 0.52, width: 0.52, taper: 1, collar: 0.18, hem: 0.88 },
-  phone: { cx: 0.5, cy: 0.5, width: 0.34, taper: 0.98, collar: 0.18, hem: 0.86 },
-  canvas: { cx: 0.5, cy: 0.5, width: 0.52, taper: 1, collar: 0.12, hem: 0.9 },
-  repeat: { cx: 0.5, cy: 0.5, width: 0.62, taper: 0.96, collar: 0.2, hem: 0.86 },
+  tee: { cx: 0.5, taper: 0.93, collar: 0.24, hem: 0.84, surfaceIn: 20, body: 0.58 },
+  long: { cx: 0.5, taper: 0.93, collar: 0.24, hem: 0.84, surfaceIn: 20, body: 0.56 },
+  tank: { cx: 0.5, taper: 0.94, collar: 0.26, hem: 0.82, surfaceIn: 18, body: 0.52 },
+  hoodie: { cx: 0.5, taper: 0.92, collar: 0.26, hem: 0.68, surfaceIn: 22, body: 0.56 },
+  crew: { cx: 0.5, taper: 0.93, collar: 0.25, hem: 0.8, surfaceIn: 22, body: 0.56 },
+  chest: { cx: 0.36, taper: 0.97, collar: 0.28, hem: 0.5, surfaceIn: 20, body: 0.58 },
+  back: { cx: 0.5, taper: 0.93, collar: 0.22, hem: 0.84, surfaceIn: 20, body: 0.6 },
+  baby: { cx: 0.5, taper: 0.95, collar: 0.28, hem: 0.8, surfaceIn: 14, body: 0.5 },
+  tote: { cx: 0.5, taper: 1, collar: 0.2, hem: 0.88, surfaceIn: 15, body: 0.62 },
+  hat: { cx: 0.5, taper: 0.86, collar: 0.3, hem: 0.58, surfaceIn: 7, body: 0.36 },
+  mug: { cx: 0.48, taper: 0.9, collar: 0.3, hem: 0.78, surfaceIn: 9, body: 0.42 },
+  tumbler: { cx: 0.5, taper: 0.92, collar: 0.22, hem: 0.82, surfaceIn: 8, body: 0.28 },
+  sticker: { cx: 0.5, taper: 1, collar: 0.14, hem: 0.88, surfaceIn: 8, body: 0.55 },
+  poster: { cx: 0.5, taper: 1, collar: 0.12, hem: 0.9, surfaceIn: 16, body: 0.5 },
+  pillow: { cx: 0.5, taper: 1, collar: 0.18, hem: 0.88, surfaceIn: 16, body: 0.58 },
+  phone: { cx: 0.5, taper: 0.98, collar: 0.16, hem: 0.86, surfaceIn: 3.2, body: 0.32 },
+  canvas: { cx: 0.5, taper: 1, collar: 0.12, hem: 0.9, surfaceIn: 16, body: 0.52 },
+  repeat: { cx: 0.5, taper: 0.96, collar: 0.2, hem: 0.86, surfaceIn: 20, body: 0.7 },
 };
 
 function placeOf(id: ProductId): Place {
   return PLACE[id] ?? PLACE.tee;
+}
+
+function printInches(productId: ProductId) {
+  const match = printifyPreset(productId).inches.match(/([\d.]+)\s*[×x]\s*([\d.]+)/);
+  if (!match) return { w: 15, h: 18 };
+  return { w: Number(match[1]), h: Number(match[2]) };
 }
 
 function canvasToPng(canvas: HTMLCanvasElement): Promise<string> {
@@ -87,31 +93,32 @@ function printArea(
   productId: ProductId,
 ) {
   const place = placeOf(productId);
-  const preset = PRINTIFY_PRESETS[productId];
-  const ratio = preset.height / Math.max(1, preset.width);
-  let w = box.w * place.width;
+  const inches = printInches(productId);
+  const ratio = inches.h / Math.max(0.1, inches.w);
+  let w = box.w * place.body * (inches.w / place.surfaceIn);
   let h = w * ratio;
   const maxH = box.h * (place.hem - place.collar);
   if (h > maxH) {
     h = maxH;
     w = h / ratio;
   }
-  let x = box.x + box.w * place.cx - w / 2;
-  let y = box.y + box.h * place.cy - h / 2;
   const collar = box.y + box.h * place.collar;
   const hem = box.y + box.h * place.hem;
-  if (y < collar) y = collar;
+  let x = box.x + box.w * place.cx - w / 2;
+  let y = collar + (Math.min(hem, collar + maxH) - collar - h) * 0.12;
   if (y + h > hem) y = Math.max(collar, hem - h);
+  if (y < collar) y = collar;
   x = Math.max(box.x, Math.min(x, box.x + box.w - w));
-  return { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), taper: place.taper };
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    w: Math.round(w),
+    h: Math.round(h),
+    taper: place.taper,
+  };
 }
 
-function fitArt(
-  areaW: number,
-  areaH: number,
-  artW: number,
-  artH: number,
-) {
+function fitArt(areaW: number, areaH: number, artW: number, artH: number) {
   const scale = Math.min(areaW / Math.max(1, artW), areaH / Math.max(1, artH));
   const w = Math.max(32, Math.round(artW * scale));
   const h = Math.max(32, Math.round(artH * scale));
