@@ -88,7 +88,7 @@ export function Studio() {
   const [packing, setPacking] = useState(false);
   const [packStep, setPackStep] = useState(0);
   const [dropStep, setDropStep] = useState(0);
-  const [dropTotal, setDropTotal] = useState(DROP_COUNT);
+  const [dropTotal, setDropTotal] = useState<number>(DROP_COUNT);
   const [printScale, setPrintScale] = useState(1);
   const [garmentColorId, setGarmentColorId] = useState<GarmentColorId>("shop");
   const [elapsed, setElapsed] = useState(0);
@@ -228,6 +228,7 @@ export function Studio() {
         edit: nextLens !== "lookbook" && mode === "edit",
         source: nextLens === "lookbook" ? null : sourceImage,
         artUrl: lookbookArt,
+        garmentColorId,
         reshoot,
       });
       if (!still) return;
@@ -284,17 +285,14 @@ export function Studio() {
     }
     const jobs =
       nextLens === "lookbook"
-        ? plates.length >= 2
-          ? plates.slice(0, poses.length).map((plate, index) => ({
-              ...poses[index % poses.length]!,
+        ? (plates.length > 0 ? plates : [{ dataUrl: sourceImage as string, categoryId: "lockup" as const, leadId: "brand" as const }])
+            .slice(0, poses.length)
+            .map((plate) => ({
+              categoryId: plate.categoryId,
+              leadId: plate.leadId,
+              note: "",
               source: null as string | null,
               artUrl: plate.dataUrl,
-              edit: false,
-            }))
-          : poses.map((slot) => ({
-              ...slot,
-              source: null as string | null,
-              artUrl: plates[0]?.dataUrl ?? sourceImage,
               edit: false,
             }))
         : poses.map((slot) => ({
@@ -557,7 +555,8 @@ export function Studio() {
 
     const pngUrl =
       nextLens === "lookbook" && artUrl
-        ? await stampPrintOnGarment(photoUrl, artUrl, nextProduct, scale ?? printScale, brand.audience)        : nextLens === "lookbook"
+        ? await stampPrintOnGarment(photoUrl, artUrl, nextProduct, scale ?? printScale, brand.audience)
+        : nextLens === "lookbook"
           ? photoUrl
           : await toTransparentPng(photoUrl, true).catch(() => photoUrl);
     const still: Still = {
