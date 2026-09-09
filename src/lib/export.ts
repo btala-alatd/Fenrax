@@ -290,8 +290,8 @@ export async function rasterToSvgFromArt(
   }
 
   const inner = stripChroma(svg, chroma)
-    .replace(/^[\\s\\S]*?<svg[^>]*>/i, "")
-    .replace(/<\\/svg>\\s*$/i, "");
+    .replace(/^[\s\S]*?<svg[^>]*>/i, "")
+    .replace(/<\/svg>\s*$/i, "");
 
   if (tight) {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${srcW}" height="${srcH}" viewBox="0 0 ${width} ${height}" fill="none">${inner}</svg>`;
