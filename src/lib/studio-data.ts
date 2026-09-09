@@ -389,6 +389,7 @@ export function composePrompt(
   const kidsCraft = kids
     ? "Kids merch craft 2023–2026: chunky type, rounded geometry, color-block, original animal or mascot, one giant idea. Study Mini Rodini / Bobo Choses / TAO / Primary / Patagonia Kids as composition only. Never copy their marks. No movie characters, no clipart, no kawaii anime, no Disney proportions."
     : "";
+  const church = theme.id === "church";
   const spelled = name
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, "")
