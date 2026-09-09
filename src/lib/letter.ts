@@ -2,25 +2,14 @@ import { type Brand } from "@/lib/brand";
 import { loadImage } from "@/lib/image-file";
 import type { CategoryId } from "@/lib/studio-data";
 
-function isShortCopy(value: string) {
-  const text = value.trim();
-  if (text.length < 4 || text.length > 48) return false;
-  if (text.split(/\s+/).length > 8) return false;
-  if (/^(draw|make|create|design|a |an |the |otter|bear|lion|dove)/i.test(text)) return false;
-  return true;
-}
-
 export function plateCopy(
   brand: Brand,
-  prompt: string,
+  _prompt: string,
   categoryId: CategoryId,
 ): { name: string; lines: string[] } {
   const name = brand.name.trim().toUpperCase();
   const showName = categoryId !== "wordmark";
-  const lines: string[] = [];
-  const user = prompt.trim();
-  if (isShortCopy(user)) lines.push(user.toUpperCase());
-  return { name: showName ? name : "", lines };
+  return { name: showName ? name : "", lines: [] };
 }
 
 export async function letterPlate(
