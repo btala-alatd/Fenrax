@@ -657,11 +657,13 @@ export function composePrompt(
   const church = theme.id === "church";
   const churchCraft = church
     ? kids
-      ? "CHURCH / KIDS. Flagship Sunday-school merch. One short true line plus citation — Jesus loves me, this little light, God is love (1 John 4:8), be kind. Chunky joyful type, original dove or simple cross, stained-glass color-block. Cute and reverent. Never scary, never crucifixion, never sarcasm, never a Disney character, never a meme."
+      ? "CHURCH / KIDS. Original Sunday-school merch, never a gift-shop cartoon. One short true line plus citation that is NOT the usual Amazon kids-faith tropes. Invented dove, stained-glass creature, or house mascot — cute and reverent. Never scary, never crucifixion, never sarcasm, never Disney, never a smiling clipart Jesus."
       : women
-        ? "CHURCH / WOMEN. Flagship women's faith fashion. Scripture is the garment. Short accurate verse or phrase plus citation in considered serif or fine script (Be still — Psalm 46:10, Loved — 1 John 4, Selah, She is clothed with strength — Proverbs 31:25). Editorial, feminine, gold and bone, stained-glass facets, thin original cross or dove. Would wear it without the verse too. Not rhinestone 2008, not 'coffee and Jesus' clipart, not sarcastic. Front under ~12 words; longer verses on Back."
-        : "CHURCH / MEN. Flagship men's gospel merch. Scripture hits like a concert poster. Short accurate verse or phrase plus citation in heavy type or woodcut (Fear not — Isaiah 41:10, Be still — Psalm 46:10, The Lord is my shepherd — Psalm 23, If God is for us — Romans 8:31). Boxy lockup, revival ink, original cross geometry or dove. Masculine, premium, heavyweight-street energy. Fun and reverent — not youth-group clipart, not a joke at the church. Front under ~12 words; longer passages on Back."
+        ? "CHURCH / WOMEN. Original women's faith fashion. Accurate Scripture plus citation, set like a fashion house — not a boutique rack of the same five verses. Ban: Jeremiah 29:11, Phil 4:13, John 3:16, 'coffee and Jesus', rhinestone crosses, 'faith over fear' in that lockup. Find a true, less-printed line (or a distinctive setting of a known one if the user named it). Editorial, feminine, gold and bone. Would wear it without needing the verse to excuse the design."
+        : "CHURCH / MEN. Original men's gospel merch. Accurate Scripture plus citation as a concert poster only this house could have printed. Ban: John 3:16 as the whole idea, Phil 4:13, Jeremiah 29:11, clipart crosses, 'faith over fear', WWJD. Pick a true, less-worn line (Micah 6:8, Isaiah 43:1, Psalm 121, Habakkuk 2:2, 2 Timothy 1:7 — or better, one that fits this house). Heavy type, revival ink, invented geometry. If the user named a verse, use that verse accurately."
     : "";
+  const originalLock =
+    "ORIGINALITY LOCK: Nothing generic. If it looks like Amazon bulk merch, a mall kiosk, or a clipart pack, throw it away. No EST. year badges, no leaping-bass cliché, no 'I'd rather be fishing', no barbed-wire stamps, no glowing clipart cross, no stock mountain-sun, no generic dino smile. Specific object, specific sentence, specific composition that could only belong to this house. Invented. Unrepeatable.";
   const churchSet = church
     ? kids
       ? "Photoreal church courtyard or Sunday steps. Child-appropriate, bright, joyful. Real place, not a drawing."
@@ -701,6 +703,7 @@ export function composePrompt(
         notes,
         kidsCraft,
         churchCraft,
+        originalLock,
         "PRINT FILE, not a photo. No model, no body, no fabric, no hanger, no wrinkles, no cyclorama, no mockup, no watermark, no UI chrome.",
         "Isolated 2D graphic centered on a perfectly even matte #F2F3F5 field. The field is empty studio, not part of the design. Uniform RGB 242,243,245 — no gradient, no vignette, no floor, no drop shadow.",
         "Huge empty margin. Art occupies 60–75% of the frame. Billboard-simple. Readable as a 200px thumbnail.",
@@ -710,8 +713,8 @@ export function composePrompt(
         "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",
         `Invent original ${name} merch in that ${theme.label.toLowerCase()} ${who} feeling. Full designer freedom. Never copy a known logo or trademark.`,
         church
-          ? "Craft bar: the best church tee in the shop. Fashion-first. Scripture true. Thumbnail-sharp."
-          : "Craft bar: flagship drop, sharper than a mall tee.",
+          ? "Craft bar: the best original church tee in the shop. Fashion-first. Scripture true. Nothing you have seen on a rack."
+          : "Craft bar: flagship original drop. Sharper than a mall tee. Nothing generic.",
         salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
       ];
   const productBit = product?.suffix ?? "";
@@ -720,11 +723,11 @@ export function composePrompt(
     ? trimmed
     : church
       ? kids
-        ? `Invent a flagship kids church graphic for ${name}. Short true Bible line plus citation. Joyful, original, Sunday-school best. Do not ask. Just draw.`
+        ? `Invent an original kids church graphic for ${name}. True Bible line plus citation that is not the usual gift-shop verse. Joyful, specific, this house only. Do not ask. Just draw.`
         : women
-          ? `Invent a flagship women's church tee for ${name}. Short accurate Scripture plus citation, editorial and feminine. Fashion-first. Do not ask. Just draw.`
-          : `Invent a flagship men's church tee for ${name}. Short accurate Scripture plus citation, heavy type, gospel-poster energy. Do not ask. Just draw.`
-      : `Invent a flagship ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. You are the designer. Full freedom. One unforgettable idea. Do not ask. Just draw.`;
+          ? `Invent an original women's church tee for ${name}. Accurate Scripture plus citation, editorial, not the five verses every shop prints. Fashion-first. Do not ask. Just draw.`
+          : `Invent an original men's church tee for ${name}. Accurate Scripture plus citation, heavy type, a line that is not the Amazon default. Do not ask. Just draw.`
+      : `Invent an original ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. Specific, unrepeatable, this house only. If it looks generic, invent again. Do not ask. Just draw.`;
   const composed = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
   return composed.slice(0, MAX_COMPOSED);
 }
