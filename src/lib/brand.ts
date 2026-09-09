@@ -114,14 +114,22 @@ export const THEMES = [
     ink: "#1c1712",
     paper: "#f4eee4",
     accent: "#c2a36b",
-    motifs: "original cross geometry, dove line, stained-glass facets, revival serif",
-    vibe: "Sunday morning, gospel night, quiet faith, house of worship",
-    hook: "church merch, original cross or dove, stained-glass color, revival type",
+    motifs: "short Bible verse, citation, original cross geometry, dove, stained-glass facets",
+    vibe: "joyful Sunday, gospel night, reverent and fun, house of worship",
+    hook: "Bible-message merch, short scripture lockup, stained-glass color, revival type, joy without irreverence",
     world:
-      "Church and worship apparel. Original cross geometry, dove, stained-glass facets, hymn-book serif, revival-poster type. Feels like a real house of faith — Sunday merch, not costume. For kids: joyful, simple, age-appropriate. Invented marks only. Never copy Hillsong, Elevation, Passion, or any church logo.",
+      "Church and worship apparel. The message is Scripture — a short verse or phrase plus its citation, set in considered type. Joyful, wearable, conversation-starting. Fun like a good Sunday, never sarcastic, never a meme about God, never costume. Original cross, dove, stained-glass geometry around the words. For kids: simple joyful lines (Jesus loves me, this little light, be kind) with a verse ref — no passion imagery, no scare. Invented house only. Never copy Hillsong, Elevation, Passion, He Gets Us, or any church logo.",
     schools:
-      "Gospel concert merch, hymn-book layout, stained-glass composition as schools. Never copy a church, ministry, or Christian-brand logo, ichthys trademark, or known slogan lockup.",
-    tags: ["church shirt", "christian tee", "worship shirt", "faith graphic tee", "gospel tee"],
+      "Hymn-book layout, gospel-concert posters, stained-glass composition, modern faith streetwear (heavyweight type, restrained palette) as schools. Scripture integrity: quote accurately, keep the reference, make it readable at thumbnail size. Never copy a ministry logo, ichthys trademark, or famous slogan lockup.",
+    tags: [
+      "church shirt",
+      "christian tee",
+      "bible verse shirt",
+      "scripture tshirt",
+      "worship shirt",
+      "faith graphic tee",
+      "gospel tee",
+    ],
   },
   {
     id: "work",

@@ -654,6 +654,12 @@ export function composePrompt(
   const kidsCraft = kids
     ? "Kids merch craft 2023–2026: chunky type, rounded geometry, color-block, original animal or mascot, one giant idea. Study Mini Rodini / Bobo Choses / TAO / Primary / Patagonia Kids as composition only. Never copy their marks. No movie characters."
     : "";
+  const church = theme.id === "church";
+  const churchCraft = church
+    ? kids
+      ? "CHURCH / BIBLE. Joyful kids Sunday merch. One short true line plus a citation (Jesus loves me, this little light, be kind, God is love — 1 John 4:8). Original dove, rainbow-covenant geometry, or simple cross. Fun and gentle. Never scary, never crucifixion, never sarcasm about God, never a meme."
+      : "CHURCH / BIBLE. Scripture is the hero. One short accurate verse or phrase plus its citation, readable across a room. Joyful and reverent together — revival-poster energy, hymn-book type, stained-glass facets, original cross or dove. Fun like a good Sunday, not youth-group clipart from 2008, not sarcastic, not a joke at the church. Front: under ~12 words. Longer passages belong on Back. Quote the Bible correctly. Never copy a ministry logo or famous church slogan."
+    : "";
   const who = kids ? "kids" : women ? "women's" : "men's";
   const wear = productWear(productId);
   if (lookbook) {
@@ -685,6 +691,7 @@ export function composePrompt(
         `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
         notes,
         kidsCraft,
+        churchCraft,
         "PRINT FILE, not a photo. No model, no body, no fabric, no hanger, no wrinkles, no cyclorama, no mockup, no watermark, no UI chrome.",
         "Isolated 2D graphic centered on a perfectly even matte #F2F3F5 field. The field is empty studio, not part of the design. Uniform RGB 242,243,245 — no gradient, no vignette, no floor, no drop shadow.",
         "Huge empty margin. Art occupies 60–75% of the frame. Billboard-simple. Readable as a 200px thumbnail.",
@@ -700,7 +707,11 @@ export function composePrompt(
   const suffix = `${anime ? animeSuffix(brand, lens) : ""}${leadSuffix(leadId, brand, lens)}${categorySuffix(categoryId, brand, lens)}${styleSuffix(styleId, brand, lens)}${productBit}`;
   const idea = trimmed
     ? trimmed
-    : `Invent a flagship ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. You are the designer. Full freedom. One unforgettable idea. Do not ask. Just draw.`;
+    : church
+      ? kids
+        ? `Invent a joyful kids church graphic for ${name}. Short true Bible line plus citation. Fun, gentle, original. Do not ask. Just draw.`
+        : `Invent a flagship church tee for ${name}. Short accurate Scripture plus citation is the design. Joyful and reverent. Do not ask. Just draw.`
+      : `Invent a flagship ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. You are the designer. Full freedom. One unforgettable idea. Do not ask. Just draw.`;
   const composed = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
   return composed.slice(0, MAX_COMPOSED);
 }
