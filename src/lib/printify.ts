@@ -244,12 +244,20 @@ function isMagenta(r: number, g: number, b: number) {
   return Math.min(r, b) - g > 28 && r > 80 && b > 80;
 }
 
+function isGreenScreen(r: number, g: number, b: number) {
+  return g - Math.max(r, b) > 28 && g > 90;
+}
+
+function isChroma(r: number, g: number, b: number) {
+  return isMagenta(r, g, b) || isGreenScreen(r, g, b);
+}
+
 function isSaturated(r: number, g: number, b: number) {
   return Math.max(r, g, b) - Math.min(r, g, b) > 32;
 }
 
 function isTick(r: number, g: number, b: number) {
-  if (isMagenta(r, g, b)) return false;
+  if (isChroma(r, g, b)) return false;
   return isSaturated(r, g, b);
 }
 
@@ -271,7 +279,7 @@ function floodKnock(imageData: ImageData, ground: { r: number; g: number; b: num
     const g = data[i + 1];
     const b = data[i + 2];
     if (isTick(r, g, b)) return;
-    if (dist(r, g, b, ground) > tol && !isMagenta(r, g, b)) return;
+    if (dist(r, g, b, ground) > tol && !isChroma(r, g, b)) return;
     marked[idx] = 1;
     qx[tail] = x;
     qy[tail] = y;
@@ -350,28 +358,81 @@ function despill(data: Uint8ClampedArray) {
       data[i + 2] = Math.max(0, b - mag);
       if (g < 50 && mag > 36) data[i + 3] = 0;
     }
+    const green = g - Math.max(r, b);
+    if (green > 10) {
+      data[i + 1] = Math.max(0, g - green);
+      if (green > 36 && Math.max(r, b) < 50) data[i + 3] = 0;
+    }
   }
 }
 
-function knockOut(imageData: ImageData) {
-  const { data, width, height } = imageData;
-  const ground = sampleBorder(data, width, height);
-  let marked = floodKnock(imageData, ground, 32);
-  let hits = 0;
-  for (let i = 0; i < marked.length; i += 1) hits += marked[i];
-  if (hits < marked.length * 0.04) {
-    marked = floodKnock(imageData, ground, 42);
-    hits = 0;
-    for (let i = 0; i < marked.length; i += 1) hits += marked[i];
+function punchFieldHoles(
+  imageData: ImageData,
+  ground: { r: number; g: number; b: number },
+  marked: Uint8Array,
+  tol: number,
+) {
+  const { data } = imageData;
+  for (let idx = 0; idx < marked.length; idx += 1) {
+    if (marked[idx]) continue;
+    const i = idx * 4;
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    if (isTick(r, g, b)) continue;
+    if (isChroma(r, g, b) || dist(r, g, b, ground) <= tol) {
+      marked[idx] = 1;
+    }
   }
-  if (hits > marked.length * 0.92 || hits < marked.length * 0.02) {
-    return imageData;
+}
+
+function knockOut(imageData: ImageData, holes = true) {
+  const { data, width, height } = imageData;
+  const sampled = sampleBorder(data, width, height);
+  const grounds = [
+    sampled,
+    { r: 242, g: 243, b: 245 },
+    { r: 255, g: 255, b: 255 },
+    { r: 232, g: 232, b: 232 },
+  ];
+
+  let bestMarked: Uint8Array | null = null;
+  let bestHits = 0;
+  let bestGround = sampled;
+  for (const ground of grounds) {
+    for (const tol of [28, 40, 54]) {
+      const marked = floodKnock(imageData, ground, tol);
+      let hits = 0;
+      for (let i = 0; i < marked.length; i += 1) hits += marked[i];
+      const ratio = hits / marked.length;
+      if (ratio < 0.03 || ratio > 0.9) continue;
+      if (hits > bestHits) {
+        bestHits = hits;
+        bestMarked = marked;
+        bestGround = ground;
+      }
+    }
   }
 
+  let marked = bestMarked;
+  let ground = bestGround;
+  if (!marked) {
+    marked = floodKnock(imageData, sampled, 48);
+    ground = sampled;
+    let hits = 0;
+    for (let i = 0; i < marked.length; i += 1) hits += marked[i];
+    if (hits < marked.length * 0.02) return imageData;
+  }
+
+  if (holes) punchFieldHoles(imageData, ground, marked, 30);
+
+  let knocked = 0;
   for (let idx = 0; idx < marked.length; idx += 1) {
     if (!marked[idx]) continue;
     data[idx * 4 + 3] = 0;
+    knocked += 1;
   }
+  if (knocked < marked.length * 0.02) return imageData;
   defringe(data, width, height, ground, marked);
   despill(data);
   return imageData;
@@ -500,7 +561,7 @@ export function evaluateArtworkResolution(
   return { dpi, scale, grade };
 }
 
-export async function prepareArt(dataUrl: string, knock = true) {
+export async function prepareArt(dataUrl: string, knock = true, holes = true) {
   const image = await loadImage(dataUrl);
   const srcW = image.naturalWidth || image.width;
   const srcH = image.naturalHeight || image.height;
@@ -512,11 +573,16 @@ export async function prepareArt(dataUrl: string, knock = true) {
   workCtx.drawImage(image, 0, 0);
   if (knock) {
     const pixels = workCtx.getImageData(0, 0, srcW, srcH);
-    knockOut(pixels);
+    knockOut(pixels, holes);
     workCtx.putImageData(pixels, 0, 0);
     return trimTransparent(work);
   }
   return work;
+}
+
+export async function toTransparentPng(dataUrl: string, holes = true) {
+  const art = await prepareArt(dataUrl, true, holes);
+  return canvasToPngDataUrl(art);
 }
 
 function canvasToPngDataUrl(canvas: HTMLCanvasElement): string {
@@ -566,9 +632,9 @@ export async function buildPrintifyFromArt(
 export async function buildPrintifyPng(
   dataUrl: string,
   productId: ProductId,
-  knock = true,
+  holes = true,
 ): Promise<PrintifyBuild> {
-  const art = await prepareArt(dataUrl, knock);
+  const art = await prepareArt(dataUrl, true, holes);
   return buildPrintifyFromArt(art, productId);
 }
 

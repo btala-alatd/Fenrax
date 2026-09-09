@@ -2,12 +2,13 @@ import JSZip from "jszip";
 import { brandSlug, themeOf, type Brand } from "@/lib/brand";
 import { rasterToSvgFromArt } from "@/lib/export";
 import { buildEtsyListing } from "@/lib/etsy";
-import { dataUrlToBlob, toPngDataUrl } from "@/lib/image-file";
+import { dataUrlToBlob } from "@/lib/image-file";
 import { saveBlob } from "@/lib/save-to";
 import {
   PRINTIFY_CATALOG,
   buildPrintifyFromArt,
   prepareArt,
+  toTransparentPng,
 } from "@/lib/printify";
 import type { Still } from "@/lib/studio-data";
 
@@ -60,7 +61,7 @@ async function addGeneratedImage(
   index: number,
 ) {
   const stem = stillStem(still, index);
-  const png = await toPngDataUrl(still.dataUrl);
+  const png = await toTransparentPng(still.dataUrl, still.lens !== "lookbook");
   const blob = dataUrlToBlob(png);
   zip.file(`${root}/images/${stem}.png`, blob, { compression: "STORE" });
   zip.file(`${root}/${stem}/image.png`, blob, { compression: "STORE" });
@@ -118,14 +119,12 @@ async function addPrintifyFolder(
   folder: string,
 ) {
   const colors = [brand.ink, brand.paper, brand.accent];
-  const knock = still.lens !== "lookbook";
-  const art = await prepareArt(still.dataUrl, knock);
+  const holes = still.lens !== "lookbook";
+  const art = await prepareArt(still.dataUrl, true, holes);
   await yieldTick();
   const print = await buildPrintifyFromArt(art, still.productId);
   await yieldTick();
-  const svg = knock
-    ? await rasterToSvgFromArt(art, colors, still.productId, true).catch(() => null)
-    : null;
+  const svg = await rasterToSvgFromArt(art, colors, still.productId, true).catch(() => null);
   const listing = buildEtsyListing(still, brand);
   const canvasName = `${print.preset.id}-${print.preset.width}x${print.preset.height}.png`;
   zip.file(`${folder}/printify/${canvasName}`, print.blob, { compression: "STORE" });

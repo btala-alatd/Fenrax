@@ -19,7 +19,7 @@ import { ExportButtons } from "@/components/export-buttons";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { applyAudience, AUDIENCES, themeOf, useBrand, type Brand } from "@/lib/brand";
-import { printifyPreset } from "@/lib/printify";
+import { printifyPreset, toTransparentPng } from "@/lib/printify";
 import { useGallery } from "@/lib/gallery";
 import { readImageFile } from "@/lib/image-file";
 import { zipGeneratedImages, zipPrintifyPack } from "@/lib/pack";
@@ -156,7 +156,8 @@ export function Studio() {
   async function acceptFile(file: File) {
     try {
       const dataUrl = await readImageFile(file);
-      setSourceImage(dataUrl);
+      const clean = await toTransparentPng(dataUrl, true).catch(() => dataUrl);
+      setSourceImage(clean);
       setMode("edit");
       setCurrent(null);
       promptRef.current?.focus();
@@ -372,7 +373,10 @@ export function Studio() {
       return null;
     }
 
-    const pngUrl = result.dataUrl;
+    const pngUrl = await toTransparentPng(
+      result.dataUrl,
+      nextLens !== "lookbook",
+    ).catch(() => result.dataUrl);
     const still: Still = {
       id: crypto.randomUUID(),
       prompt: nextPrompt || "Designer pick",
@@ -499,7 +503,7 @@ export function Studio() {
           {stageImage ? (
             <button
               type="button"
-              className="flex size-full items-center justify-center p-3 sm:p-6"
+              className="checkerboard flex size-full items-center justify-center p-3 sm:p-6"
               onClick={() => current && setLightbox(current)}
               disabled={!current}
             >
@@ -736,7 +740,7 @@ function FilmStrip({
             onClick={() => onSelect(still)}
             onDoubleClick={() => onOpen(still)}
             className={cn(
-              "relative shrink-0 overflow-hidden rounded-[var(--radius-md)] transition-[box-shadow,opacity,transform] duration-[var(--motion-fast)] ease-[var(--ease-out)] active:scale-[0.96]",
+              "relative shrink-0 overflow-hidden rounded-[var(--radius-md)] checkerboard transition-[box-shadow,opacity,transform] duration-[var(--motion-fast)] ease-[var(--ease-out)] active:scale-[0.96]",
               selected
                 ? "shadow-[0_0_0_1px_var(--color-primary)]"
                 : "opacity-80 shadow-[var(--shadow-border)] hover:opacity-100",
@@ -1099,11 +1103,11 @@ function Lightbox({
           <X className="size-5" />
         </Button>
       </div>
-      <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-4">
+      <div className="checkerboard mx-4 mb-4 flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[var(--radius-lg)] px-4 py-4">
         <img
           src={still.dataUrl}
           alt={still.prompt}
-          className="max-h-full max-w-full object-contain shadow-[var(--shadow-print)] outline outline-1 -outline-offset-1 outline-foreground/10"
+          className="max-h-full max-w-full object-contain"
           style={{ borderRadius: "var(--radius-md)" }}
         />
       </div>
