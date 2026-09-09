@@ -1,5 +1,5 @@
 import { loadImage } from "@/lib/image-file";
-import { prepareArt } from "@/lib/printify";
+import { prepareArt, PRINTIFY_PRESETS } from "@/lib/printify";
 import type { ProductId } from "@/lib/studio-data";
 
 type Place = {
@@ -7,27 +7,29 @@ type Place = {
   cy: number;
   width: number;
   taper: number;
+  collar: number;
+  hem: number;
 };
 
 const PLACE: Record<ProductId, Place> = {
-  tee: { cx: 0.5, cy: 0.445, width: 0.36, taper: 0.94 },
-  long: { cx: 0.5, cy: 0.445, width: 0.34, taper: 0.94 },
-  tank: { cx: 0.5, cy: 0.42, width: 0.32, taper: 0.95 },
-  hoodie: { cx: 0.5, cy: 0.4, width: 0.33, taper: 0.93 },
-  crew: { cx: 0.5, cy: 0.43, width: 0.34, taper: 0.94 },
-  chest: { cx: 0.385, cy: 0.385, width: 0.125, taper: 0.97 },
-  back: { cx: 0.5, cy: 0.44, width: 0.4, taper: 0.94 },
-  baby: { cx: 0.5, cy: 0.46, width: 0.28, taper: 0.96 },
-  tote: { cx: 0.5, cy: 0.52, width: 0.38, taper: 1 },
-  hat: { cx: 0.5, cy: 0.42, width: 0.22, taper: 0.88 },
-  mug: { cx: 0.48, cy: 0.48, width: 0.28, taper: 0.9 },
-  tumbler: { cx: 0.5, cy: 0.48, width: 0.22, taper: 0.92 },
-  sticker: { cx: 0.5, cy: 0.5, width: 0.42, taper: 1 },
-  poster: { cx: 0.5, cy: 0.48, width: 0.36, taper: 1 },
-  pillow: { cx: 0.5, cy: 0.5, width: 0.4, taper: 1 },
-  phone: { cx: 0.5, cy: 0.5, width: 0.28, taper: 0.98 },
-  canvas: { cx: 0.5, cy: 0.48, width: 0.4, taper: 1 },
-  repeat: { cx: 0.5, cy: 0.46, width: 0.5, taper: 0.96 },
+  tee: { cx: 0.5, cy: 0.51, width: 0.54, taper: 0.93, collar: 0.24, hem: 0.84 },
+  long: { cx: 0.5, cy: 0.51, width: 0.52, taper: 0.93, collar: 0.24, hem: 0.84 },
+  tank: { cx: 0.5, cy: 0.5, width: 0.48, taper: 0.94, collar: 0.26, hem: 0.82 },
+  hoodie: { cx: 0.5, cy: 0.46, width: 0.5, taper: 0.92, collar: 0.26, hem: 0.7 },
+  crew: { cx: 0.5, cy: 0.5, width: 0.52, taper: 0.93, collar: 0.25, hem: 0.8 },
+  chest: { cx: 0.37, cy: 0.4, width: 0.18, taper: 0.97, collar: 0.28, hem: 0.55 },
+  back: { cx: 0.5, cy: 0.5, width: 0.56, taper: 0.93, collar: 0.22, hem: 0.84 },
+  baby: { cx: 0.5, cy: 0.52, width: 0.42, taper: 0.95, collar: 0.28, hem: 0.82 },
+  tote: { cx: 0.5, cy: 0.54, width: 0.5, taper: 1, collar: 0.22, hem: 0.88 },
+  hat: { cx: 0.5, cy: 0.42, width: 0.28, taper: 0.86, collar: 0.28, hem: 0.62 },
+  mug: { cx: 0.48, cy: 0.5, width: 0.34, taper: 0.9, collar: 0.28, hem: 0.78 },
+  tumbler: { cx: 0.5, cy: 0.5, width: 0.28, taper: 0.92, collar: 0.22, hem: 0.82 },
+  sticker: { cx: 0.5, cy: 0.5, width: 0.55, taper: 1, collar: 0.12, hem: 0.9 },
+  poster: { cx: 0.5, cy: 0.5, width: 0.48, taper: 1, collar: 0.12, hem: 0.9 },
+  pillow: { cx: 0.5, cy: 0.52, width: 0.52, taper: 1, collar: 0.18, hem: 0.88 },
+  phone: { cx: 0.5, cy: 0.5, width: 0.34, taper: 0.98, collar: 0.18, hem: 0.86 },
+  canvas: { cx: 0.5, cy: 0.5, width: 0.52, taper: 1, collar: 0.12, hem: 0.9 },
+  repeat: { cx: 0.5, cy: 0.5, width: 0.62, taper: 0.96, collar: 0.2, hem: 0.86 },
 };
 
 function placeOf(id: ProductId): Place {
@@ -53,6 +55,74 @@ function canvasToPng(canvas: HTMLCanvasElement): Promise<string> {
   });
 }
 
+function contentBox(image: ImageData) {
+  const { width, height, data } = image;
+  let minX = width;
+  let minY = height;
+  let maxX = 0;
+  let maxY = 0;
+  const step = Math.max(1, Math.floor(Math.min(width, height) / 360));
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const i = (y * width + x) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      if (r > 246 && g > 246 && b > 246) continue;
+      if (r < 10 && g < 10 && b < 10) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX - minX < width * 0.4 || maxY - minY < height * 0.4) {
+    return { x: 0, y: 0, w: width, h: height };
+  }
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+
+function printArea(
+  box: { x: number; y: number; w: number; h: number },
+  productId: ProductId,
+) {
+  const place = placeOf(productId);
+  const preset = PRINTIFY_PRESETS[productId];
+  const ratio = preset.height / Math.max(1, preset.width);
+  let w = box.w * place.width;
+  let h = w * ratio;
+  const maxH = box.h * (place.hem - place.collar);
+  if (h > maxH) {
+    h = maxH;
+    w = h / ratio;
+  }
+  let x = box.x + box.w * place.cx - w / 2;
+  let y = box.y + box.h * place.cy - h / 2;
+  const collar = box.y + box.h * place.collar;
+  const hem = box.y + box.h * place.hem;
+  if (y < collar) y = collar;
+  if (y + h > hem) y = Math.max(collar, hem - h);
+  x = Math.max(box.x, Math.min(x, box.x + box.w - w));
+  return { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), taper: place.taper };
+}
+
+function fitArt(
+  areaW: number,
+  areaH: number,
+  artW: number,
+  artH: number,
+) {
+  const scale = Math.min(areaW / Math.max(1, artW), areaH / Math.max(1, artH));
+  const w = Math.max(32, Math.round(artW * scale));
+  const h = Math.max(32, Math.round(artH * scale));
+  return {
+    w,
+    h,
+    x: Math.round((areaW - w) / 2),
+    y: Math.round((areaH - h) / 2),
+  };
+}
+
 function drawTapered(
   ctx: CanvasRenderingContext2D,
   source: HTMLCanvasElement,
@@ -62,7 +132,7 @@ function drawTapered(
   h: number,
   taper: number,
 ) {
-  const strips = 32;
+  const strips = 36;
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   for (let i = 0; i < strips; i += 1) {
@@ -100,8 +170,8 @@ function sitInFabric(
       const fr = pd[pi];
       const fg = pd[pi + 1];
       const fb = pd[pi + 2];
-      const light = 0.58 + 0.42 * ((fr + fg + fb) / 765);
-      const ia = Math.min(1, a * 0.96);
+      const light = 0.62 + 0.38 * ((fr + fg + fb) / 765);
+      const ia = Math.min(1, a * 0.97);
       pd[pi] = Math.round(fr * (1 - ia) + od[oi] * light * ia);
       pd[pi + 1] = Math.round(fg * (1 - ia) + od[oi + 1] * light * ia);
       pd[pi + 2] = Math.round(fb * (1 - ia) + od[oi + 2] * light * ia);
@@ -116,7 +186,6 @@ export async function stampPrintOnGarment(
 ): Promise<string> {
   const photo = await loadImage(photoUrl);
   const art = await prepareArt(artUrl, true, true);
-  const place = placeOf(productId);
   const width = photo.naturalWidth || photo.width;
   const height = photo.naturalHeight || photo.height;
 
@@ -129,23 +198,21 @@ export async function stampPrintOnGarment(
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(photo, 0, 0, width, height);
 
-  const destW = Math.max(32, Math.round(width * place.width));
-  const destH = Math.max(32, Math.round(destW * (art.height / Math.max(1, art.width))));
-  const x = Math.round(width * place.cx - destW / 2);
-  const y = Math.round(height * place.cy - destH / 2);
+  const mixed = ctx.getImageData(0, 0, width, height);
+  const area = printArea(contentBox(mixed), productId);
+  const fitted = fitArt(area.w, area.h, art.width, art.height);
 
   const overlay = document.createElement("canvas");
-  overlay.width = destW;
-  overlay.height = destH;
+  overlay.width = area.w;
+  overlay.height = area.h;
   const octx = overlay.getContext("2d");
   if (!octx) throw new Error("Could not stamp the print.");
   octx.imageSmoothingEnabled = true;
   octx.imageSmoothingQuality = "high";
-  drawTapered(octx, art, 0, 0, destW, destH, place.taper);
+  drawTapered(octx, art, fitted.x, fitted.y, fitted.w, fitted.h, area.taper);
 
-  const mixed = ctx.getImageData(0, 0, width, height);
-  const ink = octx.getImageData(0, 0, destW, destH);
-  sitInFabric(mixed, ink, x, y);
+  const ink = octx.getImageData(0, 0, area.w, area.h);
+  sitInFabric(mixed, ink, area.x, area.y);
   ctx.putImageData(mixed, 0, 0);
 
   return canvasToPng(canvas);
