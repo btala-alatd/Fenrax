@@ -421,7 +421,7 @@ export function composePrompt(
     "Centered on a perfectly even matte #F2F3F5 field. Uniform RGB 242,243,245 — no gradient, no vignette, no floor, no drop shadow. The field is empty studio, not part of the design.",
     "Huge empty margin. Art occupies 60–75% of the frame. Billboard-simple. Readable as a 200px thumbnail.",
     "Solid fills, thick strokes. No hairlines. No drop shadow under the art. No paper grain behind it.",
-    "FAIL if the studio field is black or dark. FAIL if you add distress, crackle, speckle, noise, photocopy grain, worn paper, or a faded-wash texture. Ink is flat and opaque. Two or three solid colors only.",
+    "FAIL if the studio field is black or dark. Never fill the canvas with black. Dark ink is only allowed inside the mark. FAIL if you add distress, crackle, speckle, noise, photocopy grain, worn paper, or a faded-wash texture. Ink is flat and opaque. Two or three solid colors only.",
     "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
     "Ultra-sharp merch illustration. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
     "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",

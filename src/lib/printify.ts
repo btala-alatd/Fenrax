@@ -261,7 +261,16 @@ function isTick(r: number, g: number, b: number) {
   return isSaturated(r, g, b);
 }
 
-function floodKnock(imageData: ImageData, ground: { r: number; g: number; b: number }, tol: number) {
+function pixelLuma(r: number, g: number, b: number) {
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function floodKnock(
+  imageData: ImageData,
+  ground: { r: number; g: number; b: number },
+  tol: number,
+  ignoreTickBelow = -1,
+) {
   const { data, width, height } = imageData;
   const n = width * height;
   const marked = new Uint8Array(n);
@@ -278,7 +287,8 @@ function floodKnock(imageData: ImageData, ground: { r: number; g: number; b: num
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
-    if (isTick(r, g, b)) return;
+    const l = pixelLuma(r, g, b);
+    if (l > ignoreTickBelow && isTick(r, g, b)) return;
     if (dist(r, g, b, ground) > tol && !isChroma(r, g, b)) return;
     marked[idx] = 1;
     qx[tail] = x;
@@ -417,14 +427,15 @@ function knockOut(imageData: ImageData, holes = true) {
         { r: 232, g: 232, b: 232 },
         { r: 243, g: 234, b: 212 },
       ];
-  const tols = darkField ? [12, 20, 28] : [28, 40, 54];
+  const tols = darkField ? [20, 32, 44] : [28, 40, 54];
+  const ignoreTick = darkField ? 36 : -1;
 
   let bestMarked: Uint8Array | null = null;
   let bestHits = 0;
   let bestGround = sampled;
   for (const ground of grounds) {
     for (const tol of tols) {
-      const marked = floodKnock(imageData, ground, tol);
+      const marked = floodKnock(imageData, ground, tol, ignoreTick);
       let hits = 0;
       for (let i = 0; i < marked.length; i += 1) hits += marked[i];
       const ratio = hits / marked.length;
@@ -440,14 +451,14 @@ function knockOut(imageData: ImageData, holes = true) {
   let marked = bestMarked;
   let ground = bestGround;
   if (!marked) {
-    marked = floodKnock(imageData, sampled, darkField ? 22 : 48);
+    marked = floodKnock(imageData, sampled, darkField ? 36 : 48, darkField ? 36 : -1);
     ground = sampled;
     let hits = 0;
     for (let i = 0; i < marked.length; i += 1) hits += marked[i];
     if (hits < marked.length * 0.02) return imageData;
   }
 
-  if (holes) punchFieldHoles(imageData, ground, marked, darkField ? 16 : 30);
+  if (holes && !darkField) punchFieldHoles(imageData, ground, marked, 30);
 
   let knocked = 0;
   for (let idx = 0; idx < marked.length; idx += 1) {
@@ -606,19 +617,65 @@ function merchDespeckle(imageData: ImageData) {
           }
         }
       }
-      if (src[i + 3] >= 16 && opaqueN <= 1) {
+      if (src[i + 3] >= 16 && opaqueN <= 2) {
         data[i + 3] = 0;
         continue;
       }
       if (src[i + 3] >= 16 && majorityN >= 5) {
         const self = (src[i] << 16) | (src[i + 1] << 8) | src[i + 2];
         const selfN = counts.get(self) ?? 0;
-        if (selfN <= 1) {
+        if (selfN <= 2) {
           data[i] = (majority >> 16) & 255;
           data[i + 1] = (majority >> 8) & 255;
           data[i + 2] = majority & 255;
         }
       }
+    }
+  }
+  return imageData;
+}
+
+function dropSmallBlobs(imageData: ImageData) {
+  const { data, width, height } = imageData;
+  const n = width * height;
+  const minSize = Math.max(48, Math.round(n * 0.0012));
+  const seen = new Uint8Array(n);
+  const qx = new Int32Array(n);
+  const qy = new Int32Array(n);
+  const stack: number[] = [];
+  for (let start = 0; start < n; start += 1) {
+    if (seen[start] || data[start * 4 + 3] < 16) continue;
+    let head = 0;
+    let tail = 0;
+    qx[0] = start % width;
+    qy[0] = (start / width) | 0;
+    tail = 1;
+    seen[start] = 1;
+    stack.length = 0;
+    stack.push(start);
+    while (head < tail) {
+      const x = qx[head]!;
+      const y = qy[head]!;
+      head += 1;
+      const neigh = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+      for (const [nx, ny] of neigh) {
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+        const idx = ny * width + nx;
+        if (seen[idx] || data[idx * 4 + 3] < 16) continue;
+        seen[idx] = 1;
+        qx[tail] = nx;
+        qy[tail] = ny;
+        tail += 1;
+        stack.push(idx);
+      }
+    }
+    if (stack.length < minSize) {
+      for (const idx of stack) data[idx * 4 + 3] = 0;
     }
   }
   return imageData;
@@ -763,6 +820,7 @@ export async function prepareArt(dataUrl: string, knock = true, holes = true) {
     knockOut(pixels, holes);
     merchFlatten(pixels);
     merchDespeckle(pixels);
+    dropSmallBlobs(pixels);
     workCtx.putImageData(pixels, 0, 0);
     return trimTransparent(work);
   }
