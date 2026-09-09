@@ -109,6 +109,21 @@ export const THEMES = [
     tags: ["varsity tee", "crest shirt", "collegiate tee"],
   },
   {
+    id: "church",
+    label: "Church",
+    ink: "#1c1712",
+    paper: "#f4eee4",
+    accent: "#c2a36b",
+    motifs: "original cross geometry, dove line, stained-glass facets, revival serif",
+    vibe: "Sunday morning, gospel night, quiet faith, house of worship",
+    hook: "church merch, original cross or dove, stained-glass color, revival type",
+    world:
+      "Church and worship apparel. Original cross geometry, dove, stained-glass facets, hymn-book serif, revival-poster type. Feels like a real house of faith — Sunday merch, not costume. For kids: joyful, simple, age-appropriate. Invented marks only. Never copy Hillsong, Elevation, Passion, or any church logo.",
+    schools:
+      "Gospel concert merch, hymn-book layout, stained-glass composition as schools. Never copy a church, ministry, or Christian-brand logo, ichthys trademark, or known slogan lockup.",
+    tags: ["church shirt", "christian tee", "worship shirt", "faith graphic tee", "gospel tee"],
+  },
+  {
     id: "work",
     label: "Work",
     ink: "#141414",
