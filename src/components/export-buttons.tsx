@@ -54,7 +54,7 @@ export function ExportButtons({
       const next = await buildPrintifyPng(
         still.dataUrl,
         still.productId,
-        still.lens !== "lookbook",
+        true,
       );
       await saveBlob(next.blob, `${base}.png`);
       await saveBlob(next.artBlob, `${base}-art.png`);
@@ -90,7 +90,7 @@ export function ExportButtons({
       const next = await buildPrintifyPng(
         still.dataUrl,
         still.productId,
-        still.lens !== "lookbook",
+        true,
       );
       setPack(next);
     } catch (error) {
@@ -105,15 +105,11 @@ export function ExportButtons({
     try {
       await saveBlob(next.blob, `${base}.png`);
       await saveBlob(next.artBlob, `${base}-art.png`);
-      if (still.lens !== "lookbook") {
-        await downloadSvg(still.dataUrl, `${base}-art.svg`, colors, still.productId, true);
-      }
+      await downloadSvg(still.dataUrl, `${base}-art.svg`, colors, still.productId, true);
       toast.success(
-        still.lens === "lookbook"
-          ? "Saved campaign photo PNG."
-          : next.grade === "print"
-            ? "Saved Printify PNG, transparent art PNG, and SVG."
-            : `Saved. ${GRADE_COPY[next.grade]}`,
+        next.grade === "print"
+          ? "Saved Printify PNG, transparent art PNG, and SVG."
+          : `Saved. ${GRADE_COPY[next.grade]}`,
       );
       setPack(null);
     } catch (error) {
@@ -176,7 +172,6 @@ export function ExportButtons({
             <Image className="size-4" />
             {busy === "png" ? "Saving" : "PNG"}
           </Button>
-          {still.lens !== "lookbook" ? (
           <Button
             variant="outline"
             size={size}
@@ -187,7 +182,6 @@ export function ExportButtons({
             <FileCode2 className="size-4" />
             {busy === "svg" ? "Tracing" : "Vector"}
           </Button>
-          ) : null}
           {onEtsy ? (
             <Button variant="outline" size={size} onClick={onEtsy} title="Etsy listing copy">
               <Store className="size-4" />

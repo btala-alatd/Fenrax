@@ -24,275 +24,118 @@ export const PRODUCTS = [
     label: "Tee",
     suffix:
       " Isolated Printify DTG full-front graphic, 15×18 in canvas. Even #F2F3F5 field, huge empty margin, no garment, no shadow, no mockup.",
-    lookbook:
-      " Photoreal heavyweight t-shirt. Real cotton grain, stitching, neck tape, drape. On-model, hanging, or flat as specified. Not a cheap mockup template.",
   },
   {
     id: "back",
     label: "Back",
     suffix:
       " Isolated Printify DTG full-back graphic, 15×18 in. Giant back print, even #F2F3F5 field, huge margin, no garment.",
-    lookbook:
-      " Photoreal tee or hoodie from behind. Large back print readable, model walking or standing.",
   },
   {
     id: "chest",
     label: "Chest",
     suffix:
       " Isolated Printify left-chest mark, 6×6 in. Compact, thick strokes, even #F2F3F5 field, no hairlines, no garment.",
-    lookbook:
-      " Photoreal left-chest embroidery or small print, three-quarter view, mark at heart.",
   },
   {
     id: "long",
     label: "Long",
     suffix:
       " Isolated Printify long-sleeve front graphic, 15×18 in. Even #F2F3F5 field, huge margin, no sleeve photo.",
-    lookbook:
-      " Photoreal long-sleeve tee. Cuffs, drape, print on the body. Campaign lookbook.",
   },
   {
     id: "tank",
     label: "Tank",
     suffix:
       " Isolated Printify tank-front graphic, 12×16 in. Even #F2F3F5 field, huge margin, no garment.",
-    lookbook:
-      " Photoreal tank top. Armholes, rib, print sitting on the chest. Summer lookbook.",
   },
   {
     id: "hoodie",
     label: "Hoodie",
     suffix:
       " Isolated Printify hoodie-front graphic, 15×18 in. Even #F2F3F5 field, huge margin, no pocket, no cords.",
-    lookbook:
-      " Photoreal heavyweight hoodie. Real fleece, cords, rib, kangaroo pocket, drape. Campaign lookbook.",
   },
   {
     id: "crew",
     label: "Crew",
     suffix:
       " Isolated Printify crewneck graphic, 15×18 in. Even #F2F3F5 field, huge margin, no garment photo.",
-    lookbook:
-      " Photoreal crewneck sweatshirt. Heavy fleece, rib collar, print on the chest.",
   },
   {
     id: "tote",
     label: "Tote",
     suffix:
       " Isolated Printify tote-bag graphic, 14×16 in. Even #F2F3F5 field, centered, no bag photo, no handles.",
-    lookbook:
-      " Photoreal canvas tote. Handles, weave, print on the face. Street still life.",
   },
   {
     id: "hat",
     label: "Hat",
     suffix:
       " Compact Printify cap mark, 6×4 in. Thick geometry, two or three colors, even #F2F3F5 field, no hairline detail.",
-    lookbook:
-      " Photoreal cap. Embroidery on real wool or cotton twill, worn or still life.",
   },
   {
     id: "mug",
     label: "Mug",
     suffix:
       " Printify 11oz mug-wrap graphic, 9×3.75 in landscape. Art in the center third, even #F2F3F5 field, no mug photo, keep sides empty for the handle.",
-    lookbook:
-      " Photoreal 11oz mug on a table. Ceramic, handle, printed wrap visible, product still life.",
   },
   {
     id: "tumbler",
     label: "Drink",
     suffix:
       " Printify tumbler wrap, wide landscape. Even #F2F3F5 field, art centered, no cup photo, wrap-safe.",
-    lookbook:
-      " Photoreal 20oz tumbler, printed wrap, product still life.",
   },
   {
     id: "sticker",
     label: "Sticker",
     suffix:
       " Printify die-cut sticker, 6×6 in. Bold silhouette, thick strokes, even #F2F3F5 field, clean edge.",
-    lookbook:
-      " Die-cut sticker pack shot on a real surface — slate, concrete, or packing table.",
   },
   {
     id: "poster",
     label: "Poster",
     suffix:
       " Isolated Printify poster art, 12×16 in. Even #F2F3F5 field, centered graphic, no frame, no wall.",
-    lookbook:
-      " Campaign poster in a real space — gallery wall, warehouse, or lookbook still life.",
   },
   {
     id: "pillow",
     label: "Pillow",
     suffix:
       " Isolated Printify throw-pillow graphic, 16×16 in square. Even #F2F3F5 field, centered, no pillow photo.",
-    lookbook:
-      " Photoreal throw pillow, print on the face, sofa or bed still life.",
   },
   {
     id: "phone",
     label: "Phone",
     suffix:
       " Isolated Printify phone-case graphic, tall portrait. Even #F2F3F5 field, centered, no case photo, no camera cutout.",
-    lookbook:
-      " Photoreal phone case on a real phone, product still life.",
   },
   {
     id: "baby",
     label: "Baby",
     suffix:
       " Isolated Printify baby-onesie graphic. Compact, thick fills, even #F2F3F5 field, no garment photo.",
-    lookbook:
-      " Photoreal baby onesie, small print on the chest, soft product still life.",
   },
   {
     id: "canvas",
     label: "Canvas",
     suffix:
       " Isolated Printify gallery-canvas art. Even #F2F3F5 field, centered, no frame, no wall.",
-    lookbook:
-      " Gallery canvas on a real wall, lookbook still life.",
   },
   {
     id: "repeat",
     label: "AOP",
     suffix:
       " Seamless tileable all-over print for Printify AOP. Edges match. Original house pattern. Even #F2F3F5 field.",
-    lookbook:
-      " All-over print on a real garment. Camp shirt or tee, fabric rolling with the body.",
   },
 ] as const;
 
 export type ProductId = (typeof PRODUCTS)[number]["id"];
 
-export const PRODUCT_WEAR: Record<
-  ProductId,
-  { garment: string; place: string }
-> = {
-  tee: {
-    garment: "heavyweight short-sleeve t-shirt",
-    place: "full-front DTG print, centered on the chest",
-  },
-  back: {
-    garment: "heavyweight t-shirt or hoodie, photographed from behind",
-    place: "large full-back DTG print",
-  },
-  chest: {
-    garment: "heavyweight t-shirt",
-    place: "small left-chest print or embroidery",
-  },
-  long: {
-    garment: "long-sleeve t-shirt",
-    place: "full-front print on the body",
-  },
-  tank: {
-    garment: "tank top",
-    place: "front chest print",
-  },
-  hoodie: {
-    garment: "heavyweight pullover hoodie with kangaroo pocket and cords",
-    place: "front print above the pocket",
-  },
-  crew: {
-    garment: "crewneck sweatshirt",
-    place: "chest print",
-  },
-  tote: {
-    garment: "canvas tote bag",
-    place: "print on the face of the bag",
-  },
-  hat: {
-    garment: "structured baseball cap",
-    place: "front-panel embroidery",
-  },
-  mug: {
-    garment: "11oz ceramic mug",
-    place: "wrap print on the mug",
-  },
-  tumbler: {
-    garment: "20oz tumbler",
-    place: "wrap print on the tumbler",
-  },
-  sticker: {
-    garment: "die-cut sticker on a real surface",
-    place: "the sticker is the locked art, full size",
-  },
-  poster: {
-    garment: "poster in a real interior",
-    place: "the poster is the locked art on a wall or board",
-  },
-  pillow: {
-    garment: "throw pillow",
-    place: "print on the face of the pillow",
-  },
-  phone: {
-    garment: "phone case on a real phone",
-    place: "the case print is the locked art",
-  },
-  baby: {
-    garment: "baby onesie",
-    place: "small chest print",
-  },
-  canvas: {
-    garment: "gallery canvas on a real wall",
-    place: "the canvas is the locked art",
-  },
-  repeat: {
-    garment: "all-over-print shirt or camp shirt",
-    place: "the locked art as a repeating fabric print",
-  },
-};
-
-export function productWear(id: ProductId) {
-  return PRODUCT_WEAR[id] ?? PRODUCT_WEAR.tee;
-}
-
-export const LOOKBOOK_SHOT: Record<ProductId, string> = {
-  tee: "POSE: standing square to camera, full head in frame, face visible, collar visible. Torso facing camera, arms relaxed, garment front flat. Never crop at the neck.",
-  long: "POSE: standing square to camera, full head in frame, collar visible. Long-sleeve tee front flat. Never crop at the neck.",
-  tank: "POSE: standing square to camera, full head in frame, armholes visible, tank front flat. Never crop at the neck.",
-  hoodie: "POSE: standing square to camera, full head in frame, hood and kangaroo pocket visible, chest above the pocket flat. Never crop at the neck.",
-  crew: "POSE: standing square to camera, full head in frame, rib collar visible, crewneck front flat. Never crop at the neck.",
-  chest: "POSE: three-quarter standing, full head in frame, left chest visible and relatively flat. Never crop at the neck.",
-  back: "POSE: photographed from behind. Head in frame. Back of the garment fully visible and relatively flat.",
-  baby: "POSE: photoreal baby or toddler in a onesie, or a onesie flat lay. Chest and collar visible, blank garment.",
-  tote: "POSE: photoreal canvas tote, standing, hanging, or carried. Front face flat and fully visible. Handles in frame. Blank bag, no print.",
-  hat: "POSE: photoreal baseball cap, worn on a real head or still life. Front panel fully visible and relatively flat. Blank panel, no mark, no fake embroidery.",
-  mug: "POSE: photoreal 11oz ceramic mug still life on a table. Handle to one side. Front face of the mug fully visible. Blank ceramic, no print.",
-  tumbler: "POSE: photoreal 20oz tumbler standing on a surface, still life. Cylinder face fully visible. Blank, no wrap print.",
-  sticker: "POSE: photoreal product still life. A blank die-cut sticker or clean surface ready for the sticker. No printed art.",
-  poster: "POSE: photoreal blank poster or board in a real interior, on a wall or leaning. Empty face, no art.",
-  pillow: "POSE: photoreal throw pillow on a sofa or bed. Front face visible, blank fabric, no print.",
-  phone: "POSE: photoreal phone case on a real phone, back facing camera. Blank case, camera module visible, no printed art.",
-  canvas: "POSE: photoreal blank gallery canvas on a real wall. Empty face, no art.",
-  repeat: "POSE: standing square to camera, full head in frame, all-over-print shirt or camp shirt, garment visible. Blank fabric, no pattern yet.",
-};
-
-export function lookbookShot(id: ProductId, audience?: string) {
-  const kids = audience === "kids";
-  if (kids) {
-    if (id === "back") {
-      return "POSE: a real child age 6–10 photographed from behind. Catalog crop, head to hips, garment fills the frame. Real photo.";
-    }
-    if (id === "baby") {
-      return "POSE: a real toddler age 1–3 in a onesie, catalog crop, chest and collar visible. Real photo, not a drawing.";
-    }
-    if (id === "hat" || id === "mug" || id === "tumbler" || id === "tote" || id === "sticker" || id === "poster" || id === "pillow" || id === "phone" || id === "canvas") {
-      return LOOKBOOK_SHOT[id] ?? LOOKBOOK_SHOT.tee;
-    }
-    return "POSE: a real child age 6–10. Catalog crop head to hips so the garment fills the frame. Full head in frame, collar visible. Not a baby, not a teenager, not an adult in a small shirt. Documentary family-catalog light.";
-  }
-  return LOOKBOOK_SHOT[id] ?? LOOKBOOK_SHOT.tee;
-}
-
 export const LENSES = [
-  { id: "lookbook", label: "Photo" },
   { id: "plate", label: "Graphic" },
 ] as const;
 
-export type LensId = (typeof LENSES)[number]["id"];
+export type LensId = "plate" | "lookbook";
 
 export const LEADS = [
   { id: "brand", label: "Brand", hint: "Mark leads" },
@@ -331,8 +174,7 @@ export const CATEGORIES = [
 
 export type CategoryId = (typeof CATEGORIES)[number]["id"];
 
-export const DROP_SLOTS = {
-  plate: [
+export const DROP_SLOTS = [
     { categoryId: "lockup", leadId: "brand", note: "SKU 01 hero mark. Giant initials. The listing thumbnail." },
     { categoryId: "wordmark", leadId: "brand", note: "SKU 02 wordmark. The house name IS the graphic." },
     { categoryId: "box", leadId: "brand", note: "SKU 03 boxed mark. Centered bar, two colors." },
@@ -343,55 +185,12 @@ export const DROP_SLOTS = {
     { categoryId: "blueprint", leadId: "art", note: "SKU 08 technical plate. Drafting-table graphic." },
     { categoryId: "trail", leadId: "art", note: "SKU 09 outdoor stamp. Ridge and topo." },
     { categoryId: "issue", leadId: "art", note: "SKU 10 catalog issue. Numbered drop energy." },
-  ],
-  lookbook: [
-    { categoryId: "lockup", leadId: "brand", note: "Three-quarter on-model, campaign studio light." },
-    { categoryId: "wordmark", leadId: "brand", note: "Straight-on hero, garment filling the frame." },
-    { categoryId: "box", leadId: "brand", note: "Hanging garment on a rail, print readable." },
-    { categoryId: "tour", leadId: "brand", note: "Model walking, side light, print in motion." },
-    { categoryId: "coords", leadId: "art", note: "Overhead flat lay on a real surface." },
-    { categoryId: "crest", leadId: "brand", note: "Cropped three-quarter, print at the heart." },
-    { categoryId: "slogan", leadId: "brand", note: "Turned away or from behind if the print can read." },
-    { categoryId: "blueprint", leadId: "art", note: "Window light, model on a stool." },
-    { categoryId: "trail", leadId: "art", note: "In motion outdoors or on stairs." },
-    { categoryId: "issue", leadId: "art", note: "Lifestyle still life or paired campaign frame." },
-  ],
-} as const;
-
-export const GARMENT_COLORS = [
-  { id: "shop", label: "Shop", hex: "" },
-  { id: "bone", label: "Bone", hex: "#f4eee4" },
-  { id: "white", label: "White", hex: "#f2f2ee" },
-  { id: "black", label: "Black", hex: "#1c1c1c" },
-  { id: "navy", label: "Navy", hex: "#1a2744" },
-  { id: "forest", label: "Forest", hex: "#1e3a2f" },
 ] as const;
 
-export type GarmentColorId = (typeof GARMENT_COLORS)[number]["id"];
+export const DROP_COUNT = DROP_SLOTS.length;
 
-export function clothHex(id: GarmentColorId, paper: string) {
-  const row = GARMENT_COLORS.find((item) => item.id === id);
-  return row?.hex || paper;
-}
-
-export const LISTING_SHOTS: {
-  productId: ProductId;
-  colorId: GarmentColorId;
-  note: string;
-}[] = [
-  { productId: "tee", colorId: "shop", note: "Hero tee, shop color." },
-  { productId: "hoodie", colorId: "shop", note: "Hoodie, same print." },
-  { productId: "chest", colorId: "shop", note: "Left chest, same print." },
-  { productId: "back", colorId: "shop", note: "Back of the garment, same print." },
-  { productId: "tee", colorId: "black", note: "Tee on a black blank." },
-  { productId: "tee", colorId: "white", note: "Tee on a white blank." },
-];
-
-export const LISTING_COUNT = LISTING_SHOTS.length;
-export const DROP_COUNT = DROP_SLOTS.plate.length;
-
-export function dropSlots(lens: LensId) {
-  return lens === "lookbook" ? DROP_SLOTS.lookbook : DROP_SLOTS.plate;
+export function dropSlots() {
+  return DROP_SLOTS;
 }
 
 const STYLE_ALIASES: Record<string, StyleId> = {
@@ -402,35 +201,11 @@ const STYLE_ALIASES: Record<string, StyleId> = {
   scarf: "floral",
 };
 
-function styleSuffix(styleId: StyleId, brand: Brand, lens: LensId): string {
+function styleSuffix(styleId: StyleId, brand: Brand): string {
   const initials = brand.initials.trim() || brand.name.trim().slice(0, 2).toUpperCase() || "mark";
   const name = brand.name.trim() || "the house";
   const theme = themeOf(brand);
   const world = theme.label.toLowerCase();
-  if (lens === "lookbook") {
-    switch (styleId) {
-      case "drop":
-        return ` Campaign hero light, catalog-sharp. Blank garment.`;
-      case "chrome":
-        return ` Futuristic campaign light, metallic hardware. Blank garment, no graphic.`;
-      case "vintage":
-        return ` Vintage-wash cotton, lived-in garment, blank chest.`;
-      case "type":
-        return ` Editorial catalog light. Blank garment.`;
-      case "line":
-        return ` Quiet editorial light, lots of fabric showing, blank chest.`;
-      case "tattoo":
-        return ` Warehouse grit, bold merch photo, blank garment.`;
-      case "floral":
-        return ` Soft fashion light, blank garment.`;
-      case "liquid":
-        return ` Sculptural fashion light, blank garment.`;
-      case "grunge":
-        return ` Skater lookbook, warehouse grit, blank garment.`;
-      case "vector":
-        return ` Clean studio light, sharp cotton, blank chest.`;
-    }
-  }
   switch (styleId) {
     case "drop":
       return ` Hero merch drop. One giant ${world} idea, oversized ${initials}, billboard-simple, thumbnail-killer. ${theme.hook}.`;
@@ -455,7 +230,7 @@ function styleSuffix(styleId: StyleId, brand: Brand, lens: LensId): string {
   }
 }
 
-function categorySuffix(categoryId: CategoryId, brand: Brand, lens: LensId): string {
+function categorySuffix(categoryId: CategoryId, brand: Brand): string {
   const name = brand.name.trim() || "the house";
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
   const upper = name.toUpperCase();
@@ -508,29 +283,18 @@ function categorySuffix(categoryId: CategoryId, brand: Brand, lens: LensId): str
         return ` Category ISSUE — numbered catalog drop. “${upper.slice(0, 8)} / 01” and EST. 2026. Editorial grid, one giant motif.`;
     }
   })();
-  if (lens === "lookbook") {
-    return ` Photo only. Blank garment. Do not draw any ${categoryId} graphic.`;
-  }
   return graphic;
 }
 
-function animeSuffix(brand: Brand, lens: LensId): string {
+function animeSuffix(brand: Brand): string {
   const name = brand.name.trim() || "the house";
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
-  const core =
-    ` ANIME MODE. Original anime / manga merch for ${name}. Cel-shaded, bold ink line, fashion-forward 2026 J-streetwear. Invented character, creature, or scene that belongs to this house — ${initials} as a quiet mark. Never copy Naruto, Dragon Ball, One Piece, Ghibli, Demon Slayer, or any existing IP. Thumbnail-bold. Limited house palette.`;
-  if (lens === "lookbook") {
-    return `${core} Photoreal blank garment, no graphic. The print will be composited later.`;
-  }
-  return `${core} Isolated 2D anime graphic, print-ready, huge margin.`;
+  return ` ANIME MODE. Original anime / manga merch for ${name}. Cel-shaded, bold ink line, fashion-forward 2026 J-streetwear. Invented character, creature, or scene that belongs to this house — ${initials} as a quiet mark. Never copy Naruto, Dragon Ball, One Piece, Ghibli, Demon Slayer, or any existing IP. Thumbnail-bold. Limited house palette. Isolated 2D anime graphic, print-ready, huge margin.`;
 }
 
-function leadSuffix(leadId: LeadId, brand: Brand, lens: LensId = "plate"): string {
+function leadSuffix(leadId: LeadId, brand: Brand): string {
   const name = brand.name.trim() || "the house";
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
-  if (lens === "lookbook") {
-    return ` Blank garment. No graphic.`;
-  }
   if (leadId === "art") {
     return ` LEAD ART. The design is the hero — illustration, motif, scene, texture — 90% of the frame. Branding is a whisper: tiny ${initials} or 8pt ${name}, like a woven neck label. No giant wordmark, no chest-spanning name. Genius pass: invent a new image. Risk. One unforgettable idea. Unlimited original invention, never a template.`;
   }
@@ -572,92 +336,8 @@ export const EXAMPLE_TEMPLATES = [
   },
 ] as const;
 
-export const LOOKBOOK_TEMPLATES = [
-  {
-    title: "Cyclorama",
-    styleId: "drop" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "3:4" as AspectRatioId,
-    prompt:
-      "Photorealistic studio product shot of a heavyweight {ink} {NAME} t-shirt, small embroidered {motifs} mark at left chest, {paper} interior neck tape, worn by a lean male model three-quarter view, white cyclorama, hard directional light, 8k fashion campaign",
-  },
-  {
-    title: "Back graphic",
-    styleId: "drop" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "3:4" as AspectRatioId,
-    prompt:
-      "Oversized {paper} {NAME} tee, large tonal {ink} back graphic of {motifs} dissolving into motion lines, small {accent} mark on the front left chest, model walking, side light, high-end streetwear lookbook",
-  },
-  {
-    title: "Type flat lay",
-    styleId: "type" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "1:1" as AspectRatioId,
-    prompt:
-      "Deep {ink} {NAME} t-shirt, centered front typography in condensed custom sans with the {initials} mark cutting the first letter, subtle reflective ink, flat lay on raw concrete, overhead lighting",
-  },
-  {
-    title: "Studio woman",
-    styleId: "line" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "3:4" as AspectRatioId,
-    prompt:
-      "{ink} {NAME} long-sleeve, {accent} contrast stitching at seams and cuff, small repeated {motifs} pattern down the left sleeve, worn by a female model arms crossed, dark studio, rim light",
-  },
-  {
-    title: "Hanging vintage",
-    styleId: "vintage" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "3:4" as AspectRatioId,
-    prompt:
-      "Vintage-wash {paper} {NAME} tee, cracked {ink} print of {motifs}, distressed collar, hanging on a metal hanger against white brick",
-  },
-  {
-    title: "Warehouse rear",
-    styleId: "drop" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "3:4" as AspectRatioId,
-    prompt:
-      "Black {NAME} boxy tee, full-back abstract graphic in {accent} and {paper} lines forming {motifs}, tiny front mark, model from behind, warehouse location, cinematic lighting",
-  },
-  {
-    title: "Window light",
-    styleId: "type" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "3:4" as AspectRatioId,
-    prompt:
-      "{ink} {NAME} oversized tee, large outlined {paper} mark on the back with “{NAME} / EST.” stacked underneath in small type, model sitting on a stool, soft window light",
-  },
-  {
-    title: "High-key mark",
-    styleId: "line" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "3:4" as AspectRatioId,
-    prompt:
-      "{paper} {NAME} t-shirt, front chest print of {motifs} forming the {NAME} mark, {accent} on one line only, worn by a male model looking off-camera, high-key studio",
-  },
-  {
-    title: "Motion stairs",
-    styleId: "drop" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "3:4" as AspectRatioId,
-    prompt:
-      "Deep {ink} {NAME} shirt, front graphic of {motifs} over a topographic map in {paper} and {accent}, high-density print, model in motion on outdoor concrete stairs",
-  },
-  {
-    title: "Campaign pair",
-    styleId: "type" as StyleId,
-    productId: "tee" as ProductId,
-    aspectRatio: "3:2" as AspectRatioId,
-    prompt:
-      "{ink} {NAME} campaign tee, large back print in outlined type with the mark cutting through the letters, small matching front mark, two models standing together, desaturated warehouse set, cinematic grade",
-  },
-] as const;
-
-export function examplesFor(brand: Brand, lens: LensId = "lookbook") {
-  const pack = lens === "lookbook" ? LOOKBOOK_TEMPLATES : EXAMPLE_TEMPLATES;
-  return pack.map((example) => ({
+export function examplesFor(brand: Brand) {
+  return EXAMPLE_TEMPLATES.map((example) => ({
     ...example,
     prompt: fillBrand(example.prompt, brand),
   }));
@@ -690,13 +370,11 @@ export function composePrompt(
   styleId: StyleId,
   productId: ProductId,
   brand: Brand,
-  lens: LensId = "lookbook",
+  _lens: LensId = "plate",
   salt = "",
   categoryId: CategoryId = "lockup",
   leadId: LeadId = "brand",
   anime = false,
-  garmentHex?: string,
-  garmentLabel?: string,
 ): string {
   const trimmed = prompt.trim();
   const name = brand.name.trim() || "the house";
@@ -709,18 +387,12 @@ export function composePrompt(
   const theme = themeOf(brand);
   const women = brand.audience === "women";
   const kids = brand.audience === "kids";
-  const lookbook = lens === "lookbook";
-  const audienceLine = lookbook
-    ? kids
-      ? "KIDSWEAR lookbook. A REAL child age 6–10 wearing a real youth garment. Documentary catalog photo, skin pores, cotton weave. Not an adult, not a baby, not a CGI child."
-      : women
-        ? "WOMENSWEAR collection. Female model, women's fit (relaxed, cropped, or oversized fashion). Shot for a women's clothing brand."
-        : "MENSWEAR collection. Male model, men's fit (boxy, oversized, dropped shoulder). Shot for a men's clothing brand."
-    : kids
-      ? "Designed for a KIDS clothing shop. Playful, thumbnail-bold, original house only. Age-appropriate. Never copy Disney, Pokémon, Marvel, Paw Patrol, Hello Kitty, Labubu, or any existing character."
-      : women
-        ? "Designed for a WOMEN'S clothing shop. Feminine merch energy, thumbnail-bold, original house only."
-        : "Designed for a MEN'S clothing shop. Masculine merch energy, thumbnail-bold, original house only.";
+  const who = kids ? "kids" : women ? "women's" : "men's";
+  const audienceLine = kids
+    ? "Designed for a KIDS clothing shop. Playful, thumbnail-bold, original house only. Age-appropriate. Never copy Disney, Pokémon, Marvel, Paw Patrol, Hello Kitty, Labubu, or any existing character."
+    : women
+      ? "Designed for a WOMEN'S clothing shop. Feminine merch energy, thumbnail-bold, original house only."
+      : "Designed for a MEN'S clothing shop. Masculine merch energy, thumbnail-bold, original house only.";
   const kidsCraft = kids
     ? "Kids merch craft 2023–2026: chunky type, rounded geometry, color-block, original animal or mascot, one giant idea. Study Mini Rodini / Bobo Choses / TAO / Primary / Patagonia Kids as composition only. Never copy their marks. No movie characters, no clipart, no kawaii anime, no Disney proportions."
     : "";
@@ -732,62 +404,32 @@ export function composePrompt(
         ? "CHURCH is direction, not a cage. Women's shop: Scripture and faith as fashion. Accurate verse plus citation if you set type, or invented stained-glass / dove / house mark. Editorial, feminine, joyful, reverent. You pick the line and the picture."
         : "CHURCH is direction, not a cage. Men's shop: Scripture and faith as merch. Accurate verse plus citation if you set type, or invented revival geometry. Masculine, joyful, reverent. You pick the line and the picture."
     : "";
-  const originalLock =
-    "Original house only — not generic, not clipart, not a copy. Theme and audience are a compass. Full designer freedom inside that compass.";
-  const churchSet = church
-    ? kids
-      ? "Photoreal Sunday place a child would actually stand — courtyard, steps, bright churchyard. Real photo, not a drawing."
-      : women
-        ? "Photoreal Sunday place for a women's lookbook — chapel light, garden, or street after service. Real photo, not a drawing."
-        : "Photoreal Sunday place for a men's lookbook — church steps, brick sanctuary, or night street. Real photo, not a drawing."
-    : `Photoreal ${theme.label.toLowerCase()} location only — real street, lodge, studio, or interior. Place and wardrobe, never a drawing style.`;
-  const who = kids ? "kids" : women ? "women's" : "men's";
-  const wear = productWear(productId);
-  if (lookbook) {
-    const shot = [
-      "REAL PHOTOGRAPH of a real human. Catalog fashion photo, 85mm lens, f/2.8, 8k, visible skin pores, cotton weave, stitching, neck tape. Shot on a camera.",
-      "NOT illustration, NOT anime, NOT manga, NOT cartoon, NOT comic, NOT 3D render, NOT digital painting, NOT cel-shading, NOT a drawing, NOT Pixar, NOT CGI.",
-      `PRODUCT: a real blank ${wear.garment}. ${audienceLine}`,
-      "BLANK PRODUCT: empty print area. No graphic, no logo, no letters, no fake print. Unmarked. A real print file will be composited after.",
-      lookbookShot(productId, brand.audience),
-      `SET: ${churchSet}`,
-      `Garment color: a real ${garmentLabel || "shop"} ${wear.garment}, solid color ${garmentHex || paper}. Unmarked cloth.`,
-      `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
-      notes,
-      salt ? `New pose and set ${salt}. Still a real photo, still a blank product.` : "",
-      trimmed
-        ? trimmed
-        : `Photograph a real blank ${wear.garment}. Empty print area.`,
-    ]
-      .filter(Boolean)
-      .join(" ");
-    return shot.slice(0, MAX_COMPOSED);
-  }
   const direction = [
-        `You are a professional merch art director designing a Printify print FILE for ${name}.`,
-        `House: ${name}. Mark: ${initials}. Motifs: ${brand.motifs.trim() || theme.motifs}.`,
-        `Direction: ${theme.label} for ${who}. ${theme.world} Use that as a starting world, not a cage.`,
-        `${theme.hook}.`,
-        audienceLine,
-        `Palette only — ink ${ink}, paper ${paper}, accent ${accent}. Two or three colors. No extra hues.`,
-        `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
-        notes,
-        kidsCraft,
-        churchCraft,
-        originalLock,
-        "PRINT FILE, not a photo. No model, no body, no fabric, no hanger, no wrinkles, no cyclorama, no mockup, no watermark, no UI chrome.",
-        "Isolated 2D graphic centered on a perfectly even matte #F2F3F5 field. The field is empty studio, not part of the design. Uniform RGB 242,243,245 — no gradient, no vignette, no floor, no drop shadow.",
-        "Huge empty margin. Art occupies 60–75% of the frame. Billboard-simple. Readable as a 200px thumbnail.",
-        "Solid fills, thick strokes. No hairlines. No drop shadow under the art. No paper grain behind it.",
-        "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
-        "Ultra-sharp merch illustration. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
-        "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",
-        `Invent original ${name} merch. Compass: ${theme.label} × ${who}. Full designer freedom inside that. Never copy a known logo or trademark.`,
-        "Craft bar: flagship, original, sharper than a mall tee.",
-        salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
-      ];
+    `You are a professional merch art director designing a Printify print FILE for ${name}.`,
+    `House: ${name}. Mark: ${initials}. Motifs: ${brand.motifs.trim() || theme.motifs}.`,
+    `Direction: ${theme.label} for ${who}. ${theme.world} Use that as a starting world, not a cage.`,
+    `${theme.hook}.`,
+    audienceLine,
+    `Palette only — ink ${ink}, paper ${paper}, accent ${accent}. Two or three colors. No extra hues.`,
+    `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
+    notes,
+    kidsCraft,
+    churchCraft,
+    "Original house only — not generic, not clipart, not a copy. Theme and audience are a compass. Full designer freedom inside that compass.",
+    "PRINT FILE for Printify Product Creator. Isolated 2D graphic only.",
+    "Never a photo. Never a model. Never a body. Never a garment. Never fabric texture. Never a hanger. Never wrinkles. Never a mockup. Never a lifestyle shot. Never a watermark. Never UI chrome.",
+    "Centered on a perfectly even matte #F2F3F5 field. Uniform RGB 242,243,245 — no gradient, no vignette, no floor, no drop shadow. The field is empty studio, not part of the design.",
+    "Huge empty margin. Art occupies 60–75% of the frame. Billboard-simple. Readable as a 200px thumbnail.",
+    "Solid fills, thick strokes. No hairlines. No drop shadow under the art. No paper grain behind it.",
+    "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
+    "Ultra-sharp merch illustration. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
+    "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",
+    `Invent original ${name} merch. Compass: ${theme.label} × ${who}. Full designer freedom inside that. Never copy a known logo or trademark.`,
+    "Craft bar: flagship Printify art, original, sharper than a mall tee.",
+    salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
+  ];
   const productBit = product?.suffix ?? "";
-  const suffix = `${anime ? animeSuffix(brand, lens) : ""}${leadSuffix(leadId, brand, lens)}${categorySuffix(categoryId, brand, lens)}${styleSuffix(styleId, brand, lens)}${productBit}`;
+  const suffix = `${anime ? animeSuffix(brand) : ""}${leadSuffix(leadId, brand)}${categorySuffix(categoryId, brand)}${styleSuffix(styleId, brand)}${productBit}`;
   const idea = trimmed
     ? trimmed
     : `You are the designer. Compass: ${theme.label} for ${who}. Full freedom. One unforgettable original idea. Do not ask. Just draw.`;
@@ -821,11 +463,11 @@ export function coerceProductId(value: unknown): ProductId {
 }
 
 export function isLensId(value: string): value is LensId {
-  return LENSES.some((item) => item.id === value);
+  return value === "plate" || value === "lookbook";
 }
 
-export function coerceLensId(value: unknown): LensId {
-  return typeof value === "string" && isLensId(value) ? value : "lookbook";
+export function coerceLensId(_value: unknown): LensId {
+  return "plate";
 }
 
 export function isCategoryId(value: string): value is CategoryId {

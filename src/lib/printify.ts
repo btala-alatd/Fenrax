@@ -586,6 +586,46 @@ export async function toTransparentPng(dataUrl: string, holes = true) {
   return canvasToPngDataUrl(art);
 }
 
+function isSkinTone(r: number, g: number, b: number) {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  return r > 70 && r >= g && r > b + 6 && max - min > 12 && g > 28 && b < r - 4;
+}
+
+export async function looksLikePhoto(dataUrl: string) {
+  try {
+    const image = await loadImage(dataUrl);
+    const w = 64;
+    const h = 64;
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return false;
+    ctx.drawImage(image, 0, 0, w, h);
+    const { data } = ctx.getImageData(0, 0, w, h);
+    let skin = 0;
+    let n = 0;
+    const y1 = Math.floor(h * 0.52);
+    const x0 = Math.floor(w * 0.22);
+    const x1 = Math.floor(w * 0.78);
+    for (let y = 0; y < y1; y += 1) {
+      for (let x = x0; x < x1; x += 1) {
+        const i = (y * w + x) * 4;
+        n += 1;
+        if (isSkinTone(data[i], data[i + 1], data[i + 2])) skin += 1;
+      }
+    }
+    return n > 0 && skin / n > 0.1;
+  } catch {
+    return false;
+  }
+}
+
+export async function finishPrintFile(dataUrl: string) {
+  return toTransparentPng(dataUrl, true);
+}
+
 function canvasToPngDataUrl(canvas: HTMLCanvasElement): string {
   return canvas.toDataURL("image/png");
 }

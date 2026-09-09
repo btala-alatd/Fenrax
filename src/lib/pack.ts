@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { brandSlug, themeOf, type Brand } from "@/lib/brand";
 import { rasterToSvgFromArt } from "@/lib/export";
 import { buildEtsyListing } from "@/lib/etsy";
-import { dataUrlToBlob, toPngDataUrl } from "@/lib/image-file";
+import { dataUrlToBlob } from "@/lib/image-file";
 import { saveBlob } from "@/lib/save-to";
 import {
   PRINTIFY_CATALOG,
@@ -61,10 +61,7 @@ async function addGeneratedImage(
   index: number,
 ) {
   const stem = stillStem(still, index);
-  const png =
-    still.lens === "lookbook"
-      ? await toPngDataUrl(still.dataUrl)
-      : await toTransparentPng(still.dataUrl, true);
+  const png = await toTransparentPng(still.dataUrl, true);
   const blob = dataUrlToBlob(png);
   zip.file(`${root}/images/${stem}.png`, blob, { compression: "STORE" });
   zip.file(`${root}/${stem}/image.png`, blob, { compression: "STORE" });
@@ -122,7 +119,7 @@ async function addPrintifyFolder(
   folder: string,
 ) {
   const colors = [brand.ink, brand.paper, brand.accent];
-  const printFile = still.lens !== "lookbook";
+  const printFile = true;
   const art = await prepareArt(still.dataUrl, printFile, printFile);
   await yieldTick();
   const print = await buildPrintifyFromArt(art, still.productId, !printFile);
@@ -180,45 +177,4 @@ export async function zipPrintifyPack(
   return root;
 }
 
-export async function zipListingPack(
-  plate: Still,
-  photos: Still[],
-  brand: Brand,
-  onProgress?: (done: number, total: number) => void,
-) {
-  const slug = brandSlug(brand);
-  const root = `${slug}-listing-${stamp()}`;
-  const zip = new JSZip();
-  zip.file(`${root}/brand/brand.json`, JSON.stringify(brand, null, 2));
-  zip.file(
-    `${root}/brand/readme.txt`,
-    [
-      `${brand.name} listing pack`,
-      "",
-      "printify/     upload these to Printify Product Creator",
-      "photos/       on-model shots of that same print",
-      "listing/      Etsy title, tags, description",
-      "",
-      `House: ${brand.name}`,
-      `Theme: ${themeOf(brand).label}`,
-      `Shots: ${photos.length}`,
-    ].join("\n"),
-  );
-  onProgress?.(1, photos.length + 1);
-  await addPrintifyFolder(zip, plate, brand, root);
-  for (let i = 0; i < photos.length; i += 1) {
-    onProgress?.(i + 2, photos.length + 1);
-    const still = photos[i];
-    const name = `${String(i + 1).padStart(2, "0")}-${segment(still.productId)}.png`;
-    const png = await toPngDataUrl(still.dataUrl);
-    zip.file(`${root}/photos/${name}`, dataUrlToBlob(png), { compression: "STORE" });
-    await yieldTick();
-  }
-  const packed = await zip.generateAsync({
-    type: "blob",
-    compression: "DEFLATE",
-    compressionOptions: { level: 6 },
-  });
-  await saveBlob(packed, `${root}.zip`);
-  return root;
-}
+
