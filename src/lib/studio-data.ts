@@ -249,6 +249,31 @@ export function productWear(id: ProductId) {
   return PRODUCT_WEAR[id] ?? PRODUCT_WEAR.tee;
 }
 
+export const LOOKBOOK_SHOT: Record<ProductId, string> = {
+  tee: "POSE: standing square to camera, full head in frame, face visible, collar visible. Torso facing camera, arms relaxed, garment front flat. Never crop at the neck.",
+  long: "POSE: standing square to camera, full head in frame, collar visible. Long-sleeve tee front flat. Never crop at the neck.",
+  tank: "POSE: standing square to camera, full head in frame, armholes visible, tank front flat. Never crop at the neck.",
+  hoodie: "POSE: standing square to camera, full head in frame, hood and kangaroo pocket visible, chest above the pocket flat. Never crop at the neck.",
+  crew: "POSE: standing square to camera, full head in frame, rib collar visible, crewneck front flat. Never crop at the neck.",
+  chest: "POSE: three-quarter standing, full head in frame, left chest visible and relatively flat. Never crop at the neck.",
+  back: "POSE: photographed from behind. Head in frame. Back of the garment fully visible and relatively flat.",
+  baby: "POSE: photoreal baby or toddler in a onesie, or a onesie flat lay. Chest and collar visible, blank garment.",
+  tote: "POSE: photoreal canvas tote, standing, hanging, or carried. Front face flat and fully visible. Handles in frame. Blank bag, no print.",
+  hat: "POSE: photoreal baseball cap, worn on a real head or still life. Front panel fully visible and relatively flat. Blank panel, no mark, no fake embroidery.",
+  mug: "POSE: photoreal 11oz ceramic mug still life on a table. Handle to one side. Front face of the mug fully visible. Blank ceramic, no print.",
+  tumbler: "POSE: photoreal 20oz tumbler standing on a surface, still life. Cylinder face fully visible. Blank, no wrap print.",
+  sticker: "POSE: photoreal product still life. A blank die-cut sticker or clean surface ready for the sticker. No printed art.",
+  poster: "POSE: photoreal blank poster or board in a real interior, on a wall or leaning. Empty face, no art.",
+  pillow: "POSE: photoreal throw pillow on a sofa or bed. Front face visible, blank fabric, no print.",
+  phone: "POSE: photoreal phone case on a real phone, back facing camera. Blank case, camera module visible, no printed art.",
+  canvas: "POSE: photoreal blank gallery canvas on a real wall. Empty face, no art.",
+  repeat: "POSE: standing square to camera, full head in frame, all-over-print shirt or camp shirt, garment visible. Blank fabric, no pattern yet.",
+};
+
+export function lookbookShot(id: ProductId) {
+  return LOOKBOOK_SHOT[id] ?? LOOKBOOK_SHOT.tee;
+}
+
 export const LENSES = [
   { id: "lookbook", label: "Photo" },
   { id: "plate", label: "Graphic" },
@@ -710,20 +735,16 @@ export function composePrompt(
       "REAL PHOTOGRAPH of a real human. Catalog fashion photo, 85mm lens, f/2.8, 8k, visible skin pores, cotton weave, stitching, neck tape. Shot on a camera.",
       "NOT illustration, NOT anime, NOT manga, NOT cartoon, NOT comic, NOT 3D render, NOT digital painting, NOT cel-shading, NOT a drawing.",
       `PRODUCT: a real blank ${wear.garment}. ${audienceLine}`,
-      "BLANK GARMENT: empty chest and back. No graphic, no logo, no letters, no fake print, no illustration on the fabric. Unmarked cloth. A real print file will be composited after.",
-      productId === "back"
-        ? "POSE: photographed from behind. Head in frame. Back of the garment fully visible and relatively flat."
-        : "POSE: standing square to camera, full head in frame, face visible, collar visible. Torso facing camera, arms relaxed at the sides, garment front flat. Never crop at the neck.",
+      "BLANK PRODUCT: empty print area. No graphic, no logo, no letters, no fake print. Unmarked. A real print file will be composited after.",
+      lookbookShot(productId),
       `SET: ${churchSet}`,
       `Garment color: a real ${garmentLabel || "shop"} ${wear.garment}, solid color ${garmentHex || paper}. Unmarked cloth.`,
       `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
       notes,
-      salt ? `New pose and set ${salt}. Still a real photo, still a blank garment.` : "",
+      salt ? `New pose and set ${salt}. Still a real photo, still a blank product.` : "",
       trimmed
         ? trimmed
-        : productId === "back"
-          ? `Photograph a real person from behind in a blank ${wear.garment}. Empty back.`
-          : `Photograph a real person in a blank ${wear.garment}. Empty chest.`,
+        : `Photograph a real blank ${wear.garment}. Empty print area.`,
     ]
       .filter(Boolean)
       .join(" ");

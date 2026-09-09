@@ -141,7 +141,110 @@ function garmentBox(image: ImageData) {
   };
 }
 
-function printArea(image: ImageData, productId: ProductId, scale = 1) {
+const APPAREL = new Set<ProductId>([
+  "tee",
+  "long",
+  "tank",
+  "hoodie",
+  "crew",
+  "chest",
+  "back",
+  "baby",
+  "repeat",
+]);
+
+const OBJECT_PLACE: Record<
+  string,
+  { cx: number; cy: number; w: number; h: number; taper: number }
+> = {
+  hat: { cx: 0.5, cy: 0.36, w: 0.42, h: 0.34, taper: 0.88 },
+  mug: { cx: 0.47, cy: 0.48, w: 0.56, h: 0.52, taper: 0.92 },
+  tumbler: { cx: 0.5, cy: 0.48, w: 0.6, h: 0.7, taper: 0.9 },
+  tote: { cx: 0.5, cy: 0.54, w: 0.72, h: 0.58, taper: 1 },
+  sticker: { cx: 0.5, cy: 0.5, w: 0.9, h: 0.9, taper: 1 },
+  poster: { cx: 0.5, cy: 0.5, w: 0.84, h: 0.88, taper: 1 },
+  pillow: { cx: 0.5, cy: 0.5, w: 0.78, h: 0.78, taper: 1 },
+  phone: { cx: 0.5, cy: 0.56, w: 0.78, h: 0.7, taper: 0.98 },
+  canvas: { cx: 0.5, cy: 0.5, w: 0.88, h: 0.9, taper: 1 },
+};
+
+function samplePoint(productId: ProductId, width: number, height: number) {
+  const map: Partial<Record<ProductId, [number, number]>> = {
+    hat: [0.5, 0.28],
+    mug: [0.48, 0.52],
+    tumbler: [0.5, 0.5],
+    tote: [0.5, 0.55],
+    phone: [0.5, 0.56],
+    pillow: [0.5, 0.5],
+    poster: [0.5, 0.5],
+    canvas: [0.5, 0.5],
+    sticker: [0.5, 0.5],
+  };
+  const [fx, fy] = map[productId] ?? [0.5, 0.48];
+  return [Math.floor(width * fx), Math.floor(height * fy)] as const;
+}
+
+function objectBox(image: ImageData, productId: ProductId) {
+  const { width, height, data } = image;
+  const [sx, sy] = samplePoint(productId, width, height);
+  const i0 = (sy * width + sx) * 4;
+  let key = [data[i0], data[i0 + 1], data[i0 + 2]] as const;
+  if (isSkin(key[0], key[1], key[2])) {
+    const j = (Math.min(height - 2, sy + Math.floor(height * 0.12)) * width + sx) * 4;
+    key = [data[j], data[j + 1], data[j + 2]];
+  }
+  let minX = width;
+  let minY = height;
+  let maxX = 0;
+  let maxY = 0;
+  const x0 = Math.floor(width * 0.06);
+  const x1 = Math.floor(width * 0.94);
+  const y0 = Math.floor(height * 0.06);
+  const y1 = Math.floor(height * 0.94);
+  for (let y = y0; y < y1; y += 2) {
+    for (let x = x0; x < x1; x += 2) {
+      const i = (y * width + x) * 4;
+      if (isSkin(data[i], data[i + 1], data[i + 2])) continue;
+      if (Math.abs(data[i] - key[0]) + Math.abs(data[i + 1] - key[1]) + Math.abs(data[i + 2] - key[2]) > 96) {
+        continue;
+      }
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX - minX < width * 0.1 || maxY - minY < height * 0.1) {
+    return {
+      x: Math.floor(width * 0.28),
+      y: Math.floor(height * 0.28),
+      w: Math.floor(width * 0.44),
+      h: Math.floor(height * 0.44),
+    };
+  }
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+
+function objectArea(image: ImageData, productId: ProductId, scale: number) {
+  const spec = OBJECT_PLACE[productId] ?? OBJECT_PLACE.tote;
+  const grow = Math.min(1.12, Math.max(0.85, scale));
+  const box = objectBox(image, productId);
+  let w = box.w * spec.w * grow;
+  let h = box.h * spec.h * grow;
+  let x = box.x + box.w * spec.cx - w / 2;
+  let y = box.y + box.h * spec.cy - h / 2;
+  x = Math.max(2, Math.min(x, image.width - w - 2));
+  y = Math.max(2, Math.min(y, image.height - h - 2));
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    w: Math.round(Math.max(20, w)),
+    h: Math.round(Math.max(20, h)),
+    taper: spec.taper,
+  };
+}
+
+function apparelArea(image: ImageData, productId: ProductId, scale: number) {
   const place = placeOf(productId);
   const grow = Math.min(1.12, Math.max(0.85, scale));
   const { width, height } = image;
@@ -179,6 +282,11 @@ function printArea(image: ImageData, productId: ProductId, scale = 1) {
     h: Math.round(Math.max(24, h)),
     taper: place.taper,
   };
+}
+
+function printArea(image: ImageData, productId: ProductId, scale = 1) {
+  if (APPAREL.has(productId)) return apparelArea(image, productId, scale);
+  return objectArea(image, productId, scale);
 }
 
 function punchLightField(source: HTMLCanvasElement) {
