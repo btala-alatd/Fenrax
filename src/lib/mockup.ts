@@ -1,44 +1,38 @@
 import { loadImage } from "@/lib/image-file";
-import { prepareArt, printifyPreset } from "@/lib/printify";
+import { prepareArt } from "@/lib/printify";
 import type { ProductId } from "@/lib/studio-data";
 
 type Place = {
   cx: number;
   taper: number;
-  width: number;
-  drop: number;
-  cover: number;
+  gapIn: number;
+  widthIn: number;
+  maxHIn: number;
 };
 
 const PLACE: Record<ProductId, Place> = {
-  tee: { cx: 0.5, taper: 0.95, width: 0.78, drop: 0.11, cover: 0.78 },
-  long: { cx: 0.5, taper: 0.95, width: 0.76, drop: 0.11, cover: 0.78 },
-  tank: { cx: 0.5, taper: 0.96, width: 0.74, drop: 0.12, cover: 0.76 },
-  hoodie: { cx: 0.5, taper: 0.94, width: 0.76, drop: 0.12, cover: 0.58 },
-  crew: { cx: 0.5, taper: 0.95, width: 0.76, drop: 0.11, cover: 0.72 },
-  chest: { cx: 0.3, taper: 0.98, width: 0.24, drop: 0.11, cover: 0.28 },
-  back: { cx: 0.5, taper: 0.95, width: 0.8, drop: 0.1, cover: 0.8 },
-  baby: { cx: 0.5, taper: 0.96, width: 0.72, drop: 0.12, cover: 0.74 },
-  tote: { cx: 0.5, taper: 1, width: 0.8, drop: 0.08, cover: 0.82 },
-  hat: { cx: 0.5, taper: 0.86, width: 0.62, drop: 0.12, cover: 0.5 },
-  mug: { cx: 0.48, taper: 0.9, width: 0.7, drop: 0.1, cover: 0.7 },
-  tumbler: { cx: 0.5, taper: 0.92, width: 0.56, drop: 0.08, cover: 0.78 },
-  sticker: { cx: 0.5, taper: 1, width: 0.72, drop: 0.06, cover: 0.84 },
-  poster: { cx: 0.5, taper: 1, width: 0.78, drop: 0.06, cover: 0.88 },
-  pillow: { cx: 0.5, taper: 1, width: 0.8, drop: 0.08, cover: 0.84 },
-  phone: { cx: 0.5, taper: 0.98, width: 0.74, drop: 0.08, cover: 0.82 },
-  canvas: { cx: 0.5, taper: 1, width: 0.82, drop: 0.06, cover: 0.88 },
-  repeat: { cx: 0.5, taper: 0.96, width: 0.9, drop: 0.04, cover: 0.9 },
+  tee: { cx: 0.5, taper: 0.96, gapIn: 3.5, widthIn: 12, maxHIn: 14 },
+  long: { cx: 0.5, taper: 0.96, gapIn: 3.5, widthIn: 12, maxHIn: 14 },
+  tank: { cx: 0.5, taper: 0.96, gapIn: 3.25, widthIn: 11, maxHIn: 13 },
+  hoodie: { cx: 0.5, taper: 0.95, gapIn: 4.25, widthIn: 11, maxHIn: 12 },
+  crew: { cx: 0.5, taper: 0.96, gapIn: 3.75, widthIn: 12, maxHIn: 13 },
+  chest: { cx: 0.28, taper: 0.99, gapIn: 3.5, widthIn: 4, maxHIn: 4 },
+  back: { cx: 0.5, taper: 0.96, gapIn: 3.5, widthIn: 13, maxHIn: 15 },
+  baby: { cx: 0.5, taper: 0.97, gapIn: 2.5, widthIn: 8, maxHIn: 9 },
+  tote: { cx: 0.5, taper: 1, gapIn: 1.5, widthIn: 12, maxHIn: 13 },
+  hat: { cx: 0.5, taper: 0.86, gapIn: 0.6, widthIn: 2.25, maxHIn: 2.25 },
+  mug: { cx: 0.48, taper: 0.9, gapIn: 0.6, widthIn: 3, maxHIn: 3.5 },
+  tumbler: { cx: 0.5, taper: 0.92, gapIn: 0.4, widthIn: 2.5, maxHIn: 6 },
+  sticker: { cx: 0.5, taper: 1, gapIn: 0.2, widthIn: 3, maxHIn: 3 },
+  poster: { cx: 0.5, taper: 1, gapIn: 0.4, widthIn: 12, maxHIn: 16 },
+  pillow: { cx: 0.5, taper: 1, gapIn: 0.8, widthIn: 12, maxHIn: 12 },
+  phone: { cx: 0.5, taper: 0.98, gapIn: 0.2, widthIn: 2.4, maxHIn: 5 },
+  canvas: { cx: 0.5, taper: 1, gapIn: 0.5, widthIn: 12, maxHIn: 16 },
+  repeat: { cx: 0.5, taper: 0.96, gapIn: 0.4, widthIn: 16, maxHIn: 18 },
 };
 
 function placeOf(id: ProductId): Place {
   return PLACE[id] ?? PLACE.tee;
-}
-
-function printInches(productId: ProductId) {
-  const match = printifyPreset(productId).inches.match(/([\d.]+)\s*[×x]\s*([\d.]+)/);
-  if (!match) return { w: 15, h: 18 };
-  return { w: Number(match[1]), h: Number(match[2]) };
 }
 
 function canvasToPng(canvas: HTMLCanvasElement): Promise<string> {
@@ -69,15 +63,13 @@ function isSkin(r: number, g: number, b: number) {
 function neckFloor(image: ImageData, productId: ProductId) {
   const { width, height, data } = image;
   if (productId === "back" || productId === "tote" || productId === "poster" || productId === "canvas") {
-    return Math.floor(height * 0.2);
+    return Math.floor(height * 0.18);
   }
   const x0 = Math.floor(width * 0.34);
   const x1 = Math.floor(width * 0.66);
-  const y0 = Math.floor(height * 0.06);
-  const y1 = Math.floor(height * 0.56);
-  let last = Math.floor(height * 0.34);
+  let last = Math.floor(height * 0.32);
   let found = false;
-  for (let y = y0; y < y1; y += 2) {
+  for (let y = Math.floor(height * 0.06); y < height * 0.55; y += 2) {
     let skin = 0;
     let n = 0;
     for (let x = x0; x < x1; x += 3) {
@@ -90,8 +82,7 @@ function neckFloor(image: ImageData, productId: ProductId) {
       found = true;
     }
   }
-  if (!found) return Math.floor(height * 0.36);
-  return last;
+  return found ? last : Math.floor(height * 0.34);
 }
 
 function chestRun(image: ImageData, y: number) {
@@ -104,7 +95,7 @@ function chestRun(image: ImageData, y: number) {
   };
   const key = at(cx);
   if (isSkin(key[0], key[1], key[2])) {
-    return { left: Math.floor(width * 0.28), right: Math.floor(width * 0.72) };
+    return { left: Math.floor(width * 0.29), right: Math.floor(width * 0.71) };
   }
   const close = (x: number) => {
     const p = at(x);
@@ -116,34 +107,35 @@ function chestRun(image: ImageData, y: number) {
   while (left > 2 && close(left - 1)) left -= 1;
   while (right < width - 3 && close(right + 1)) right += 1;
   if (right - left < width * 0.22) {
-    return { left: Math.floor(width * 0.28), right: Math.floor(width * 0.72) };
+    return { left: Math.floor(width * 0.29), right: Math.floor(width * 0.71) };
   }
   return { left, right };
 }
 
 function printArea(image: ImageData, productId: ProductId, scale = 1) {
   const place = placeOf(productId);
-  const inches = printInches(productId);
-  const ratio = inches.h / Math.max(0.1, inches.w);
-  const grow = Math.min(1.15, Math.max(0.8, scale));
+  const grow = Math.min(1.12, Math.max(0.85, scale));
   const { width, height } = image;
   const neck = neckFloor(image, productId);
-  const top = Math.min(
-    Math.floor(height * 0.72),
-    neck + Math.round(height * place.drop),
-  );
-  const run = chestRun(image, top + height * 0.08);
-  const chest = Math.max(32, run.right - run.left);
-  let w = chest * place.width * grow;
-  let h = w * ratio;
-  const hem = Math.floor(top + (height - top) * place.cover);
+  const sampleY = Math.min(height - 2, neck + Math.round(height * 0.08));
+  const run = chestRun(image, sampleY);
+  const chest = Math.max(48, run.right - run.left);
+  const pxPerIn = chest / 20;
+  const gap = Math.round(place.gapIn * pxPerIn);
+  const top = Math.min(Math.floor(height * 0.7), neck + gap);
+  let w = place.widthIn * pxPerIn * grow;
+  let h = place.maxHIn * pxPerIn * grow;
+  const hem = productId === "hoodie" || productId === "crew"
+    ? Math.floor(top + 12.5 * pxPerIn)
+    : Math.floor(height * 0.88);
   const maxH = Math.max(32, hem - top);
   if (h > maxH) {
+    const s = maxH / h;
     h = maxH;
-    w = h / ratio;
+    w *= s;
   }
   let x = run.left + chest * place.cx - w / 2;
-  x = Math.max(0, Math.min(x, width - w));
+  x = Math.max(4, Math.min(x, width - w - 4));
   const y = Math.max(0, Math.min(top, height - h));
   return {
     x: Math.round(x),
@@ -154,32 +146,80 @@ function printArea(image: ImageData, productId: ProductId, scale = 1) {
   };
 }
 
-function tightInk(source: HTMLCanvasElement) {
+function keepDenseInk(source: HTMLCanvasElement) {
   const ctx = source.getContext("2d", { willReadFrequently: true });
   if (!ctx) return source;
   const image = ctx.getImageData(0, 0, source.width, source.height);
   const { data, width, height } = image;
-  for (let i = 0; i < data.length; i += 4) {
-    const a = data[i + 3];
-    if (a < 56) {
-      data[i + 3] = 0;
-      continue;
+  const cs = 16;
+  const gw = Math.ceil(width / cs);
+  const gh = Math.ceil(height / cs);
+  const dense = new Uint8Array(gw * gh);
+  for (let gy = 0; gy < gh; gy += 1) {
+    for (let gx = 0; gx < gw; gx += 1) {
+      let ink = 0;
+      let n = 0;
+      const x1 = Math.min(width, (gx + 1) * cs);
+      const y1 = Math.min(height, (gy + 1) * cs);
+      for (let y = gy * cs; y < y1; y += 1) {
+        for (let x = gx * cs; x < x1; x += 1) {
+          n += 1;
+          if (data[(y * width + x) * 4 + 3] >= 80) ink += 1;
+        }
+      }
+      if (n && ink / n >= 0.14) dense[gy * gw + gx] = 1;
     }
-    const maxc = Math.max(data[i], data[i + 1], data[i + 2]);
-    const minc = Math.min(data[i], data[i + 1], data[i + 2]);
-    if (maxc > 210 && minc > 188 && a < 160) data[i + 3] = 0;
   }
+  const seen = new Uint8Array(gw * gh);
+  let best: number[] = [];
+  const stack: number[] = [];
+  for (let i = 0; i < dense.length; i += 1) {
+    if (!dense[i] || seen[i]) continue;
+    stack.length = 0;
+    stack.push(i);
+    seen[i] = 1;
+    const blob: number[] = [];
+    while (stack.length) {
+      const cur = stack.pop()!;
+      blob.push(cur);
+      const x = cur % gw;
+      const y = (cur / gw) | 0;
+      const next = [cur - 1, cur + 1, cur - gw, cur + gw];
+      const ok = [x > 0, x + 1 < gw, y > 0, y + 1 < gh];
+      for (let k = 0; k < 4; k += 1) {
+        if (!ok[k]) continue;
+        const n = next[k];
+        if (n < 0 || n >= dense.length || seen[n] || !dense[n]) continue;
+        seen[n] = 1;
+        stack.push(n);
+      }
+    }
+    if (blob.length > best.length) best = blob;
+  }
+  const keep = new Uint8Array(gw * gh);
+  for (const i of best) keep[i] = 1;
+  for (let i = 0; i < data.length; i += 4) {
+    const px = (i / 4) % width;
+    const py = ((i / 4) / width) | 0;
+    const gx = Math.min(gw - 1, (px / cs) | 0);
+    const gy = Math.min(gh - 1, (py / cs) | 0);
+    if (!keep[gy * gw + gx] || data[i + 3] < 64) {
+      data[i + 3] = 0;
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+
   const row = new Uint32Array(height);
   const col = new Uint32Array(width);
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      if (data[(y * width + x) * 4 + 3] < 56) continue;
+      if (data[(y * width + x) * 4 + 3] < 64) continue;
       row[y] += 1;
       col[x] += 1;
     }
   }
-  const rowMin = Math.max(8, Math.floor(width * 0.01));
-  const colMin = Math.max(8, Math.floor(height * 0.01));
+  const rowMin = Math.max(10, Math.floor(width * 0.02));
+  const colMin = Math.max(10, Math.floor(height * 0.02));
   let minY = 0;
   let maxY = height - 1;
   let minX = 0;
@@ -189,7 +229,6 @@ function tightInk(source: HTMLCanvasElement) {
   while (minX < width && col[minX] < colMin) minX += 1;
   while (maxX > minX && col[maxX] < colMin) maxX -= 1;
   if (maxX <= minX || maxY <= minY) return source;
-  ctx.putImageData(image, 0, 0);
   const cut = document.createElement("canvas");
   cut.width = maxX - minX + 1;
   cut.height = maxY - minY + 1;
@@ -207,7 +246,7 @@ function fitArt(areaW: number, areaH: number, artW: number, artH: number) {
     w,
     h,
     x: Math.round((areaW - w) / 2),
-    y: Math.round((areaH - h) * 0.1),
+    y: Math.round(Math.max(0, (areaH - h) * 0.04)),
   };
 }
 
@@ -245,7 +284,7 @@ function sitInFabric(photo: ImageData, overlay: ImageData, ox: number, oy: numbe
     for (let x = 0; x < ow; x += 1) {
       const oi = (y * ow + x) * 4;
       const a = od[oi + 3] / 255;
-      if (a < 0.28) continue;
+      if (a < 0.45) continue;
       const px = ox + x;
       const py = oy + y;
       if (px < 0 || py < 0 || px >= pw || py >= photo.height) continue;
@@ -253,8 +292,8 @@ function sitInFabric(photo: ImageData, overlay: ImageData, ox: number, oy: numbe
       const fr = pd[pi];
       const fg = pd[pi + 1];
       const fb = pd[pi + 2];
-      const light = 0.64 + 0.36 * ((fr + fg + fb) / 765);
-      const ia = Math.min(1, a * 0.95);
+      const light = 0.66 + 0.34 * ((fr + fg + fb) / 765);
+      const ia = Math.min(1, a * 0.94);
       pd[pi] = Math.round(fr * (1 - ia) + od[oi] * light * ia);
       pd[pi + 1] = Math.round(fg * (1 - ia) + od[oi + 1] * light * ia);
       pd[pi + 2] = Math.round(fb * (1 - ia) + od[oi + 2] * light * ia);
@@ -269,7 +308,7 @@ export async function stampPrintOnGarment(
   scale = 1,
 ): Promise<string> {
   const photo = await loadImage(photoUrl);
-  const art = tightInk(await prepareArt(artUrl, true, true));
+  const art = keepDenseInk(await prepareArt(artUrl, true, true));
   const width = photo.naturalWidth || photo.width;
   const height = photo.naturalHeight || photo.height;
 
