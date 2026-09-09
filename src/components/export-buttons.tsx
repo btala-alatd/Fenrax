@@ -75,7 +75,7 @@ export function ExportButtons({
     setBusy("svg");
     try {
       await downloadSvg(still.dataUrl, `${base}-art.svg`, colors, still.productId, true);
-      toast.success("Vector SVG saved.");
+      toast.success("Screen-print SVG saved — few colors, no dust.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save vector.");
     } finally {

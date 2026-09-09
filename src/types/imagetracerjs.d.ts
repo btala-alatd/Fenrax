@@ -7,6 +7,7 @@ declare module "imagetracerjs" {
     qtres?: number;
     strokewidth?: number;
     blurradius?: number;
+    blurdelta?: number;
     linefilter?: boolean;
     rightangleenhance?: boolean;
     scale?: number;
