@@ -14,9 +14,9 @@ import type { Still } from "@/lib/studio-data";
 import { cn } from "@/lib/utils";
 
 const GRADE_COPY = {
-  print: "Print-ready. 300 DPI on this canvas.",
-  soft: "A bit soft on a full front. Fine for a smaller placement.",
-  draft: "Below the DPI floor for a full front. Left-chest, or print anyway.",
+  print: "Print-ready. Full 300 DPI canvas for this product.",
+  soft: "Scaled onto the Printify canvas. Fine for a full front if the lines stay clean.",
+  draft: "Scaled onto the Printify canvas from a small plate. Print a new one if it looks soft on the shirt.",
 } as const;
 
 export function ExportButtons({
@@ -231,11 +231,11 @@ function PrintifySheet({
         </div>
         <div className="space-y-1">
           <p className="text-sm font-medium">
-            {pack.artWidth}×{pack.artHeight} transparent PNG · {pack.dpi} DPI if you fill a {pack.preset.inches} {pack.preset.label.toLowerCase()}
+            {pack.artWidth}×{pack.artHeight} PNG · {pack.dpi} DPI {pack.preset.label.toLowerCase()}
           </p>
           <p className="text-sm text-muted-foreground">{GRADE_COPY[pack.grade]}</p>
           <p className="text-sm text-muted-foreground">
-            {PRINTIFY_CATALOG[pack.preset.id]}. No background. No mockup. One file.
+            {PRINTIFY_CATALOG[pack.preset.id]}. Transparent graphic. Drop this on the shirt.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

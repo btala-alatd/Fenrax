@@ -876,25 +876,83 @@ function canvasToPngDataUrl(canvas: HTMLCanvasElement): string {
   return canvas.toDataURL("image/png");
 }
 
+function makeSizedCanvas(width: number, height: number) {
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    if (canvas.width !== width || canvas.height !== height) return null;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    return { canvas, ctx, width, height };
+  } catch {
+    return null;
+  }
+}
+
 export async function buildPrintifyFromArt(
   art: HTMLCanvasElement,
   productId: ProductId,
   _opaque = false,
 ): Promise<PrintifyBuild> {
   const preset = printifyPreset(productId);
-  const { dpi, grade, scale } = evaluateArtworkResolution(art.width, art.height, preset);
-  const artPng = withDpi(await canvasToPng(art), DPI);
-  const artBlob = new Blob([artPng], { type: "image/png" });
+  const source = evaluateArtworkResolution(art.width, art.height, preset);
+
+  const attempts = [
+    { width: preset.width, height: preset.height },
+    { width: Math.round(preset.width * 0.8), height: Math.round(preset.height * 0.8) },
+    { width: Math.round(preset.width * (2 / 3)), height: Math.round(preset.height * (2 / 3)) },
+  ];
+
+  let made: ReturnType<typeof makeSizedCanvas> = null;
+  for (const size of attempts) {
+    made = makeSizedCanvas(size.width, size.height);
+    if (made) break;
+  }
+
+  if (!made) {
+    const artPng = withDpi(await canvasToPng(art), DPI);
+    const artBlob = new Blob([artPng], { type: "image/png" });
+    return {
+      blob: artBlob,
+      artBlob,
+      preset,
+      previewUrl: canvasToPngDataUrl(art),
+      artWidth: art.width,
+      artHeight: art.height,
+      scale: source.scale,
+      dpi: source.dpi,
+      grade: source.grade,
+      transparent: true,
+    };
+  }
+
+  const { canvas, ctx, width, height } = made;
+  const innerW = width * (1 - PAD * 2);
+  const innerH = height * (1 - PAD * 2);
+  const fit = Math.min(innerW / Math.max(1, art.width), innerH / Math.max(1, art.height));
+  const dw = art.width * fit;
+  const dh = art.height * fit;
+  const dx = (width - dw) / 2;
+  const dy = (height - dh) / 2;
+  ctx.clearRect(0, 0, width, height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(art, dx, dy, dw, dh);
+
+  const png = withDpi(await canvasToPng(canvas), DPI);
+  const blob = new Blob([png], { type: "image/png" });
+  const fileDpi = Math.round(DPI * (width / preset.width));
   return {
-    blob: artBlob,
-    artBlob,
+    blob,
+    artBlob: blob,
     preset,
     previewUrl: canvasToPngDataUrl(art),
-    artWidth: art.width,
-    artHeight: art.height,
-    scale,
-    dpi,
-    grade,
+    artWidth: width,
+    artHeight: height,
+    scale: fit,
+    dpi: fileDpi,
+    grade: source.grade,
     transparent: true,
   };
 }

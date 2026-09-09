@@ -75,6 +75,40 @@ function parseDataUrl(value: unknown): string {
   return value;
 }
 
+function probeImageSize(dataUrl: string): { width: number; height: number } | null {
+  try {
+    const comma = dataUrl.indexOf(",");
+    if (comma < 0) return null;
+    const buf = Buffer.from(dataUrl.slice(comma + 1), "base64");
+    if (buf.length >= 24 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
+      return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+    }
+    if (buf.length > 16 && buf[0] === 0xff && buf[1] === 0xd8) {
+      let i = 2;
+      while (i < buf.length - 8) {
+        if (buf[i] !== 0xff) break;
+        const marker = buf[i + 1]!;
+        const len = buf.readUInt16BE(i + 2);
+        if (marker === 0xc0 || marker === 0xc1 || marker === 0xc2) {
+          return { height: buf.readUInt16BE(i + 5), width: buf.readUInt16BE(i + 7) };
+        }
+        i += 2 + len;
+      }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function longEdge(dataUrl: string) {
+  const size = probeImageSize(dataUrl);
+  if (!size) return 0;
+  return Math.max(size.width, size.height);
+}
+
+const MIN_PRINT_EDGE = 1600;
+
 function parseGoogleKey(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const key = value.trim();
@@ -235,7 +269,7 @@ async function callGoogleOnce(
   aspect: AspectRatioId,
   imageDataUrl?: string,
 ): Promise<ImagineResult> {
-  const models = ["gemini-2.5-flash-image", "gemini-3.1-flash-image"];
+  const models = ["gemini-3.1-flash-image", "gemini-2.5-flash-image"];
   const ratio = googleAspect(aspect);
   const source = imageDataUrl ? splitDataUrl(imageDataUrl) : null;
   const parts: Record<string, unknown>[] = [{ text: prompt }];
@@ -249,54 +283,66 @@ async function callGoogleOnce(
   }
 
   let lastError = "Google could not finish that plate.";
+  let best: ImagineResult | null = null;
+  let bestEdge = 0;
   const sizes = ["4K", "2K"];
   for (const model of models) {
     for (const imageSize of sizes) {
-    let res: Response;
-    try {
-      res = await fetchJson(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": apiKey,
-          },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts }],
-            generationConfig: {
-              responseModalities: ["TEXT", "IMAGE"],
-              imageConfig: { aspectRatio: ratio, imageSize },
+      let res: Response;
+      try {
+        res = await fetchJson(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": apiKey,
             },
-          }),
-        },
-      );
-    } catch (error) {
-      lastError = isNetworkError(error)
-        ? "Could not reach Google. Try again."
-        : "Google misfired. Try again.";
-      continue;
-    }
+            body: JSON.stringify({
+              contents: [{ role: "user", parts }],
+              generationConfig: {
+                responseModalities: ["TEXT", "IMAGE"],
+                imageConfig: { aspectRatio: ratio, imageSize },
+              },
+            }),
+          },
+        );
+      } catch (error) {
+        lastError = isNetworkError(error)
+          ? "Could not reach Google. Try again."
+          : "Google misfired. Try again.";
+        continue;
+      }
 
-    let body: unknown = null;
-    try {
-      body = await res.json();
-    } catch {
-      body = null;
-    }
+      let body: unknown = null;
+      try {
+        body = await res.json();
+      } catch {
+        body = null;
+      }
 
-    if (!res.ok) {
-      lastError = googleFriendly(res.status, body);
-      if (res.status === 404 || res.status === 400) continue;
-      return { ok: false, error: lastError };
-    }
+      if (!res.ok) {
+        lastError = googleFriendly(res.status, body);
+        if (res.status === 404 || res.status === 400) continue;
+        continue;
+      }
 
-    const dataUrl = extractGoogleImage(body);
-    if (dataUrl) return { ok: true, dataUrl };
-    lastError = "Google returned an empty plate.";
+      const dataUrl = extractGoogleImage(body);
+      if (!dataUrl) {
+        lastError = "Google returned an empty plate.";
+        continue;
+      }
+      const edge = longEdge(dataUrl);
+      if (edge > bestEdge) {
+        best = { ok: true, dataUrl };
+        bestEdge = edge;
+      }
+      if (edge >= MIN_PRINT_EDGE) return { ok: true, dataUrl };
+      break;
     }
   }
 
+  if (best?.ok) return best;
   return { ok: false, error: lastError };
 }
 
@@ -376,7 +422,7 @@ const GENERATE_BODY = {
   model: "grok-imagine-image-2.0",
   n: 1 as const,
   resolution: "2k",
-  quality: "high",
+  quality: "medium",
   response_format: "url",
 };
 
@@ -389,14 +435,24 @@ async function printWith(
   imageDataUrl?: string,
 ): Promise<ImagineResult> {
   const google = resolveGoogleKey(googleKey);
+  let best: ImagineResult | null = null;
+  let bestEdge = 0;
   if (google) {
     const fromGoogle = await callGoogleOnce(google, prompt, aspectRatio, imageDataUrl);
-    if (fromGoogle.ok) return fromGoogle;
-    const xai = await callImagine(path, payload);
-    if (xai.ok) return xai;
-    return fromGoogle;
+    if (fromGoogle.ok) {
+      const edge = longEdge(fromGoogle.dataUrl);
+      if (edge >= MIN_PRINT_EDGE) return fromGoogle;
+      best = fromGoogle;
+      bestEdge = edge;
+    }
   }
-  return callImagine(path, payload);
+  const xai = await callImagine(path, payload);
+  if (xai.ok) {
+    const edge = longEdge(xai.dataUrl);
+    if (edge >= bestEdge) return xai;
+  }
+  if (best) return best;
+  return xai;
 }
 
 export const generateStill = createServerFn({ method: "POST" })
