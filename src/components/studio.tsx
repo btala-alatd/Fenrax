@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { applyAudience, applyTheme, AUDIENCES, THEMES, themeOf, useBrand, type Brand } from "@/lib/brand";
 import { printifyPreset, toTransparentPng } from "@/lib/printify";
+import { stampPrintOnGarment } from "@/lib/mockup";
 import { useGallery } from "@/lib/gallery";
 import { readImageFile } from "@/lib/image-file";
 import { zipGeneratedImages, zipPrintifyPack } from "@/lib/pack";
@@ -208,8 +209,9 @@ export function Studio() {
         aspectRatio: nextRatio,
         anime,
         note: "",
-        edit: nextLens === "lookbook" || mode === "edit",
-        source: nextLens === "lookbook" ? lookbookArt : sourceImage,
+        edit: nextLens !== "lookbook" && mode === "edit",
+        source: nextLens === "lookbook" ? null : sourceImage,
+        artUrl: lookbookArt,
       });
       if (!still) return;
       setCurrent(still);
@@ -260,15 +262,22 @@ export function Studio() {
         ? plates.length >= 2
           ? plates.slice(0, poses.length).map((plate, index) => ({
               ...poses[index % poses.length]!,
-              source: plate.dataUrl,
-              edit: true,
+              source: null as string | null,
+              artUrl: plate.dataUrl,
+              edit: false,
             }))
           : poses.map((slot) => ({
               ...slot,
-              source: plates[0]?.dataUrl ?? sourceImage,
-              edit: true,
+              source: null as string | null,
+              artUrl: plates[0]?.dataUrl ?? sourceImage,
+              edit: false,
             }))
-        : poses.map((slot) => ({ ...slot, source: null as string | null, edit: false }));
+        : poses.map((slot) => ({
+            ...slot,
+            source: null as string | null,
+            artUrl: null as string | null,
+            edit: false,
+          }));
     setPending(true);
     let printed = 0;
     let last: Still | null = null;
@@ -290,6 +299,7 @@ export function Studio() {
               note: job.note,
               edit: job.edit,
               source: job.source,
+              artUrl: job.artUrl,
             }),
           ),
         );
@@ -336,6 +346,7 @@ export function Studio() {
     note,
     edit,
     source,
+    artUrl,
   }: {
     prompt: string;
     styleId: StyleId;
@@ -348,6 +359,7 @@ export function Studio() {
     note: string;
     edit: boolean;
     source?: string | null;
+    artUrl?: string | null;
   }): Promise<Still | null> {
     const seed = [nextPrompt.trim(), note.trim()].filter(Boolean).join(". ");
     const composedPrompt = composePrompt(
@@ -408,9 +420,11 @@ export function Studio() {
     }
 
     const pngUrl =
-      nextLens === "lookbook"
-        ? result.dataUrl
-        : await toTransparentPng(result.dataUrl, true).catch(() => result.dataUrl);
+      nextLens === "lookbook" && artUrl
+        ? await stampPrintOnGarment(result.dataUrl, artUrl, nextProduct)
+        : nextLens === "lookbook"
+          ? result.dataUrl
+          : await toTransparentPng(result.dataUrl, true).catch(() => result.dataUrl);
     const still: Still = {
       id: crypto.randomUUID(),
       prompt: nextPrompt || "Designer pick",

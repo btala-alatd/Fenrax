@@ -342,25 +342,25 @@ function styleSuffix(styleId: StyleId, brand: Brand, lens: LensId): string {
   if (lens === "lookbook") {
     switch (styleId) {
       case "drop":
-        return ` Campaign hero light. One garment, one locked print, one light.`;
+        return ` Campaign hero light, catalog-sharp. Blank garment.`;
       case "chrome":
-        return ` Futuristic campaign light, metallic hardware on a real garment. Do not restyle the print.`;
+        return ` Futuristic campaign light, metallic hardware. Blank garment, no graphic.`;
       case "vintage":
-        return ` Vintage-wash garment, lived-in cotton. The locked print sits in the fabric, slightly cracked. Do not draw a new graphic.`;
+        return ` Vintage-wash cotton, lived-in garment, blank chest.`;
       case "type":
-        return ` Editorial type-driven merch photo. The locked print is the type. Do not rewrite it.`;
+        return ` Editorial catalog light. Blank garment.`;
       case "line":
-        return ` Quiet editorial light, lots of fabric showing around the locked print.`;
+        return ` Quiet editorial light, lots of fabric showing, blank chest.`;
       case "tattoo":
-        return ` Bold merch photo, warehouse grit. The locked print is already the flash.`;
+        return ` Warehouse grit, bold merch photo, blank garment.`;
       case "floral":
-        return ` Soft fashion light. The locked print is the botanical. Do not invent new flowers.`;
+        return ` Soft fashion light, blank garment.`;
       case "liquid":
-        return ` Sculptural fashion light on a real garment. Keep the locked print.`;
+        return ` Sculptural fashion light, blank garment.`;
       case "grunge":
-        return ` Skater lookbook, warehouse grit. The locked print is already the zine graphic.`;
+        return ` Skater lookbook, warehouse grit, blank garment.`;
       case "vector":
-        return ` Clean studio light, sharp cotton. The locked print stays two-color and exact.`;
+        return ` Clean studio light, sharp cotton, blank chest.`;
     }
   }
   switch (styleId) {
@@ -441,7 +441,7 @@ function categorySuffix(categoryId: CategoryId, brand: Brand, lens: LensId): str
     }
   })();
   if (lens === "lookbook") {
-    return ` Photo only — do not invent a new ${categoryId} graphic. The attached print is already the art.`;
+    return ` Photo only. Blank garment. Do not draw any ${categoryId} graphic.`;
   }
   return graphic;
 }
@@ -452,7 +452,7 @@ function animeSuffix(brand: Brand, lens: LensId): string {
   const core =
     ` ANIME MODE. Original anime / manga merch for ${name}. Cel-shaded, bold ink line, fashion-forward 2026 J-streetwear. Invented character, creature, or scene that belongs to this house — ${initials} as a quiet mark. Never copy Naruto, Dragon Ball, One Piece, Ghibli, Demon Slayer, or any existing IP. Thumbnail-bold. Limited house palette.`;
   if (lens === "lookbook") {
-    return `${core} Photoreal garment wearing the locked print. If that print is already anime, keep it. Do not draw a new character. The photo is fashion; the print stays the attached file.`;
+    return `${core} Photoreal blank garment, no graphic. The print will be composited later.`;
   }
   return `${core} Isolated 2D anime graphic, print-ready, huge margin.`;
 }
@@ -461,7 +461,7 @@ function leadSuffix(leadId: LeadId, brand: Brand, lens: LensId = "plate"): strin
   const name = brand.name.trim() || "the house";
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
   if (lens === "lookbook") {
-    return ` The attached print file is the only graphic on the garment. Do not add extra marks.`;
+    return ` Blank garment. No graphic.`;
   }
   if (leadId === "art") {
     return ` LEAD ART. The design is the hero — illustration, motif, scene, texture — 90% of the frame. Branding is a whisper: tiny ${initials} or 8pt ${name}, like a woven neck label. No giant wordmark, no chest-spanning name. Genius pass: invent a new image. Risk. One unforgettable idea. Unlimited original invention, never a template.`;
@@ -658,17 +658,15 @@ export function composePrompt(
   const wear = productWear(productId);
   const direction = lookbook
     ? [
-        `You are a fashion photographer shooting existing ${name} merch. You are not designing a new graphic.`,
-        `PRODUCT LOCK: the subject MUST be a real ${wear.garment}. Not a different product. Not a mockup generator. Real fabric, seams, drape, labels.`,
-        `ART LOCK: the attached image is the print file. Place that EXACT graphic as a ${wear.place}. Keep lettering, colors, and layout identical. Do not invent, replace, restyle, or add a new design.`,
-        "Photoreal campaign photo. On-model, hanging, or still life. 8k fashion. Keep the real scene — studio, street, warehouse, apartment. Do not delete the backdrop.",
-        `Brand: ${name}.`,
-        `Direction: ${theme.label} for ${who}. ${theme.world} Use that as set and styling, not a new graphic.`,
-        audienceLine,
+        `You are a catalog fashion photographer. Shot on an 85mm lens, f/2.8, natural window light plus a soft key. 8k, visible cotton weave, real seams, real drape. No AI mush, no beauty-filter skin, no plastic fabric.`,
+        `PRODUCT LOCK: a real ${wear.garment} only. ${audienceLine}`,
+        `BLANK GARMENT: empty chest and back. No graphic, no logo, no illustration, no letters, no fake print. The fabric is unmarked. A print will be composited later.`,
+        `POSE LOCK: standing square to camera, torso facing camera, arms relaxed at the sides, garment front fully visible and relatively flat so a print can sit on it.`,
+        `Shirt / garment color close to ${paper}. Set and styling follow ${theme.label} for ${who}. ${theme.world}`,
+        `Keep the real scene — studio, street, warehouse, lodge, apartment. Photoreal. Not a mockup generator, not a ghost mannequin.`,
         `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
         notes,
-        "Craft bar: flagship campaign of the existing drop.",
-        salt ? `New pose and set ${salt}. Same garment, same locked print.` : "",
+        salt ? `New pose and set ${salt}. Still blank garment, still square to camera.` : "",
       ]
     : [
         `You are a professional merch art director designing a Printify print FILE for ${name}.`,
@@ -685,20 +683,20 @@ export function composePrompt(
         "Huge empty margin. Art occupies 60–75% of the frame. Billboard-simple. Readable as a 200px thumbnail.",
         "Solid fills, thick strokes. No hairlines. No drop shadow under the art. No paper grain behind it.",
         "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
-        "One giant idea. Not a clipart collage.",
+        "Ultra-sharp merch illustration. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
         "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",
         `Invent original ${name} merch in that ${theme.label.toLowerCase()} feeling. Full designer freedom. Never copy a known logo or trademark.`,
         "Craft bar: flagship drop, sharper than a mall tee.",
         salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
       ];
   const productBit = lookbook
-    ? ` Wear a real ${wear.garment} with the locked print as a ${wear.place}. ${product?.lookbook ?? ""}`
+    ? ` Blank ${wear.garment}, empty print area, square to camera. ${product?.lookbook ?? ""}`
     : (product?.suffix ?? "");
   const suffix = `${anime ? animeSuffix(brand, lens) : ""}${leadSuffix(leadId, brand, lens)}${categorySuffix(categoryId, brand, lens)}${styleSuffix(styleId, brand, lens)}${productBit}`;
   const idea = trimmed
     ? trimmed
     : lookbook
-      ? `Shoot the locked print on the ${wear.garment}. New pose, real scene. Do not draw a new graphic.`
+      ? `Catalog photo of a blank ${wear.garment}. Empty chest. No graphic.`
       : `Invent a flagship ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. You are the designer. Full freedom. One unforgettable idea. Do not ask. Just draw.`;
   const composed = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
   return composed.slice(0, MAX_COMPOSED);

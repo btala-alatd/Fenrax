@@ -121,7 +121,7 @@ async function fetchJson(url: string, init: RequestInit, attempt = 0): Promise<R
   try {
     const res = await fetch(url, {
       ...init,
-      signal: init.signal ?? AbortSignal.timeout(90_000),
+      signal: init.signal ?? AbortSignal.timeout(120_000),
     });
     return res;
   } catch (error) {
