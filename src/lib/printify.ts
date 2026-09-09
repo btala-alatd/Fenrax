@@ -439,7 +439,8 @@ function knockOut(imageData: ImageData, holes = true) {
       let hits = 0;
       for (let i = 0; i < marked.length; i += 1) hits += marked[i];
       const ratio = hits / marked.length;
-      if (ratio < 0.02 || ratio > 0.97) continue;
+      if (ratio < 0.02) continue;
+      if (darkField ? ratio > 0.994 : ratio > 0.97) continue;
       if (hits > bestHits) {
         bestHits = hits;
         bestMarked = marked;
@@ -469,6 +470,23 @@ function knockOut(imageData: ImageData, holes = true) {
   if (knocked < marked.length * 0.02) return imageData;
   defringe(data, width, height, ground, marked);
   despill(data);
+
+  const corner = (x: number, y: number) => {
+    const i = (y * width + x) * 4;
+    return data[i + 3] > 200 && pixelLuma(data[i], data[i + 1], data[i + 2]) < 36;
+  };
+  if (corner(0, 0) && corner(width - 1, 0) && corner(0, height - 1) && corner(width - 1, height - 1)) {
+    const retry = floodKnock(imageData, { r: 0, g: 0, b: 0 }, 40, 42);
+    let extra = 0;
+    for (let idx = 0; idx < retry.length; idx += 1) {
+      if (!retry[idx] || data[idx * 4 + 3] < 16) continue;
+      data[idx * 4 + 3] = 0;
+      extra += 1;
+    }
+    if (extra > retry.length * 0.02) {
+      defringe(data, width, height, { r: 0, g: 0, b: 0 }, retry);
+    }
+  }
   return imageData;
 }
 

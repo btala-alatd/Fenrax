@@ -389,14 +389,19 @@ export function composePrompt(
   const kidsCraft = kids
     ? "Kids merch craft 2023–2026: chunky type, rounded geometry, color-block, original animal or mascot, one giant idea. Study Mini Rodini / Bobo Choses / TAO / Primary / Patagonia Kids as composition only. Never copy their marks. No movie characters, no clipart, no kawaii anime, no Disney proportions."
     : "";
-  const church = theme.id === "church";
+  const spelled = name
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "")
+    .split("")
+    .join("-");
+  const typeLaw = `TYPE LAW. Spell ${name.toUpperCase()} exactly, letter by letter: ${spelled || initials}. Every letter, in order, none extra, none missing, none cropped off the edge. If you set a slogan or Scripture, write every word in full — LOVE ONE ANOTHER not OVE ONE ANO HER; WALK IN LOVE not WALK N LOVE. Never dummy latin. Never scramble. If a phrase will not fit, use fewer complete words on a straight line — never a tight arch that clips letters. Letter holes in O A R D P B stay open.`;
   const churchCraft = church
     ? kids
-      ? "CHURCH is direction, not a cage. Kids Sunday merch: joyful, age-appropriate, a true Bible line plus citation if type is the idea — or an invented faithful picture. Reverent and fun. Never scary, never sarcasm about God."
+      ? `CHURCH is direction, not a cage. Kids Sunday merch: joyful, age-appropriate. ${typeLaw} Reverent and fun. Never scary, never sarcasm about God.`
       : women
-        ? "CHURCH is direction, not a cage. Women's shop: Scripture and faith as fashion. Accurate verse plus citation if you set type, or invented stained-glass / dove / house mark. Editorial, feminine, joyful, reverent. You pick the line and the picture."
-        : "CHURCH is direction, not a cage. Men's shop: Scripture and faith as merch. Accurate verse plus citation if you set type, or invented revival geometry. Masculine, joyful, reverent. You pick the line and the picture."
-    : "";
+        ? `CHURCH is direction, not a cage. Women's shop: Scripture and faith as fashion. ${typeLaw} Editorial, feminine, joyful, reverent.`
+        : `CHURCH is direction, not a cage. Men's shop: Scripture and faith as merch. ${typeLaw} Masculine, joyful, reverent.`
+    : typeLaw;
   const direction = [
     `You are a professional merch art director designing a Printify print FILE for ${name}.`,
     `House: ${name}. Mark: ${initials}. Motifs: ${brand.motifs.trim() || theme.motifs}.`,
@@ -413,7 +418,7 @@ export function composePrompt(
     "Never a photo. Never a model. Never a body. Never a garment. Never fabric texture. Never a hanger. Never wrinkles. Never a mockup. Never a lifestyle shot. Never a watermark. Never UI chrome.",
     "Centered on a perfectly even matte #F2F3F5 field. Uniform RGB 242,243,245 — no gradient, no vignette, no floor, no drop shadow. The field is empty studio, not part of the design.",
     "The graphic fills 85–92% of the frame. Tight crop. Billboard-simple. Readable as a 200px thumbnail.",
-    "Solid fills, thick strokes. No hairlines. No drop shadow under the art. No paper grain behind it.",
+    "Solid fills, thick strokes. No hairlines. No chips in letters. No broken outlines. No stray dots. No drop shadow under the art. No paper grain behind it.",
     "FAIL if the studio field is black or dark. Never fill the canvas with black. Dark ink is only allowed inside the mark. FAIL if you add distress, crackle, speckle, noise, photocopy grain, worn paper, or a faded-wash texture. Ink is flat and opaque. Two or three solid colors only.",
     "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
     "Ultra-sharp merch illustration. Maximum resolution 4K print file. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
