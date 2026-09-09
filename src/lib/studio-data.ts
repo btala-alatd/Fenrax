@@ -712,8 +712,8 @@ export function composePrompt(
       `PRODUCT: a real blank ${wear.garment}. ${audienceLine}`,
       "BLANK GARMENT: empty chest and back. No graphic, no logo, no letters, no fake print, no illustration on the fabric. Unmarked cloth. A real print file will be composited after.",
       productId === "back"
-        ? "POSE: photographed from behind. Back of the garment fully visible and relatively flat. No face needed."
-        : "POSE: standing square to camera, torso facing camera, arms relaxed at the sides, garment front flat and fully visible.",
+        ? "POSE: photographed from behind. Head in frame. Back of the garment fully visible and relatively flat."
+        : "POSE: standing square to camera, full head in frame, face visible, collar visible. Torso facing camera, arms relaxed at the sides, garment front flat. Never crop at the neck.",
       `SET: ${churchSet}`,
       `Garment color: a real ${garmentLabel || "shop"} ${wear.garment}, solid color ${garmentHex || paper}. Unmarked cloth.`,
       `Attitude: ${brand.vibe.trim() || theme.vibe}.`,

@@ -60,81 +60,116 @@ function isSkin(r: number, g: number, b: number) {
   return r > 70 && r >= g && r > b + 6 && max - min > 12 && g > 28 && b < r - 4;
 }
 
-function neckFloor(image: ImageData, productId: ProductId) {
-  const { width, height, data } = image;
-  if (productId === "back" || productId === "tote" || productId === "poster" || productId === "canvas") {
-    return Math.floor(height * 0.18);
-  }
-  const x0 = Math.floor(width * 0.34);
-  const x1 = Math.floor(width * 0.66);
-  let last = Math.floor(height * 0.32);
-  let found = false;
-  for (let y = Math.floor(height * 0.06); y < height * 0.55; y += 2) {
-    let skin = 0;
-    let n = 0;
-    for (let x = x0; x < x1; x += 3) {
-      const i = (y * width + x) * 4;
-      n += 1;
-      if (isSkin(data[i], data[i + 1], data[i + 2])) skin += 1;
-    }
-    if (n && skin / n > 0.18) {
-      last = y;
-      found = true;
-    }
-  }
-  return found ? last : Math.floor(height * 0.34);
+function isField(r: number, g: number, b: number, a: number) {
+  if (a < 12) return true;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const L = (r + g + b) / 3;
+  return L > 210 && max - min < 48;
 }
 
-function chestRun(image: ImageData, y: number) {
+function fabricKey(image: ImageData) {
   const { width, height, data } = image;
-  const row = Math.max(0, Math.min(height - 1, Math.round(y)));
-  const cx = Math.floor(width / 2);
-  const at = (x: number) => {
-    const i = (row * width + x) * 4;
-    return [data[i], data[i + 1], data[i + 2]] as const;
-  };
-  const key = at(cx);
-  if (isSkin(key[0], key[1], key[2])) {
-    return { left: Math.floor(width * 0.29), right: Math.floor(width * 0.71) };
+  for (const fy of [0.42, 0.5, 0.58]) {
+    const i = (Math.floor(height * fy) * width + Math.floor(width * 0.5)) * 4;
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    if (!isSkin(r, g, b)) return [r, g, b] as const;
   }
-  const close = (x: number) => {
-    const p = at(x);
-    if (isSkin(p[0], p[1], p[2])) return false;
-    return Math.abs(p[0] - key[0]) + Math.abs(p[1] - key[1]) + Math.abs(p[2] - key[2]) < 110;
-  };
-  let left = cx;
-  let right = cx;
-  while (left > 2 && close(left - 1)) left -= 1;
-  while (right < width - 3 && close(right + 1)) right += 1;
-  if (right - left < width * 0.22) {
-    return { left: Math.floor(width * 0.29), right: Math.floor(width * 0.71) };
+  const i = (Math.floor(height * 0.52) * width + Math.floor(width * 0.5)) * 4;
+  return [data[i], data[i + 1], data[i + 2]] as const;
+}
+
+function isFabric(
+  r: number,
+  g: number,
+  b: number,
+  key: readonly [number, number, number],
+) {
+  if (isSkin(r, g, b)) return false;
+  return Math.abs(r - key[0]) + Math.abs(g - key[1]) + Math.abs(b - key[2]) < 108;
+}
+
+function garmentBox(image: ImageData) {
+  const { width, height, data } = image;
+  const key = fabricKey(image);
+  const step = Math.max(1, Math.floor(height / 160));
+  let top = height;
+  let bottom = 0;
+  let best = { y: 0, left: 0, right: 0, w: 0 };
+  for (let y = 0; y < height; y += step) {
+    let left = -1;
+    let right = -1;
+    for (let x = 2; x < width - 2; x += 2) {
+      const i = (y * width + x) * 4;
+      if (!isFabric(data[i], data[i + 1], data[i + 2], key)) continue;
+      if (left < 0) left = x;
+      right = x;
+    }
+    const w = left < 0 ? 0 : right - left;
+    if (w < width * 0.16) continue;
+    if (y < top) top = y;
+    if (y > bottom) bottom = y;
+    if (w > best.w) best = { y, left, right, w };
   }
-  return { left, right };
+  if (best.w < width * 0.16 || bottom - top < height * 0.18) return null;
+  const chestY = Math.min(bottom, top + Math.round((bottom - top) * 0.22));
+  let left = best.left;
+  let right = best.right;
+  const mid = (chestY * width + Math.floor(width / 2)) * 4;
+  if (isFabric(data[mid], data[mid + 1], data[mid + 2], key)) {
+    left = Math.floor(width / 2);
+    right = left;
+    while (left > 2) {
+      const i = (chestY * width + left - 1) * 4;
+      if (!isFabric(data[i], data[i + 1], data[i + 2], key)) break;
+      left -= 1;
+    }
+    while (right < width - 3) {
+      const i = (chestY * width + right + 1) * 4;
+      if (!isFabric(data[i], data[i + 1], data[i + 2], key)) break;
+      right += 1;
+    }
+  }
+  return {
+    collar: top,
+    hem: bottom,
+    left,
+    right,
+    chest: Math.max(48, right - left),
+  };
 }
 
 function printArea(image: ImageData, productId: ProductId, scale = 1) {
   const place = placeOf(productId);
   const grow = Math.min(1.12, Math.max(0.85, scale));
   const { width, height } = image;
-  const neck = neckFloor(image, productId);
-  const sampleY = Math.min(height - 2, neck + Math.round(height * 0.08));
-  const run = chestRun(image, sampleY);
-  const chest = Math.max(48, run.right - run.left);
+  const shirt = garmentBox(image);
+  const collar = shirt?.collar ?? Math.floor(height * 0.28);
+  const hem = shirt?.hem ?? Math.floor(height * 0.82);
+  const chest = shirt?.chest ?? Math.floor(width * 0.42);
+  const left = shirt?.left ?? Math.floor((width - chest) / 2);
+  const shirtH = Math.max(48, hem - collar);
   const pxPerIn = chest / 20;
   const gap = Math.round(place.gapIn * pxPerIn);
-  const top = Math.min(Math.floor(height * 0.7), neck + gap);
+  let top = collar + gap;
+  const chestFloor = collar + Math.round(shirtH * 0.38);
+  if (top > chestFloor) top = chestFloor;
   let w = place.widthIn * pxPerIn * grow;
   let h = place.maxHIn * pxPerIn * grow;
-  const hem = productId === "hoodie" || productId === "crew"
-    ? Math.floor(top + 12.5 * pxPerIn)
-    : Math.floor(height * 0.88);
-  const maxH = Math.max(32, hem - top);
+  const pocket =
+    productId === "hoodie" || productId === "crew"
+      ? collar + Math.round(12.2 * pxPerIn)
+      : hem - Math.round(shirtH * 0.12);
+  const maxH = Math.max(32, pocket - top);
   if (h > maxH) {
     const s = maxH / h;
     h = maxH;
     w *= s;
   }
-  let x = run.left + chest * place.cx - w / 2;
+  if (top + h > pocket) top = Math.max(collar + Math.min(gap, shirtH * 0.2), pocket - h);
+  let x = left + chest * place.cx - w / 2;
   x = Math.max(4, Math.min(x, width - w - 4));
   const y = Math.max(0, Math.min(top, height - h));
   return {
@@ -144,6 +179,44 @@ function printArea(image: ImageData, productId: ProductId, scale = 1) {
     h: Math.round(Math.max(24, h)),
     taper: place.taper,
   };
+}
+
+function punchLightField(source: HTMLCanvasElement) {
+  const ctx = source.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return source;
+  const image = ctx.getImageData(0, 0, source.width, source.height);
+  const { data, width, height } = image;
+  const seen = new Uint8Array(width * height);
+  const stack: number[] = [];
+  const push = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const i = y * width + x;
+    if (seen[i]) return;
+    const p = i * 4;
+    if (!isField(data[p], data[p + 1], data[p + 2], data[p + 3])) return;
+    seen[i] = 1;
+    stack.push(i);
+  };
+  for (let x = 0; x < width; x += 1) {
+    push(x, 0);
+    push(x, height - 1);
+  }
+  for (let y = 0; y < height; y += 1) {
+    push(0, y);
+    push(width - 1, y);
+  }
+  while (stack.length) {
+    const i = stack.pop()!;
+    data[i * 4 + 3] = 0;
+    const x = i % width;
+    const y = (i / width) | 0;
+    push(x - 1, y);
+    push(x + 1, y);
+    push(x, y - 1);
+    push(x, y + 1);
+  }
+  ctx.putImageData(image, 0, 0);
+  return source;
 }
 
 function keepDenseInk(source: HTMLCanvasElement) {
@@ -203,9 +276,7 @@ function keepDenseInk(source: HTMLCanvasElement) {
     const py = ((i / 4) / width) | 0;
     const gx = Math.min(gw - 1, (px / cs) | 0);
     const gy = Math.min(gh - 1, (py / cs) | 0);
-    if (!keep[gy * gw + gx] || data[i + 3] < 64) {
-      data[i + 3] = 0;
-    }
+    if (!keep[gy * gw + gx] || data[i + 3] < 64) data[i + 3] = 0;
   }
   ctx.putImageData(image, 0, 0);
 
@@ -308,7 +379,7 @@ export async function stampPrintOnGarment(
   scale = 1,
 ): Promise<string> {
   const photo = await loadImage(photoUrl);
-  const art = keepDenseInk(await prepareArt(artUrl, true, true));
+  const art = keepDenseInk(punchLightField(await prepareArt(artUrl, true, true)));
   const width = photo.naturalWidth || photo.width;
   const height = photo.naturalHeight || photo.height;
 
