@@ -156,8 +156,7 @@ export function Studio() {
   async function acceptFile(file: File) {
     try {
       const dataUrl = await readImageFile(file);
-      const clean = await toTransparentPng(dataUrl, true).catch(() => dataUrl);
-      setSourceImage(clean);
+      setSourceImage(dataUrl);
       setMode("edit");
       setCurrent(null);
       promptRef.current?.focus();
@@ -373,10 +372,10 @@ export function Studio() {
       return null;
     }
 
-    const pngUrl = await toTransparentPng(
-      result.dataUrl,
-      nextLens !== "lookbook",
-    ).catch(() => result.dataUrl);
+    const pngUrl =
+      nextLens === "lookbook"
+        ? result.dataUrl
+        : await toTransparentPng(result.dataUrl, true).catch(() => result.dataUrl);
     const still: Still = {
       id: crypto.randomUUID(),
       prompt: nextPrompt || "Designer pick",
@@ -503,7 +502,10 @@ export function Studio() {
           {stageImage ? (
             <button
               type="button"
-              className="checkerboard flex size-full items-center justify-center p-3 sm:p-6"
+              className={cn(
+                "flex size-full items-center justify-center p-3 sm:p-6",
+                current?.lens !== "lookbook" && "checkerboard",
+              )}
               onClick={() => current && setLightbox(current)}
               disabled={!current}
             >
@@ -740,7 +742,8 @@ function FilmStrip({
             onClick={() => onSelect(still)}
             onDoubleClick={() => onOpen(still)}
             className={cn(
-              "relative shrink-0 overflow-hidden rounded-[var(--radius-md)] checkerboard transition-[box-shadow,opacity,transform] duration-[var(--motion-fast)] ease-[var(--ease-out)] active:scale-[0.96]",
+              "relative shrink-0 overflow-hidden rounded-[var(--radius-md)] transition-[box-shadow,opacity,transform] duration-[var(--motion-fast)] ease-[var(--ease-out)] active:scale-[0.96]",
+              still.lens !== "lookbook" && "checkerboard",
               selected
                 ? "shadow-[0_0_0_1px_var(--color-primary)]"
                 : "opacity-80 shadow-[var(--shadow-border)] hover:opacity-100",
@@ -1103,7 +1106,12 @@ function Lightbox({
           <X className="size-5" />
         </Button>
       </div>
-      <div className="checkerboard mx-4 mb-4 flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[var(--radius-lg)] px-4 py-4">
+      <div
+        className={cn(
+          "mx-4 mb-4 flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-[var(--radius-lg)] px-4 py-4",
+          still.lens !== "lookbook" && "checkerboard",
+        )}
+      >
         <img
           src={still.dataUrl}
           alt={still.prompt}

@@ -105,11 +105,15 @@ export function ExportButtons({
     try {
       await saveBlob(next.blob, `${base}.png`);
       await saveBlob(next.artBlob, `${base}-art.png`);
-      await downloadSvg(still.dataUrl, `${base}-art.svg`, colors, still.productId, true);
+      if (still.lens !== "lookbook") {
+        await downloadSvg(still.dataUrl, `${base}-art.svg`, colors, still.productId, true);
+      }
       toast.success(
-        next.grade === "print"
-          ? "Saved Printify PNG, transparent art PNG, and SVG."
-          : `Saved. ${GRADE_COPY[next.grade]}`,
+        still.lens === "lookbook"
+          ? "Saved campaign photo PNG."
+          : next.grade === "print"
+            ? "Saved Printify PNG, transparent art PNG, and SVG."
+            : `Saved. ${GRADE_COPY[next.grade]}`,
       );
       setPack(null);
     } catch (error) {
@@ -172,6 +176,7 @@ export function ExportButtons({
             <Image className="size-4" />
             {busy === "png" ? "Saving" : "PNG"}
           </Button>
+          {still.lens !== "lookbook" ? (
           <Button
             variant="outline"
             size={size}
@@ -182,6 +187,7 @@ export function ExportButtons({
             <FileCode2 className="size-4" />
             {busy === "svg" ? "Tracing" : "Vector"}
           </Button>
+          ) : null}
           {onEtsy ? (
             <Button variant="outline" size={size} onClick={onEtsy} title="Etsy listing copy">
               <Store className="size-4" />
@@ -258,7 +264,12 @@ function PrintifySheet({
       </div>
 
       <div className="mx-auto flex min-h-0 w-full max-w-xl flex-1 flex-col gap-4 overflow-y-auto px-4 pb-8 sm:px-6">
-        <div className="checkerboard flex min-h-72 flex-1 items-center justify-center overflow-hidden rounded-[var(--radius-lg)] p-6">
+        <div
+          className={cn(
+            "flex min-h-72 flex-1 items-center justify-center overflow-hidden rounded-[var(--radius-lg)] p-6",
+            pack.transparent && "checkerboard",
+          )}
+        >
           <img
             src={pack.previewUrl}
             alt="Transparent Printify art"

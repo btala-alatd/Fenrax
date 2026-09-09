@@ -546,6 +546,7 @@ export type PrintifyBuild = {
   scale: number;
   dpi: number;
   grade: PrintGrade;
+  transparent: boolean;
 };
 
 export function evaluateArtworkResolution(
@@ -592,6 +593,7 @@ function canvasToPngDataUrl(canvas: HTMLCanvasElement): string {
 export async function buildPrintifyFromArt(
   art: HTMLCanvasElement,
   productId: ProductId,
+  opaque = false,
 ): Promise<PrintifyBuild> {
   const preset = printifyPreset(productId);
   const { dpi, grade } = evaluateArtworkResolution(art.width, art.height, preset);
@@ -609,7 +611,12 @@ export async function buildPrintifyFromArt(
   const dh = art.height * fit;
   const dx = (preset.width - dw) / 2;
   const dy = (preset.height - dh) / 2;
-  ctx.clearRect(0, 0, preset.width, preset.height);
+  if (opaque) {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, preset.width, preset.height);
+  } else {
+    ctx.clearRect(0, 0, preset.width, preset.height);
+  }
   ctx.imageSmoothingEnabled = fit > 1;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(art, dx, dy, dw, dh);
@@ -626,16 +633,17 @@ export async function buildPrintifyFromArt(
     scale: fit,
     dpi,
     grade,
+    transparent: !opaque,
   };
 }
 
 export async function buildPrintifyPng(
   dataUrl: string,
   productId: ProductId,
-  holes = true,
+  knock = true,
 ): Promise<PrintifyBuild> {
-  const art = await prepareArt(dataUrl, true, holes);
-  return buildPrintifyFromArt(art, productId);
+  const art = await prepareArt(dataUrl, knock, knock);
+  return buildPrintifyFromArt(art, productId, !knock);
 }
 
 export async function downloadPrintifyPng(

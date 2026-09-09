@@ -574,8 +574,8 @@ export function composePrompt(
     ? [
         `You are a professional fashion designer and campaign photographer shooting the ${name} collection.`,
         "Think garment first: weight, stitch, neck tape, embroidery vs print, fit (boxy, oversized, dropped shoulder), then graphic, then light.",
-        "Photoreal fashion image of a real garment — on a model, hanging, or flat lay as specified. Visible fabric, seams, drape, labels. 8k lookbook. Not a cheap T-shirt mockup generator, not a ghost mannequin.",
-        "Backdrop is a perfectly even chroma-green (#00C853) seamless cyclorama. No set dressing, no floor seam, no props at the frame edge. The green will be deleted to transparency.",
+        "Photoreal fashion image of a real garment — on a model, hanging, or flat lay as specified. Visible fabric, seams, drape, labels. 8k lookbook. Not a cheap T-shirt mockup generator, not a ghost mannequin, not a floating PNG on a blank canvas.",
+        "Keep the real scene: studio, street, warehouse, apartment, or location. Models, set, and background stay in the photo. Do not key or delete the backdrop.",
         `Brand: ${name}. Mark: ${initials}, ${brand.motifs.trim() || theme.motifs}.`,
         `Palette: ink ${ink}, paper ${paper}, accent ${accent}.`,
         `World: ${theme.label}. ${theme.world}`,
