@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Archive, FileCode2, Image, Save, Store, X } from "lucide-react";
+import { Archive, Image, Save, Store, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { downloadSvg } from "@/lib/export";
 import {
   buildPrintifyPng,
   PRINTIFY_CATALOG,
@@ -39,12 +38,10 @@ export function ExportButtons({
   onEtsy?: () => void;
   onZip?: (stills: Still[], kind?: "images" | "printify") => void;
 }) {
-  const [busy, setBusy] = useState<"png" | "svg" | "printify" | null>(null);
+  const [busy, setBusy] = useState<"png" | "printify" | null>(null);
   const [pack, setPack] = useState<PrintifyBuild | null>(null);
   const slug = brandSlug(brand);
   const preset = printifyPreset(still.productId);
-  const colors = [brand.ink, brand.paper, brand.accent];
-  const base = `${slug}-${preset.id}-${preset.width}x${preset.height}`;
   const blocked = Boolean(busy) || packing;
 
   async function savePng() {
@@ -56,19 +53,6 @@ export function ExportButtons({
       toast.success("Printify PNG saved — transparent graphic, drop it on the shirt.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save PNG.");
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function saveSvg() {
-    if (blocked) return;
-    setBusy("svg");
-    try {
-      await downloadSvg(still.dataUrl, `${base}-art.svg`, colors, still.productId, true);
-      toast.success("Screen-print SVG saved — few colors, no dust.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save vector.");
     } finally {
       setBusy(null);
     }
@@ -156,16 +140,6 @@ export function ExportButtons({
           >
             <Image className="size-4" />
             {busy === "png" ? "Saving" : "PNG"}
-          </Button>
-          <Button
-            variant="outline"
-            size={size}
-            disabled={blocked}
-            onClick={() => void saveSvg()}
-            title="Printify vector"
-          >
-            <FileCode2 className="size-4" />
-            {busy === "svg" ? "Tracing" : "Vector"}
           </Button>
           {onEtsy ? (
             <Button variant="outline" size={size} onClick={onEtsy} title="Etsy listing copy">
