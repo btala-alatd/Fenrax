@@ -8,6 +8,7 @@ import {
   Pencil,
   Settings,
   Sparkles,
+  Store,
   Trash2,
   X,
 } from "lucide-react";
@@ -23,7 +24,7 @@ import { printifyPreset, toTransparentPng } from "@/lib/printify";
 import { stampPrintOnGarment } from "@/lib/mockup";
 import { useGallery } from "@/lib/gallery";
 import { readImageFile } from "@/lib/image-file";
-import { zipGeneratedImages, zipPrintifyPack } from "@/lib/pack";
+import { zipGeneratedImages, zipListingPack, zipPrintifyPack } from "@/lib/pack";
 import { saveToLabel } from "@/lib/save-to";
 import { usePrinter } from "@/lib/printer";
 import { editStill, generateStill } from "@/lib/imagine";
@@ -43,8 +44,13 @@ import {
   composePrompt,
   DROP_COUNT,
   dropSlots,
+  GARMENT_COLORS,
+  LISTING_COUNT,
+  LISTING_SHOTS,
+  clothHex,
   type AspectRatioId,
   type CategoryId,
+  type GarmentColorId,
   type LeadId,
   type LensId,
   type ProductId,
@@ -80,6 +86,9 @@ export function Studio() {
   const [packing, setPacking] = useState(false);
   const [packStep, setPackStep] = useState(0);
   const [dropStep, setDropStep] = useState(0);
+  const [dropTotal, setDropTotal] = useState(DROP_COUNT);
+  const [printScale, setPrintScale] = useState(1);
+  const [garmentColorId, setGarmentColorId] = useState<GarmentColorId>("shop");
   const [elapsed, setElapsed] = useState(0);
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -171,6 +180,11 @@ export function Studio() {
     const plate = items.find((item) => item.lens === "plate");
     if (plate) return plate.dataUrl;
     return sourceImage;
+  }
+
+  function resolvePlate() {
+    if (current?.lens === "plate") return current;
+    return items.find((item) => item.lens === "plate") ?? null;
   }
 
   async function printPlate() {
@@ -279,6 +293,7 @@ export function Studio() {
             edit: false,
           }));
     setPending(true);
+    setDropTotal(jobs.length);
     let printed = 0;
     let last: Still | null = null;
     try {
@@ -300,6 +315,8 @@ export function Studio() {
               edit: job.edit,
               source: job.source,
               artUrl: job.artUrl,
+              scale: printScale,
+              garmentColorId,
             }),
           ),
         );
@@ -334,6 +351,78 @@ export function Studio() {
     }
   }
 
+  async function printListing() {
+    if (pending) return;
+    if (brand.name.trim().length < 2) {
+      toast.error("Name your shop first.");
+      setBrandOpen(true);
+      return;
+    }
+    const art = resolvePrintArt();
+    const plate = resolvePlate();
+    if (!art || !plate) {
+      toast.error("Print a graphic first. Listing wears that file on tee, hoodie, chest, and back.");
+      return;
+    }
+    const nextStyle = coerceStyleId(styleId);
+    const nextRatio = coerceAspectRatioId(aspectRatio);
+    setPending(true);
+    setDropTotal(LISTING_COUNT);
+    const photos: Still[] = [];
+    try {
+      for (let i = 0; i < LISTING_SHOTS.length; i += 2) {
+        const batch = LISTING_SHOTS.slice(i, i + 2);
+        setDropStep(Math.min(i + batch.length, LISTING_COUNT));
+        const results = await Promise.all(
+          batch.map((shot) =>
+            runPrint({
+              prompt: prompt.trim(),
+              styleId: nextStyle,
+              productId: shot.productId,
+              categoryId: "lockup",
+              leadId: "brand",
+              lens: "lookbook",
+              aspectRatio: shot.productId === "chest" ? "1:1" : nextRatio === "1:1" ? "3:4" : nextRatio,
+              anime: false,
+              note: shot.note,
+              edit: false,
+              source: null,
+              artUrl: art,
+              garmentColorId: shot.colorId,
+              scale: printScale,
+            }),
+          ),
+        );
+        for (const still of results) {
+          if (!still) continue;
+          photos.push(still);
+          setCurrent(still);
+        }
+      }
+      if (photos.length === 0) {
+        toast.error("Listing missed.");
+        return;
+      }
+      setLens("lookbook");
+      toast.success(`Listing shot. ${photos.length} photos. Zipping…`);
+      setPacking(true);
+      await zipListingPack(plate, photos, brand, (done, total) => setPackStep(total > 1 ? done : 0));
+      toast.success(`Saved to ${saveToLabel()}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      toast.error(
+        /failed to fetch|networkerror|load failed/i.test(message)
+          ? "Could not reach the printer. Try again."
+          : message || "The listing misfired.",
+      );
+    } finally {
+      setDropStep(0);
+      setPending(false);
+      setPacking(false);
+      setPackStep(0);
+    }
+  }
+
   async function runPrint({
     prompt: nextPrompt,
     styleId: nextStyle,
@@ -347,6 +436,8 @@ export function Studio() {
     edit,
     source,
     artUrl,
+    garmentColorId: shotColor,
+    scale,
   }: {
     prompt: string;
     styleId: StyleId;
@@ -360,7 +451,12 @@ export function Studio() {
     edit: boolean;
     source?: string | null;
     artUrl?: string | null;
+    garmentColorId?: GarmentColorId;
+    scale?: number;
   }): Promise<Still | null> {
+    const colorId = shotColor ?? garmentColorId;
+    const color = GARMENT_COLORS.find((item) => item.id === colorId) ?? GARMENT_COLORS[0];
+    const hex = clothHex(color.id, brand.paper);
     const seed = [nextPrompt.trim(), note.trim()].filter(Boolean).join(". ");
     const composedPrompt = composePrompt(
       seed,
@@ -372,6 +468,8 @@ export function Studio() {
       nextCategory,
       nextLead,
       nextLens === "lookbook" ? false : nextAnime,
+      hex,
+      color.label,
     );
 
     const googleKey = usePrinter.getState().googleKey.trim() || undefined;
@@ -421,7 +519,7 @@ export function Studio() {
 
     const pngUrl =
       nextLens === "lookbook" && artUrl
-        ? await stampPrintOnGarment(result.dataUrl, artUrl, nextProduct)
+        ? await stampPrintOnGarment(result.dataUrl, artUrl, nextProduct, scale ?? printScale)
         : nextLens === "lookbook"
           ? result.dataUrl
           : await toTransparentPng(result.dataUrl, true).catch(() => result.dataUrl);
@@ -585,7 +683,7 @@ export function Studio() {
             <div className="pointer-events-none absolute inset-0 flex items-end justify-between p-4 sm:p-5">
               <p className="text-sm text-muted-foreground">
                 {dropStep
-                  ? `${dropStep}/${DROP_COUNT}`
+                  ? `${dropStep}/${dropTotal}`
                   : packing && packStep
                     ? `Zip ${packStep}`
                     : packing
@@ -641,6 +739,11 @@ export function Studio() {
           }
           onSubmit={() => void printPlate()}
           onDropPack={() => void printDrop()}
+          onListing={() => void printListing()}
+          printScale={printScale}
+          setPrintScale={setPrintScale}
+          garmentColorId={garmentColorId}
+          setGarmentColorId={setGarmentColorId}
           onClearSource={() => {
             setSourceImage(null);
             if (!current) setMode("create");
@@ -843,6 +946,11 @@ function PromptDock({
   placeholder,
   onSubmit,
   onDropPack,
+  onListing,
+  printScale,
+  setPrintScale,
+  garmentColorId,
+  setGarmentColorId,
   onClearSource,
   onPickFile,
   still,
@@ -878,6 +986,11 @@ function PromptDock({
   placeholder: string;
   onSubmit: () => void;
   onDropPack: () => void;
+  onListing: () => void;
+  printScale: number;
+  setPrintScale: (value: number) => void;
+  garmentColorId: GarmentColorId;
+  setGarmentColorId: (value: GarmentColorId) => void;
   onClearSource: () => void;
   onPickFile: () => void;
   still: Still | null;
@@ -971,6 +1084,41 @@ function PromptDock({
           );
         })}
       </ChipRow>
+
+      {lens === "lookbook" ? (
+        <>
+          <ChipRow label="Shirt color">
+            {GARMENT_COLORS.map((item) => (
+              <Chip
+                key={item.id}
+                pressed={garmentColorId === item.id}
+                title={item.id === "shop" ? "Your shop paper color" : item.label}
+                onClick={() => setGarmentColorId(item.id)}
+              >
+                <span
+                  className="size-2.5 rounded-full shadow-[var(--shadow-border)]"
+                  style={{ background: item.hex || brand.paper }}
+                />
+                {item.label}
+              </Chip>
+            ))}
+          </ChipRow>
+          <label className="mb-3 flex items-center gap-3 px-1">
+            <span className="shrink-0 text-[11px] font-medium tracking-[0.14em] text-ink-subtle uppercase">
+              Print size {Math.round(printScale * 100)}%
+            </span>
+            <input
+              type="range"
+              min={80}
+              max={120}
+              step={5}
+              value={Math.round(printScale * 100)}
+              onChange={(event) => setPrintScale(Number(event.target.value) / 100)}
+              className="h-8 w-full accent-primary"
+            />
+          </label>
+        </>
+      ) : null}
 
       <Textarea
         ref={promptRef}
@@ -1067,6 +1215,22 @@ function PromptDock({
               {mode === "edit" ? "Apply" : "1 design"}
             </Button>
             {mode === "create" ? (
+              <>
+              <Button
+                variant="outline"
+                size="lg"
+                disabled={pending || packing}
+                onClick={onListing}
+                title="Same print on tee, hoodie, chest, back, plus black and white tees. Zip for Printify."
+                className="h-11 min-w-0 px-3 text-sm lg:h-12 lg:px-6"
+              >
+                {pending ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Store className="size-4" />
+                )}
+                Listing
+              </Button>
               <Button
                 variant="outline"
                 size="lg"
@@ -1082,6 +1246,7 @@ function PromptDock({
                 )}
                 10 for shop
               </Button>
+              </>
             ) : null}
             {still ? (
               <ExportButtons

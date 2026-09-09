@@ -91,11 +91,13 @@ function contentBox(image: ImageData) {
 function printArea(
   box: { x: number; y: number; w: number; h: number },
   productId: ProductId,
+  scale = 1,
 ) {
   const place = placeOf(productId);
   const inches = printInches(productId);
   const ratio = inches.h / Math.max(0.1, inches.w);
-  let w = box.w * place.body * (inches.w / place.surfaceIn);
+  const grow = Math.min(1.25, Math.max(0.7, scale));
+  let w = box.w * place.body * (inches.w / place.surfaceIn) * grow;
   let h = w * ratio;
   const maxH = box.h * (place.hem - place.collar);
   if (h > maxH) {
@@ -190,6 +192,7 @@ export async function stampPrintOnGarment(
   photoUrl: string,
   artUrl: string,
   productId: ProductId,
+  scale = 1,
 ): Promise<string> {
   const photo = await loadImage(photoUrl);
   const art = await prepareArt(artUrl, true, true);
@@ -206,7 +209,7 @@ export async function stampPrintOnGarment(
   ctx.drawImage(photo, 0, 0, width, height);
 
   const mixed = ctx.getImageData(0, 0, width, height);
-  const area = printArea(contentBox(mixed), productId);
+  const area = printArea(contentBox(mixed), productId, scale);
   const fitted = fitArt(area.w, area.h, art.width, art.height);
 
   const overlay = document.createElement("canvas");

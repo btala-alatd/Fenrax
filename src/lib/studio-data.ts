@@ -320,6 +320,36 @@ export const DROP_SLOTS = {
   ],
 } as const;
 
+export const GARMENT_COLORS = [
+  { id: "shop", label: "Shop", hex: "" },
+  { id: "bone", label: "Bone", hex: "#f4eee4" },
+  { id: "white", label: "White", hex: "#f2f2ee" },
+  { id: "black", label: "Black", hex: "#1c1c1c" },
+  { id: "navy", label: "Navy", hex: "#1a2744" },
+  { id: "forest", label: "Forest", hex: "#1e3a2f" },
+] as const;
+
+export type GarmentColorId = (typeof GARMENT_COLORS)[number]["id"];
+
+export function clothHex(id: GarmentColorId, paper: string) {
+  const row = GARMENT_COLORS.find((item) => item.id === id);
+  return row?.hex || paper;
+}
+
+export const LISTING_SHOTS: {
+  productId: ProductId;
+  colorId: GarmentColorId;
+  note: string;
+}[] = [
+  { productId: "tee", colorId: "shop", note: "Hero tee, shop color." },
+  { productId: "hoodie", colorId: "shop", note: "Hoodie, same print." },
+  { productId: "chest", colorId: "shop", note: "Left chest, same print." },
+  { productId: "back", colorId: "shop", note: "Back of the garment, same print." },
+  { productId: "tee", colorId: "black", note: "Tee on a black blank." },
+  { productId: "tee", colorId: "white", note: "Tee on a white blank." },
+];
+
+export const LISTING_COUNT = LISTING_SHOTS.length;
 export const DROP_COUNT = DROP_SLOTS.plate.length;
 
 export function dropSlots(lens: LensId) {
@@ -627,6 +657,8 @@ export function composePrompt(
   categoryId: CategoryId = "lockup",
   leadId: LeadId = "brand",
   anime = false,
+  garmentHex?: string,
+  garmentLabel?: string,
 ): string {
   const trimmed = prompt.trim();
   const name = brand.name.trim() || "the house";
@@ -679,14 +711,19 @@ export function composePrompt(
       "NOT illustration, NOT anime, NOT manga, NOT cartoon, NOT comic, NOT 3D render, NOT digital painting, NOT cel-shading, NOT a drawing.",
       `PRODUCT: a real blank ${wear.garment}. ${audienceLine}`,
       "BLANK GARMENT: empty chest and back. No graphic, no logo, no letters, no fake print, no illustration on the fabric. Unmarked cloth. A real print file will be composited after.",
-      "POSE: standing square to camera, torso facing camera, arms relaxed at the sides, garment front flat and fully visible.",
+      productId === "back"
+        ? "POSE: photographed from behind. Back of the garment fully visible and relatively flat. No face needed."
+        : "POSE: standing square to camera, torso facing camera, arms relaxed at the sides, garment front flat and fully visible.",
       `SET: ${churchSet}`,
-      `Garment color close to ${paper}. Attitude: ${brand.vibe.trim() || theme.vibe}.`,
+      `Garment color: a real ${garmentLabel || "shop"} ${wear.garment}, solid color ${garmentHex || paper}. Unmarked cloth.`,
+      `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
       notes,
       salt ? `New pose and set ${salt}. Still a real photo, still a blank garment.` : "",
       trimmed
         ? trimmed
-        : `Photograph a real person in a blank ${wear.garment}. Empty chest.`,
+        : productId === "back"
+          ? `Photograph a real person from behind in a blank ${wear.garment}. Empty back.`
+          : `Photograph a real person in a blank ${wear.garment}. Empty chest.`,
     ]
       .filter(Boolean)
       .join(" ");

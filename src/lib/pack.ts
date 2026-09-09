@@ -179,3 +179,46 @@ export async function zipPrintifyPack(
   await saveBlob(blob, `${root}.zip`);
   return root;
 }
+
+export async function zipListingPack(
+  plate: Still,
+  photos: Still[],
+  brand: Brand,
+  onProgress?: (done: number, total: number) => void,
+) {
+  const slug = brandSlug(brand);
+  const root = `${slug}-listing-${stamp()}`;
+  const zip = new JSZip();
+  zip.file(`${root}/brand/brand.json`, JSON.stringify(brand, null, 2));
+  zip.file(
+    `${root}/brand/readme.txt`,
+    [
+      `${brand.name} listing pack`,
+      "",
+      "printify/     upload these to Printify Product Creator",
+      "photos/       on-model shots of that same print",
+      "listing/      Etsy title, tags, description",
+      "",
+      `House: ${brand.name}`,
+      `Theme: ${themeOf(brand).label}`,
+      `Shots: ${photos.length}`,
+    ].join("\n"),
+  );
+  onProgress?.(1, photos.length + 1);
+  await addPrintifyFolder(zip, plate, brand, root);
+  for (let i = 0; i < photos.length; i += 1) {
+    onProgress?.(i + 2, photos.length + 1);
+    const still = photos[i];
+    const name = `${String(i + 1).padStart(2, "0")}-${segment(still.productId)}.png`;
+    const png = await toPngDataUrl(still.dataUrl);
+    zip.file(`${root}/photos/${name}`, dataUrlToBlob(png), { compression: "STORE" });
+    await yieldTick();
+  }
+  const packed = await zip.generateAsync({
+    type: "blob",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
+  await saveBlob(packed, `${root}.zip`);
+  return root;
+}
