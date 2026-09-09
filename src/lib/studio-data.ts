@@ -657,9 +657,18 @@ export function composePrompt(
   const church = theme.id === "church";
   const churchCraft = church
     ? kids
-      ? "CHURCH / BIBLE. Joyful kids Sunday merch. One short true line plus a citation (Jesus loves me, this little light, be kind, God is love — 1 John 4:8). Original dove, rainbow-covenant geometry, or simple cross. Fun and gentle. Never scary, never crucifixion, never sarcasm about God, never a meme."
-      : "CHURCH / BIBLE. Scripture is the hero. One short accurate verse or phrase plus its citation, readable across a room. Joyful and reverent together — revival-poster energy, hymn-book type, stained-glass facets, original cross or dove. Fun like a good Sunday, not youth-group clipart from 2008, not sarcastic, not a joke at the church. Front: under ~12 words. Longer passages belong on Back. Quote the Bible correctly. Never copy a ministry logo or famous church slogan."
+      ? "CHURCH / KIDS. Flagship Sunday-school merch. One short true line plus citation — Jesus loves me, this little light, God is love (1 John 4:8), be kind. Chunky joyful type, original dove or simple cross, stained-glass color-block. Cute and reverent. Never scary, never crucifixion, never sarcasm, never a Disney character, never a meme."
+      : women
+        ? "CHURCH / WOMEN. Flagship women's faith fashion. Scripture is the garment. Short accurate verse or phrase plus citation in considered serif or fine script (Be still — Psalm 46:10, Loved — 1 John 4, Selah, She is clothed with strength — Proverbs 31:25). Editorial, feminine, gold and bone, stained-glass facets, thin original cross or dove. Would wear it without the verse too. Not rhinestone 2008, not 'coffee and Jesus' clipart, not sarcastic. Front under ~12 words; longer verses on Back."
+        : "CHURCH / MEN. Flagship men's gospel merch. Scripture hits like a concert poster. Short accurate verse or phrase plus citation in heavy type or woodcut (Fear not — Isaiah 41:10, Be still — Psalm 46:10, The Lord is my shepherd — Psalm 23, If God is for us — Romans 8:31). Boxy lockup, revival ink, original cross geometry or dove. Masculine, premium, heavyweight-street energy. Fun and reverent — not youth-group clipart, not a joke at the church. Front under ~12 words; longer passages on Back."
     : "";
+  const churchSet = church
+    ? kids
+      ? "Photoreal church courtyard or Sunday steps. Child-appropriate, bright, joyful. Real place, not a drawing."
+      : women
+        ? "Photoreal Sunday after service — chapel light, garden, or quiet sanctuary exterior. Women's styling. Real place, not a drawing."
+        : "Photoreal church steps, brick sanctuary, or gospel-night street. Men's styling. Real place, not a drawing."
+    : `Photoreal ${theme.label.toLowerCase()} location only — real street, lodge, studio, or interior. Use that as place and wardrobe, never as a drawing style.`;
   const who = kids ? "kids" : women ? "women's" : "men's";
   const wear = productWear(productId);
   if (lookbook) {
@@ -669,7 +678,7 @@ export function composePrompt(
       `PRODUCT: a real blank ${wear.garment}. ${audienceLine}`,
       "BLANK GARMENT: empty chest and back. No graphic, no logo, no letters, no fake print, no illustration on the fabric. Unmarked cloth. A real print file will be composited after.",
       "POSE: standing square to camera, torso facing camera, arms relaxed at the sides, garment front flat and fully visible.",
-      `SET: photoreal ${theme.label.toLowerCase()} location only — real street, lodge, studio, or interior. Use that as place and wardrobe, never as a drawing style.`,
+      `SET: ${churchSet}`,
       `Garment color close to ${paper}. Attitude: ${brand.vibe.trim() || theme.vibe}.`,
       notes,
       salt ? `New pose and set ${salt}. Still a real photo, still a blank garment.` : "",
@@ -699,8 +708,10 @@ export function composePrompt(
         "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
         "Ultra-sharp merch illustration. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
         "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",
-        `Invent original ${name} merch in that ${theme.label.toLowerCase()} feeling. Full designer freedom. Never copy a known logo or trademark.`,
-        "Craft bar: flagship drop, sharper than a mall tee.",
+        `Invent original ${name} merch in that ${theme.label.toLowerCase()} ${who} feeling. Full designer freedom. Never copy a known logo or trademark.`,
+        church
+          ? "Craft bar: the best church tee in the shop. Fashion-first. Scripture true. Thumbnail-sharp."
+          : "Craft bar: flagship drop, sharper than a mall tee.",
         salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
       ];
   const productBit = product?.suffix ?? "";
@@ -709,8 +720,10 @@ export function composePrompt(
     ? trimmed
     : church
       ? kids
-        ? `Invent a joyful kids church graphic for ${name}. Short true Bible line plus citation. Fun, gentle, original. Do not ask. Just draw.`
-        : `Invent a flagship church tee for ${name}. Short accurate Scripture plus citation is the design. Joyful and reverent. Do not ask. Just draw.`
+        ? `Invent a flagship kids church graphic for ${name}. Short true Bible line plus citation. Joyful, original, Sunday-school best. Do not ask. Just draw.`
+        : women
+          ? `Invent a flagship women's church tee for ${name}. Short accurate Scripture plus citation, editorial and feminine. Fashion-first. Do not ask. Just draw.`
+          : `Invent a flagship men's church tee for ${name}. Short accurate Scripture plus citation, heavy type, gospel-poster energy. Do not ask. Just draw.`
       : `Invent a flagship ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. You are the designer. Full freedom. One unforgettable idea. Do not ask. Just draw.`;
   const composed = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
   return composed.slice(0, MAX_COMPOSED);
