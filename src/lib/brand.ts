@@ -109,29 +109,6 @@ export const THEMES = [
     tags: ["varsity tee", "crest shirt", "collegiate tee"],
   },
   {
-    id: "church",
-    label: "Church",
-    ink: "#1c1712",
-    paper: "#f4eee4",
-    accent: "#c2a36b",
-    motifs: "short Bible verse, citation, original cross geometry, dove, stained-glass facets",
-    vibe: "joyful Sunday, gospel night, reverent and fun, house of worship",
-    hook: "Bible-message merch, short scripture lockup, stained-glass color, revival type, joy without irreverence",
-    world:
-      "Church and worship apparel as a starting world, not a cage. Scripture, joy, reverence — the designer invents the line and the picture. Fun like a good Sunday, never sarcastic, never a meme about God. Original marks only. Never copy a ministry logo.",
-    schools:
-      "Hymn-book layout, gospel-concert posters, stained-glass composition, modern faith streetwear (heavyweight type, restrained palette) as schools. Scripture integrity: quote accurately, keep the reference, make it readable at thumbnail size. Never copy a ministry logo, ichthys trademark, or famous slogan lockup.",
-    tags: [
-      "church shirt",
-      "christian tee",
-      "bible verse shirt",
-      "scripture tshirt",
-      "worship shirt",
-      "faith graphic tee",
-      "gospel tee",
-    ],
-  },
-  {
     id: "work",
     label: "Work",
     ink: "#141414",

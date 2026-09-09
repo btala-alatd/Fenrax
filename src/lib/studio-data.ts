@@ -161,23 +161,23 @@ export type StyleId = (typeof STYLES)[number]["id"];
 
 export const CATEGORIES = [
   { id: "lockup", label: "Lockup", hint: "Giant initials" },
-  { id: "wordmark", label: "Wordmark", hint: "Name as the art" },
-  { id: "box", label: "Box", hint: "Centered mark" },
-  { id: "tour", label: "Tour", hint: "Cities list" },
-  { id: "coords", label: "Coords", hint: "Lat / long" },
-  { id: "crest", label: "Crest", hint: "House emblem" },
-  { id: "slogan", label: "Slogan", hint: "One line" },
-  { id: "blueprint", label: "Blueprint", hint: "Technical plate" },
-  { id: "trail", label: "Trail", hint: "Outdoor stamp" },
-  { id: "issue", label: "Issue", hint: "Catalog number" },
+  { id: "wordmark", label: "Wordmark", hint: "Name only" },
+  { id: "box", label: "Box", hint: "Boxed mark" },
+  { id: "tour", label: "Tour", hint: "Map graphic" },
+  { id: "coords", label: "Coords", hint: "Compass" },
+  { id: "crest", label: "Crest", hint: "Emblem" },
+  { id: "slogan", label: "Slogan", hint: "Your line" },
+  { id: "blueprint", label: "Blueprint", hint: "Diagram" },
+  { id: "trail", label: "Trail", hint: "Stamp" },
+  { id: "issue", label: "Issue", hint: "Numbered" },
 ] as const;
 
 export type CategoryId = (typeof CATEGORIES)[number]["id"];
 
 export const DROP_SLOTS = [
-    { categoryId: "lockup", leadId: "brand", note: "SKU 01 hero mark. Giant initials. The listing thumbnail." },
-    { categoryId: "wordmark", leadId: "brand", note: "SKU 02 wordmark. The house name IS the graphic." },
-    { categoryId: "crest", leadId: "brand", note: "SKU 03 crest. Invented emblem for the house." },
+    { categoryId: "lockup", leadId: "brand", note: "Hero mark. Giant initials as geometry. Picture first. No extra words." },
+    { categoryId: "wordmark", leadId: "brand", note: "The house name only, spelled perfectly. No extra words." },
+    { categoryId: "crest", leadId: "brand", note: "Invented emblem. Initials inside. No slogans." },
 ] as const;
 
 export const DROP_COUNT = DROP_SLOTS.length;
@@ -201,25 +201,25 @@ function styleSuffix(styleId: StyleId, brand: Brand): string {
   const world = theme.label.toLowerCase();
   switch (styleId) {
     case "drop":
-      return ` Hero merch drop. One giant ${world} idea, oversized ${initials}, billboard-simple, thumbnail-killer. ${theme.hook}.`;
+      return ` Hero merch PICTURE. One giant ${world} image, oversized ${initials} as a mark, billboard-simple. Almost no type. ${theme.hook}.`;
     case "chrome":
-      return ` 2026 Y2K chrome. Liquid metal, iridescent, inflatable 3D, cyber highlights, chrome ${initials}. Still clearly ${world}.`;
+      return ` 2026 Y2K chrome PICTURE. Liquid metal, iridescent, inflatable 3D, chrome ${initials}. No slogans. Still ${world}.`;
     case "vintage":
-      return ` Vintage merch LAYOUT only: 90s boxy-tee scale, era type, bootleg-poster composition. Muted flat inks. No crackle, no speckle, no faded-wash texture, no noise overlay. ${world} motifs as clean screen print.`;
+      return ` Vintage merch LAYOUT: 90s boxy-tee scale, clean era poster. Muted flat inks. No crackle, no speckle, no faded wash, no noise. ${world} as a clean screen-print picture. Almost no type.`;
     case "type":
-      return ` Oversized typography poster. Giant ${name.toUpperCase()} or ${initials} IS the design. Swiss, varsity, or brutal type. ${world} attitude in the lettering.`;
+      return ` Typography plate. The ONLY words are ${name.toUpperCase()} or ${initials}, spelled perfectly. No other letters. Swiss / varsity / brutal. ${world} attitude.`;
     case "line":
-      return ` Trendy single-weight line art. Editorial, lots of negative space, one-line or fine tattoo line. ${initials} and ${world} motifs as clean contour.`;
+      return ` Single-weight line PICTURE. Editorial negative space, contour of ${world} motifs. ${initials} small. No slogans.`;
     case "tattoo":
-      return ` Traditional tattoo flash. Bold outlines, limited fills, flash-sheet composition, original ${world} flash — never copy Sailor Jerry or branded flash.`;
+      return ` Traditional tattoo flash PICTURE. Bold outlines, limited fills. Original ${world} flash. ${initials} as a tiny flash mark. No sentences. Never copy Sailor Jerry.`;
     case "floral":
-      return ` Modern botanical fashion print. Trendy florals, leaves, celestial plants, scarf density, original species for this ${world} house.`;
+      return ` Botanical fashion PICTURE. Florals, leaves, scarf density, original ${world} plants. No words except a tiny ${initials}.`;
     case "liquid":
-      return ` 3D liquid blob and inflatable supershape. Toy-like volume, chrome drip, sticky 3D, very now. ${initials} as a 3D object in the ${world} world.`;
+      return ` 3D liquid blob PICTURE. Inflatable volume, chrome drip. ${initials} as a 3D object. No slogans.`;
     case "grunge":
-      return ` Skater graphic. Bold xerox SHAPES, torn-paper collage as big pieces, 90s zine layout. Fat halftone dots OK. No pixel grain, no dirt overlay. ${world} graphic, clean ink.`;
+      return ` Skater PICTURE. Bold xerox SHAPES, big collage pieces, 90s zine layout. Fat halftone OK. No dirt overlay, no fake lyrics, no fake band names.`;
     case "vector":
-      return ` Flat merch vector lockup, 2–4 hard fills, one accent slash, stacked wordmark. Screen-print separations. Hard edges, solid ink. No grain, no crackle, no distress, no gradients, no photo, no mockup. ${theme.hook}.`;
+      return ` Flat merch vector PICTURE, 2–4 hard fills, one accent slash. Screen-print separations. Hard edges, solid ink. No grain, no crackle, no distress, no gradients, no photo, no mockup. Almost no type. ${theme.hook}.`;
   }
 }
 
@@ -228,61 +228,37 @@ function categorySuffix(categoryId: CategoryId, brand: Brand): string {
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
   const upper = name.toUpperCase();
   const kids = brand.audience === "kids";
-  const graphic = (() => {
-    if (kids) {
-      switch (categoryId) {
-        case "lockup":
-          return ` Category LOCKUP — giant playful ${initials}. Chunky rounded letters, original house creature may perch on a letter. Two or three colors. Flagship kids merch.`;
-        case "wordmark":
-          return ` Category WORDMARK — the word ${upper} IS the graphic. Chunky kids type, toy-like letters. No extra clipart.`;
-        case "box":
-          return ` Category BOX — color-block boxed ${initials}. Centered, bold, like a mini drop. Invented box.`;
-        case "tour":
-          return ` Category TOUR — ${upper} summer-camp / playground tour. Original camps, parks, or cities from this house.`;
-        case "coords":
-          return ` Category COORDS — treehouse / backyard locale plate. Coordinates, compass ticks, ${upper} EST.`;
-        case "crest":
-          return ` Category CREST — cub crest for ${name}. House animal as arms, two or three colors. Junior badge, not a stolen scout mark.`;
-        case "slogan":
-          return ` Category SLOGAN — one short kids line in huge type. ${upper} small. Playful, not mean.`;
-        case "blueprint":
-          return ` Category BLUEPRINT — exploded toy diagram. Technical but cute. ${initials} as the invention.`;
-        case "trail":
-          return ` Category TRAIL — junior ranger stamp. Ridge, cub, topo, small ${upper}.`;
-        case "issue":
-          return ` Category ISSUE — numbered playground drop. “${upper.slice(0, 8)} / 01”. Catalog energy for kids.`;
-      }
-    }
-    switch (categoryId) {
-      case "lockup":
-        return ` Category LOCKUP — giant ${initials} monogram is the whole design. Solid two-color fills, one accent slash cutting the letters, hairline registration ticks, stacked ${upper} under the mark, tiny catalog line. Flagship merch. Original house only.`;
-      case "wordmark":
-        return ` Category WORDMARK — the word ${upper} IS the graphic. Custom condensed or brutal type, one accent, kerning as craft. No clipart, no extra icons.`;
-      case "box":
-        return ` Category BOX — centered boxed ${initials} or ${upper} on a heavy bar. Perfect centering, two colors. Invented box, never a stolen logo.`;
-      case "tour":
-        return ` Category TOUR — ${upper} world-tour poster. Giant mark plus a list of original cities, camps, or peaks from this house. Small type, drop energy.`;
-      case "coords":
-        return ` Category COORDS — locale merch. Coordinates, compass ticks, ${upper} EST. Trail-house precision. Original numbers.`;
-      case "crest":
-        return ` Category CREST — invented heraldry for ${name}. Shield or seal, motifs as arms, two or three colors. Badge that outranks a college seal.`;
-      case "slogan":
-        return ` Category SLOGAN — one house line in huge type. ${upper} small. The sentence is the design.`;
-      case "blueprint":
-        return ` Category BLUEPRINT — technical plate. Architectural lines, exploded ${initials}, topo, grid. Drafting-table graphic.`;
-      case "trail":
-        return ` Category TRAIL — outdoor performance stamp. Ridge, topo, trail mark, small ${upper}. Built to beat a mountain-house drop.`;
-      case "issue":
-        return ` Category ISSUE — numbered catalog drop. “${upper.slice(0, 8)} / 01” and EST. 2026. Editorial grid, one giant motif.`;
-    }
-  })();
-  return graphic;
+  const picture = kids
+    ? "Kids picture: chunky, round, two or three colors, original house creature OK."
+    : "Adult merch picture: bold, thumbnail-simple, two or three colors.";
+  switch (categoryId) {
+    case "lockup":
+      return ` LOCKUP. Giant ${initials} as geometry is the whole design. ${picture} No extra words, no slogan, no verse.`;
+    case "wordmark":
+      return ` WORDMARK. Paint ONLY the letters ${upper}. Every letter, in order, none missing, none extra, none cropped. No icons, no slogan, no second line.`;
+    case "box":
+      return ` BOX. ${initials} inside an invented heavy box or bar. Centered. ${picture} No extra words.`;
+    case "tour":
+      return ` TOUR. A map, route, or ticket-stub PICTURE for ${upper}. Abstract places, no city names (names get misspelled). Tiny ${initials}. No slogans.`;
+    case "coords":
+      return ` COORDS. Compass, ticks, and invented numbers as a locale PICTURE. Tiny ${initials}. No sentences.`;
+    case "crest":
+      return ` CREST. Invented emblem for ${name}. Shield or seal, house motifs as arms. ${initials} inside. ${picture} No slogans, no mottos, no fake latin.`;
+    case "slogan":
+      return ` SLOGAN plate. Paint a PICTURE for ${name}. Leave the lower third empty for real type. Do not invent a sentence. Do not paint a slogan.`;
+    case "blueprint":
+      return ` BLUEPRINT. Technical diagram PICTURE of an invented ${initials} object. Drafting lines, exploded view. Tiny ${initials}. No sentences.`;
+    case "trail":
+      return ` TRAIL. Outdoor stamp PICTURE: ridge, topo, trail mark. Small ${initials}. No slogans.`;
+    case "issue":
+      return ` ISSUE. Catalog drop PICTURE. One giant motif, a small number like 01, tiny ${initials}. No sentences.`;
+  }
 }
 
 function animeSuffix(brand: Brand): string {
   const name = brand.name.trim() || "the house";
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
-  return ` ANIME MODE. Original anime / manga merch for ${name}. Cel-shaded, bold ink line, fashion-forward 2026 J-streetwear. Invented character, creature, or scene that belongs to this house — ${initials} as a quiet mark. Never copy Naruto, Dragon Ball, One Piece, Ghibli, Demon Slayer, or any existing IP. Thumbnail-bold. Limited house palette. Isolated 2D anime graphic, print-ready, huge margin.`;
+  return ` ANIME MODE. Original anime / manga PICTURE for ${name}. Cel-shaded, bold ink, invented character or scene. Tiny ${initials}. No copied IP. No slogans. Isolated 2D graphic.`;
 }
 
 function leadSuffix(leadId: LeadId, brand: Brand): string {
@@ -387,22 +363,14 @@ export function composePrompt(
       ? "Designed for a WOMEN'S clothing shop. Feminine merch energy, thumbnail-bold, original house only."
       : "Designed for a MEN'S clothing shop. Masculine merch energy, thumbnail-bold, original house only.";
   const kidsCraft = kids
-    ? "Kids merch craft 2023–2026: chunky type, rounded geometry, color-block, original animal or mascot, one giant idea. Study Mini Rodini / Bobo Choses / TAO / Primary / Patagonia Kids as composition only. Never copy their marks. No movie characters, no clipart, no kawaii anime, no Disney proportions."
+    ? "Kids merch craft: chunky picture, rounded geometry, color-block, original animal or mascot, one giant idea. No movie characters, no clipart, no Disney. Almost no type."
     : "";
-  const church = theme.id === "church";
   const spelled = name
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, "")
     .split("")
     .join("-");
-  const typeLaw = `TYPE LAW. The only letters the image may contain are the initials ${initials} inside a crest, or ${name.toUpperCase()} (${spelled || initials}) if this is a wordmark. Do not paint Bible verses, psalm numbers, citations, slogans, or sentences. No arch type. No dummy latin. Fenrax sets all other copy in production.`;
-  const churchCraft = church
-    ? kids
-      ? `CHURCH is direction, not a cage. Kids Sunday merch: joyful, age-appropriate. ${typeLaw} Reverent and fun. Never scary, never sarcasm about God.`
-      : women
-        ? `CHURCH is direction, not a cage. Women's shop: Scripture and faith as fashion. ${typeLaw} Editorial, feminine, joyful, reverent.`
-        : `CHURCH is direction, not a cage. Men's shop: Scripture and faith as merch. ${typeLaw} Masculine, joyful, reverent.`
-    : typeLaw;
+  const typeLaw = `COPY LOCK. Allowed letters in the image: ${initials}, and ${name.toUpperCase()} (${spelled || initials}) only if this is a wordmark. No other words. No slogans. No verses. No mottos. No fake latin. No city names. No lyrics. No psalm. No sentences. If you need a caption, leave the bottom empty. Picture first.`;
   const direction = [
     `You are a professional merch art director designing a Printify print FILE for ${name}.`,
     `House: ${name}. Mark: ${initials}. Motifs: ${brand.motifs.trim() || theme.motifs}.`,
@@ -413,7 +381,7 @@ export function composePrompt(
     `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
     notes,
     kidsCraft,
-    churchCraft,
+    typeLaw,
     "Original house only — not generic, not clipart, not a copy. Theme and audience are a compass. Full designer freedom inside that compass.",
     "PRINT FILE for Printify Product Creator. Isolated 2D graphic only.",
     "Never a photo. Never a model. Never a body. Never a garment. Never fabric texture. Never a hanger. Never wrinkles. Never a mockup. Never a lifestyle shot. Never a watermark. Never UI chrome.",
@@ -431,8 +399,8 @@ export function composePrompt(
   const productBit = product?.suffix ?? "";
   const suffix = `${anime ? animeSuffix(brand) : ""}${leadSuffix(leadId, brand)}${categorySuffix(categoryId, brand)}${styleSuffix(styleId, brand)}${productBit}`;
   const idea = trimmed
-    ? trimmed
-    : `You are the designer. Compass: ${theme.label} for ${who}. Full freedom. One unforgettable original idea. Do not ask. Just draw.`;
+    ? `PICTURE direction only — do not paint these words: ${trimmed}`
+    : `Draw one unforgettable ${theme.label.toLowerCase()} PICTURE for ${who}. No words except the mark. Do not ask. Just draw.`;
   const composed = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
   return composed.slice(0, MAX_COMPOSED);
 }

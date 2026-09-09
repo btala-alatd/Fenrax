@@ -1,35 +1,12 @@
-import { themeOf, type Brand } from "@/lib/brand";
+import { type Brand } from "@/lib/brand";
 import { loadImage } from "@/lib/image-file";
 import type { CategoryId } from "@/lib/studio-data";
-
-const CHURCH_VERSES = [
-  { cite: "PSALM 100:2", line: "SERVE THE LORD WITH GLADNESS" },
-  { cite: "JOHN 13:34", line: "LOVE ONE ANOTHER" },
-  { cite: "EPHESIANS 5:2", line: "WALK IN LOVE" },
-  { cite: "PSALM 23:1", line: "THE LORD IS MY SHEPHERD" },
-  { cite: "PHILIPPIANS 4:4", line: "REJOICE IN THE LORD" },
-] as const;
-
-const KIDS_VERSES = [
-  { cite: "JOHN 13:34", line: "LOVE ONE ANOTHER" },
-  { cite: "EPHESIANS 5:2", line: "WALK IN LOVE" },
-  { cite: "PSALM 100:2", line: "SERVE THE LORD WITH GLADNESS" },
-] as const;
-
-function hashPick<T>(seed: string, items: readonly T[]): T {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i += 1) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return items[Math.abs(h) % items.length]!;
-}
 
 function isShortCopy(value: string) {
   const text = value.trim();
   if (text.length < 4 || text.length > 48) return false;
-  if (text.split(/\s+/).length > 10) return false;
-  if (/^(draw|make|create|design|a |an |the )/i.test(text)) return false;
+  if (text.split(/\s+/).length > 8) return false;
+  if (/^(draw|make|create|design|a |an |the |otter|bear|lion|dove)/i.test(text)) return false;
   return true;
 }
 
@@ -39,23 +16,10 @@ export function plateCopy(
   categoryId: CategoryId,
 ): { name: string; lines: string[] } {
   const name = brand.name.trim().toUpperCase();
-  const theme = themeOf(brand);
   const showName = categoryId !== "wordmark";
   const lines: string[] = [];
   const user = prompt.trim();
-  if (theme.id === "church") {
-    if (isShortCopy(user)) {
-      lines.push(user.toUpperCase());
-    } else {
-      const verse = hashPick(
-        `${name}|${user}|${categoryId}`,
-        brand.audience === "kids" ? KIDS_VERSES : CHURCH_VERSES,
-      );
-      lines.push(verse.cite, verse.line);
-    }
-  } else if (isShortCopy(user)) {
-    lines.push(user.toUpperCase());
-  }
+  if (isShortCopy(user)) lines.push(user.toUpperCase());
   return { name: showName ? name : "", lines };
 }
 
