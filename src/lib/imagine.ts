@@ -264,7 +264,7 @@ async function callGoogleOnce(
             contents: [{ role: "user", parts }],
             generationConfig: {
               responseModalities: ["TEXT", "IMAGE"],
-              imageConfig: { aspectRatio: ratio },
+              imageConfig: { aspectRatio: ratio, imageSize: "2K" },
             },
           }),
         },
@@ -373,7 +373,7 @@ const GENERATE_BODY = {
   model: "grok-imagine-image-2.0",
   n: 1 as const,
   resolution: "2k",
-  quality: "high",
+  quality: "medium",
   response_format: "url",
 };
 

@@ -1,4 +1,4 @@
-const MAX_EDGE = 2048;
+const MAX_EDGE = 5400;
 
 export function readImageFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -6,7 +6,7 @@ export function readImageFile(file: File): Promise<string> {
       reject(new Error("Use a JPEG, PNG, or WebP file."));
       return;
     }
-    if (file.size > 8 * 1024 * 1024) {
+    if (file.size > 24 * 1024 * 1024) {
       reject(new Error("That file is too large."));
       return;
     }
@@ -35,17 +35,27 @@ function loadImage(dataUrl: string): Promise<HTMLImageElement> {
 }
 
 export async function toPngDataUrl(dataUrl: string): Promise<string> {
-  if (dataUrl.startsWith("data:image/png")) return dataUrl;
   const image = await loadImage(dataUrl);
   const width = image.naturalWidth || image.width;
   const height = image.naturalHeight || image.height;
   const scale = Math.min(1, MAX_EDGE / Math.max(width, height));
+  const outW = Math.max(1, Math.round(width * scale));
+  const outH = Math.max(1, Math.round(height * scale));
+  if (
+    dataUrl.startsWith("data:image/png") &&
+    outW === width &&
+    outH === height
+  ) {
+    return dataUrl;
+  }
   const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(width * scale));
-  canvas.height = Math.max(1, Math.round(height * scale));
+  canvas.width = outW;
+  canvas.height = outH;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not convert to PNG.");
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingEnabled = scale < 1;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(image, 0, 0, outW, outH);
   return canvas.toDataURL("image/png");
 }
 

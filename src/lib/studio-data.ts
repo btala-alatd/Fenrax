@@ -512,7 +512,7 @@ export function examplesFor(brand: Brand, lens: LensId = "lookbook") {
 
 export const MAX_PROMPT = 2000;
 export const MAX_COMPOSED = 4000;
-export const MAX_SOURCE_BYTES = 4 * 1024 * 1024;
+export const MAX_SOURCE_BYTES = 16 * 1024 * 1024;
 
 export type StudioMode = "create" | "edit";
 

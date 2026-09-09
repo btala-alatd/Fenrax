@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Archive, FileCode2, Image, Save, Store, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { downloadPng, downloadSvg, fileStem } from "@/lib/export";
+import { downloadSvg } from "@/lib/export";
 import {
   buildPrintifyPng,
   PRINTIFY_CATALOG,
@@ -42,7 +42,6 @@ export function ExportButtons({
   const [busy, setBusy] = useState<"png" | "svg" | "printify" | null>(null);
   const [pack, setPack] = useState<PrintifyBuild | null>(null);
   const slug = brandSlug(brand);
-  const stem = fileStem(still.id, slug);
   const preset = printifyPreset(still.productId);
   const colors = [brand.ink, brand.paper, brand.accent];
   const base = `${slug}-${preset.id}-${preset.width}x${preset.height}`;
@@ -52,8 +51,18 @@ export function ExportButtons({
     if (blocked) return;
     setBusy("png");
     try {
-      await downloadPng(still.dataUrl, `${stem}.png`);
-      toast.success("PNG saved.");
+      const next = await buildPrintifyPng(
+        still.dataUrl,
+        still.productId,
+        still.lens !== "lookbook",
+      );
+      await saveBlob(next.blob, `${base}.png`);
+      await saveBlob(next.artBlob, `${base}-art.png`);
+      toast.success(
+        next.grade === "print"
+          ? `PNG saved at ${next.preset.width}×${next.preset.height} · 300 DPI.`
+          : `PNG saved at ${next.artWidth}×${next.artHeight} on a ${next.preset.width}×${next.preset.height} canvas.`,
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save PNG.");
     } finally {

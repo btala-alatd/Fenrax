@@ -528,16 +528,13 @@ export async function buildPrintifyFromArt(
   productId: ProductId,
 ): Promise<PrintifyBuild> {
   const preset = printifyPreset(productId);
-  const { dpi, scale, grade } = evaluateArtworkResolution(art.width, art.height, preset);
+  const { dpi, grade } = evaluateArtworkResolution(art.width, art.height, preset);
 
   const canvas = document.createElement("canvas");
   canvas.width = preset.width;
   canvas.height = preset.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not build the Printify canvas.");
-  ctx.clearRect(0, 0, preset.width, preset.height);
-  ctx.imageSmoothingEnabled = scale > 1;
-  ctx.imageSmoothingQuality = "high";
 
   const innerW = preset.width * (1 - PAD * 2);
   const innerH = preset.height * (1 - PAD * 2);
@@ -546,6 +543,9 @@ export async function buildPrintifyFromArt(
   const dh = art.height * fit;
   const dx = (preset.width - dw) / 2;
   const dy = (preset.height - dh) / 2;
+  ctx.clearRect(0, 0, preset.width, preset.height);
+  ctx.imageSmoothingEnabled = fit > 1;
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(art, dx, dy, dw, dh);
 
   const png = withDpi(await canvasToPng(canvas), DPI);

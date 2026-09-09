@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { brandSlug, themeOf, type Brand } from "@/lib/brand";
 import { rasterToSvgFromArt } from "@/lib/export";
 import { buildEtsyListing } from "@/lib/etsy";
-import { dataUrlToBlob } from "@/lib/image-file";
+import { dataUrlToBlob, toPngDataUrl } from "@/lib/image-file";
 import { saveBlob } from "@/lib/save-to";
 import {
   PRINTIFY_CATALOG,
@@ -29,16 +29,6 @@ function segment(value: string) {
 
 function stamp() {
   return new Date().toISOString().replace(/[-:]/g, "").slice(0, 13);
-}
-
-async function dataUrlBlob(dataUrl: string) {
-  return dataUrlToBlob(dataUrl);
-}
-
-function imageExt(dataUrl: string) {
-  if (dataUrl.startsWith("data:image/jpeg")) return "jpg";
-  if (dataUrl.startsWith("data:image/webp")) return "webp";
-  return "png";
 }
 
 function stillStem(still: Still, index: number) {
@@ -70,10 +60,10 @@ async function addGeneratedImage(
   index: number,
 ) {
   const stem = stillStem(still, index);
-  const ext = imageExt(still.dataUrl);
-  const blob = await dataUrlBlob(still.dataUrl);
-  zip.file(`${root}/images/${stem}.${ext}`, blob, { compression: "STORE" });
-  zip.file(`${root}/${stem}/image.${ext}`, blob, { compression: "STORE" });
+  const png = await toPngDataUrl(still.dataUrl);
+  const blob = dataUrlToBlob(png);
+  zip.file(`${root}/images/${stem}.png`, blob, { compression: "STORE" });
+  zip.file(`${root}/${stem}/image.png`, blob, { compression: "STORE" });
   zip.file(
     `${root}/${stem}/prompt.txt`,
     [
