@@ -2,16 +2,19 @@
 
 Private merch studio. Printify-ready graphics for Men, Women, and Kids shops.
 
-## Render
+## Render (use this)
 
-1. Open [render.com](https://render.com) → **New +** → **Blueprint**
-2. Connect GitHub and pick **btala-alatd/Fenrax** (branch `main`)
-3. Deploy. No API key is required to start.
-4. After it is live, add `GEMINI_API_KEY` in Render → Environment, or paste it in Shop → Settings
-5. Open the live URL in **Chrome** on the Flip 7 → menu → **Add to Home screen**
+The GitHub repo is **public** so Render can clone it without connecting GitHub.
 
-Do not commit API keys.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/btala-alatd/Fenrax)
 
-## GitSync (phone)
+1. Open https://render.com/deploy?repo=https://github.com/btala-alatd/Fenrax
+2. Sign in to Render if asked
+3. Click **Apply** / **Deploy**
+4. Skip any API key / environment prompt
+5. Wait until the **fenrax** service is **Live**
+6. Open the `*.onrender.com` URL in **Chrome** on the Flip 7 → menu → **Add to Home screen**
 
-The empty-repo / detached-head clone is stale. Delete that Fenrax folder, then clone `https://github.com/btala-alatd/Fenrax.git` again on branch `main`. You do not need GitSync to run the studio — Render is the live app.
+Do not commit API keys. After it is live you can paste `GEMINI_API_KEY` in Render → Environment, or in Fenrax → Settings.
+
+To lock the GitHub repo private again after deploy, say so in chat.
