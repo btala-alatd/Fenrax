@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #061018;
+  --color-foreground: #f4fffb;
+  --color-card: #0b1c26;
+  --color-raised: #102530;
+  --color-primary: #c6ff3b;
+  --color-primary-foreground: #061018;
+  --color-muted-foreground: #8aa8a3;
+  --color-ink-subtle: #5e7a76;
+  --color-border: rgb(244 255 251 / 0.1);
+  --color-ring: #c6ff3b;
+  --color-destructive: #ff6b6b;
+  --color-glow: rgb(198 255 59 / 0.16);
+  --color-ice: rgb(94 234 212 / 0.14);
+
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 16px;
+  --radius-md: 22px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+
+  --shadow-border: 0 0 0 1px rgb(244 255 251 / 0.08);
+  --shadow-border-hover: 0 0 0 1px rgb(244 255 251 / 0.16);
+  --shadow-print: 0 28px 64px rgb(0 0 0 / 0.4);
+  --shadow-glow: 0 0 80px rgb(198 255 59 / 0.08);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --motion-quick: 160ms;
+  --motion-fast: 280ms;
+  --motion-slow: 480ms;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100dvh;
+    max-width: 100%;
+    overflow-x: hidden;
+    background: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+.app-shell {
+  max-width: 100%;
+  overflow-x: hidden;
+  background:
+    radial-gradient(920px 520px at 8% -8%, var(--color-glow), transparent 58%),
+    radial-gradient(760px 480px at 108% 0%, var(--color-ice), transparent 52%),
+    var(--color-background);
+}
+
+.chip-scroller {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  max-width: 100%;
+}
+
+.checkerboard {
+  background-color: #d9d9d9;
+  background-image:
+    linear-gradient(45deg, #efefef 25%, transparent 25%),
+    linear-gradient(-45deg, #efefef 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #efefef 75%),
+    linear-gradient(-45deg, transparent 75%, #efefef 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+
+.glass-panel {
+  background: rgb(11 28 38 / 0.78);
+  box-shadow: var(--shadow-border), var(--shadow-glow);
+  backdrop-filter: blur(22px);
+}
+
+.stage-enter {
+  animation: stage-enter var(--motion-slow) var(--ease-smooth-out) both;
+}
+
+@keyframes stage-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-enter {
+    animation: none;
+  }
+
+  * {
+    scroll-behavior: auto !important;
+  }
+}
