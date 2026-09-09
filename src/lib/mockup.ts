@@ -7,29 +7,28 @@ type Place = {
   taper: number;
   collar: number;
   hem: number;
-  surfaceIn: number;
-  body: number;
+  width: number;
 };
 
 const PLACE: Record<ProductId, Place> = {
-  tee: { cx: 0.5, taper: 0.93, collar: 0.24, hem: 0.84, surfaceIn: 18, body: 0.62 },
-  long: { cx: 0.5, taper: 0.93, collar: 0.24, hem: 0.84, surfaceIn: 18, body: 0.6 },
-  tank: { cx: 0.5, taper: 0.94, collar: 0.26, hem: 0.82, surfaceIn: 16, body: 0.54 },
-  hoodie: { cx: 0.5, taper: 0.92, collar: 0.26, hem: 0.68, surfaceIn: 20, body: 0.58 },
-  crew: { cx: 0.5, taper: 0.93, collar: 0.25, hem: 0.8, surfaceIn: 20, body: 0.58 },
-  chest: { cx: 0.36, taper: 0.97, collar: 0.28, hem: 0.5, surfaceIn: 20, body: 0.58 },
-  back: { cx: 0.5, taper: 0.93, collar: 0.22, hem: 0.84, surfaceIn: 18, body: 0.64 },
-  baby: { cx: 0.5, taper: 0.95, collar: 0.28, hem: 0.8, surfaceIn: 14, body: 0.5 },
-  tote: { cx: 0.5, taper: 1, collar: 0.2, hem: 0.88, surfaceIn: 15, body: 0.62 },
-  hat: { cx: 0.5, taper: 0.86, collar: 0.3, hem: 0.58, surfaceIn: 7, body: 0.36 },
-  mug: { cx: 0.48, taper: 0.9, collar: 0.3, hem: 0.78, surfaceIn: 9, body: 0.42 },
-  tumbler: { cx: 0.5, taper: 0.92, collar: 0.22, hem: 0.82, surfaceIn: 8, body: 0.28 },
-  sticker: { cx: 0.5, taper: 1, collar: 0.14, hem: 0.88, surfaceIn: 8, body: 0.55 },
-  poster: { cx: 0.5, taper: 1, collar: 0.12, hem: 0.9, surfaceIn: 16, body: 0.5 },
-  pillow: { cx: 0.5, taper: 1, collar: 0.18, hem: 0.88, surfaceIn: 16, body: 0.58 },
-  phone: { cx: 0.5, taper: 0.98, collar: 0.16, hem: 0.86, surfaceIn: 3.2, body: 0.32 },
-  canvas: { cx: 0.5, taper: 1, collar: 0.12, hem: 0.9, surfaceIn: 16, body: 0.52 },
-  repeat: { cx: 0.5, taper: 0.96, collar: 0.2, hem: 0.86, surfaceIn: 20, body: 0.7 },
+  tee: { cx: 0.5, taper: 0.94, collar: 0.3, hem: 0.69, width: 0.42 },
+  long: { cx: 0.5, taper: 0.94, collar: 0.3, hem: 0.69, width: 0.4 },
+  tank: { cx: 0.5, taper: 0.95, collar: 0.32, hem: 0.68, width: 0.38 },
+  hoodie: { cx: 0.5, taper: 0.93, collar: 0.32, hem: 0.58, width: 0.4 },
+  crew: { cx: 0.5, taper: 0.94, collar: 0.31, hem: 0.64, width: 0.4 },
+  chest: { cx: 0.37, taper: 0.98, collar: 0.32, hem: 0.48, width: 0.15 },
+  back: { cx: 0.5, taper: 0.94, collar: 0.26, hem: 0.7, width: 0.44 },
+  baby: { cx: 0.5, taper: 0.96, collar: 0.34, hem: 0.68, width: 0.36 },
+  tote: { cx: 0.5, taper: 1, collar: 0.28, hem: 0.78, width: 0.48 },
+  hat: { cx: 0.5, taper: 0.86, collar: 0.34, hem: 0.56, width: 0.26 },
+  mug: { cx: 0.48, taper: 0.9, collar: 0.32, hem: 0.76, width: 0.34 },
+  tumbler: { cx: 0.5, taper: 0.92, collar: 0.24, hem: 0.8, width: 0.26 },
+  sticker: { cx: 0.5, taper: 1, collar: 0.16, hem: 0.86, width: 0.5 },
+  poster: { cx: 0.5, taper: 1, collar: 0.14, hem: 0.88, width: 0.46 },
+  pillow: { cx: 0.5, taper: 1, collar: 0.2, hem: 0.84, width: 0.5 },
+  phone: { cx: 0.5, taper: 0.98, collar: 0.18, hem: 0.84, width: 0.3 },
+  canvas: { cx: 0.5, taper: 1, collar: 0.14, hem: 0.88, width: 0.5 },
+  repeat: { cx: 0.5, taper: 0.96, collar: 0.22, hem: 0.8, width: 0.58 },
 };
 
 function placeOf(id: ProductId): Place {
@@ -61,31 +60,45 @@ function canvasToPng(canvas: HTMLCanvasElement): Promise<string> {
   });
 }
 
-function contentBox(image: ImageData) {
+function letterbox(image: ImageData) {
   const { width, height, data } = image;
-  let minX = width;
-  let minY = height;
-  let maxX = 0;
-  let maxY = 0;
-  const step = Math.max(1, Math.floor(Math.min(width, height) / 360));
-  for (let y = 0; y < height; y += step) {
-    for (let x = 0; x < width; x += step) {
+  const band = Math.max(2, Math.floor(height * 0.045));
+  const bar = (y0: number, y1: number) => {
+    let n = 0;
+    let blank = 0;
+    for (let y = y0; y < y1; y += 2) {
+      for (let x = 0; x < width; x += 6) {
+        const i = (y * width + x) * 4;
+        n += 1;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        if ((r > 244 && g > 244 && b > 244) || (r < 12 && g < 12 && b < 12)) blank += 1;
+      }
+    }
+    return n > 0 && blank / n > 0.9;
+  };
+  if (!bar(0, band) || !bar(height - band, height)) {
+    return { x: 0, y: 0, w: width, h: height };
+  }
+  let minY = 0;
+  let maxY = height - 1;
+  const rowBlank = (y: number) => {
+    let n = 0;
+    let blank = 0;
+    for (let x = 0; x < width; x += 6) {
       const i = (y * width + x) * 4;
+      n += 1;
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      if (r > 246 && g > 246 && b > 246) continue;
-      if (r < 10 && g < 10 && b < 10) continue;
-      if (x < minX) minX = x;
-      if (y < minY) minY = y;
-      if (x > maxX) maxX = x;
-      if (y > maxY) maxY = y;
+      if ((r > 244 && g > 244 && b > 244) || (r < 12 && g < 12 && b < 12)) blank += 1;
     }
-  }
-  if (maxX - minX < width * 0.4 || maxY - minY < height * 0.4) {
-    return { x: 0, y: 0, w: width, h: height };
-  }
-  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    return n > 0 && blank / n > 0.9;
+  };
+  while (minY < height && rowBlank(minY)) minY += 2;
+  while (maxY > minY && rowBlank(maxY)) maxY -= 2;
+  return { x: 0, y: minY, w: width, h: Math.max(32, maxY - minY) };
 }
 
 function printArea(
@@ -97,19 +110,18 @@ function printArea(
   const inches = printInches(productId);
   const ratio = inches.h / Math.max(0.1, inches.w);
   const grow = Math.min(1.25, Math.max(0.7, scale));
-  let w = box.w * place.body * (inches.w / place.surfaceIn) * grow;
+  let w = box.w * place.width * grow;
   let h = w * ratio;
-  const maxH = box.h * (place.hem - place.collar);
+  const collar = box.y + box.h * place.collar;
+  const hem = box.y + box.h * place.hem;
+  const maxH = Math.max(32, hem - collar);
   if (h > maxH) {
     h = maxH;
     w = h / ratio;
   }
-  const collar = box.y + box.h * place.collar;
-  const hem = box.y + box.h * place.hem;
   let x = box.x + box.w * place.cx - w / 2;
-  let y = collar + (Math.min(hem, collar + maxH) - collar - h) * 0.12;
+  let y = collar;
   if (y + h > hem) y = Math.max(collar, hem - h);
-  if (y < collar) y = collar;
   x = Math.max(box.x, Math.min(x, box.x + box.w - w));
   return {
     x: Math.round(x),
@@ -209,7 +221,7 @@ export async function stampPrintOnGarment(
   ctx.drawImage(photo, 0, 0, width, height);
 
   const mixed = ctx.getImageData(0, 0, width, height);
-  const area = printArea(contentBox(mixed), productId, scale);
+  const area = printArea(letterbox(mixed), productId, scale);
   const fitted = fitArt(area.w, area.h, art.width, art.height);
 
   const overlay = document.createElement("canvas");
