@@ -37,12 +37,12 @@ const PLACE: Record<ProductId, Place> = {
 function placeOf(id: ProductId, audience: Audience = "men"): Place {
   const base = PLACE[id] ?? PLACE.tee;
   if (audience !== "kids") return base;
-  if (id === "chest") return { ...base, gapIn: 4.6, widthIn: 3, maxHIn: 3 };
-  if (id === "baby") return { ...base, gapIn: 3.4, widthIn: 5.5, maxHIn: 5.5 };
-  if (id === "hoodie" || id === "crew") return { ...base, gapIn: 5.8, widthIn: 7, maxHIn: 7 };
-  if (id === "back") return { ...base, gapIn: 5.2, widthIn: 8, maxHIn: 8 };
+  if (id === "chest") return { ...base, gapIn: 2.4, widthIn: 2.75, maxHIn: 2.75 };
+  if (id === "baby") return { ...base, gapIn: 2.2, widthIn: 5, maxHIn: 5.5 };
+  if (id === "hoodie" || id === "crew") return { ...base, gapIn: 3.2, widthIn: 9, maxHIn: 9 };
+  if (id === "back") return { ...base, gapIn: 2.8, widthIn: 10, maxHIn: 11 };
   if (!APPAREL.has(id)) return base;
-  return { ...base, gapIn: 5.5, widthIn: 7.25, maxHIn: 7.5 };
+  return { ...base, gapIn: 2.6, widthIn: 10, maxHIn: 11 };
 }
 
 function canvasToPng(canvas: HTMLCanvasElement): Promise<string> {
@@ -265,29 +265,25 @@ function apparelArea(image: ImageData, productId: ProductId, scale: number, audi
   const chest = shirt?.chest ?? Math.floor(width * 0.42);
   const left = shirt?.left ?? Math.floor((width - chest) / 2);
   const shirtH = Math.max(48, hem - collar);
-  const pxPerIn = chest / 20;
+  const chestIn = kids ? 16 : 20;
+  const pxPerIn = chest / chestIn;
   const gap = Math.round(place.gapIn * pxPerIn);
-  const minGap = kids ? Math.round(shirtH * 0.46) : gap;
-  let top = collar + Math.max(gap, minGap);
-  const chestFloor = collar + Math.round(shirtH * (kids ? 0.55 : 0.38));
+  let top = collar + gap;
+  const chestFloor = collar + Math.round(shirtH * (kids ? 0.32 : 0.38));
   if (top > chestFloor) top = chestFloor;
   let w = place.widthIn * pxPerIn * grow;
   let h = place.maxHIn * pxPerIn * grow;
-  if (kids) h = Math.min(h, shirtH * 0.34);
   const pocket =
     productId === "hoodie" || productId === "crew"
-      ? collar + Math.round((kids ? 11 : 12.2) * pxPerIn)
-      : hem - Math.round(shirtH * 0.12);
+      ? collar + Math.round((kids ? 9.5 : 12.2) * pxPerIn)
+      : hem - Math.round(shirtH * (kids ? 0.18 : 0.12));
   const maxH = Math.max(32, pocket - top);
   if (h > maxH) {
     const s = maxH / h;
     h = maxH;
     w *= s;
   }
-  if (top + h > pocket) {
-    const floor = collar + (kids ? Math.round(shirtH * 0.4) : Math.min(gap, shirtH * 0.2));
-    top = Math.max(floor, pocket - h);
-  }
+  if (top + h > pocket) top = Math.max(collar + Math.min(gap, shirtH * 0.18), pocket - h);
   let x = left + chest * place.cx - w / 2;
   x = Math.max(4, Math.min(x, width - w - 4));
   const y = Math.max(0, Math.min(top, height - h));
@@ -519,8 +515,7 @@ export async function stampPrintOnGarment(
 
   const mixed = ctx.getImageData(0, 0, width, height);
   const area = printArea(mixed, productId, scale, audience);
-  const fitted = fitArt(area.w, area.h, art.width, art.height, audience === "kids" ? 0.22 : 0.04);
-
+  const fitted = fitArt(area.w, area.h, art.width, art.height, audience === "kids" ? 0.08 : 0.04);
   const overlay = document.createElement("canvas");
   overlay.width = fitted.w;
   overlay.height = fitted.h;

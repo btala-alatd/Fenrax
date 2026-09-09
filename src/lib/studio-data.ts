@@ -270,7 +270,20 @@ export const LOOKBOOK_SHOT: Record<ProductId, string> = {
   repeat: "POSE: standing square to camera, full head in frame, all-over-print shirt or camp shirt, garment visible. Blank fabric, no pattern yet.",
 };
 
-export function lookbookShot(id: ProductId) {
+export function lookbookShot(id: ProductId, audience?: string) {
+  const kids = audience === "kids";
+  if (kids) {
+    if (id === "back") {
+      return "POSE: a real child age 6–10 photographed from behind. Catalog crop, head to hips, garment fills the frame. Real photo.";
+    }
+    if (id === "baby") {
+      return "POSE: a real toddler age 1–3 in a onesie, catalog crop, chest and collar visible. Real photo, not a drawing.";
+    }
+    if (id === "hat" || id === "mug" || id === "tumbler" || id === "tote" || id === "sticker" || id === "poster" || id === "pillow" || id === "phone" || id === "canvas") {
+      return LOOKBOOK_SHOT[id] ?? LOOKBOOK_SHOT.tee;
+    }
+    return "POSE: a real child age 6–10. Catalog crop head to hips so the garment fills the frame. Full head in frame, collar visible. Not a baby, not a teenager, not an adult in a small shirt. Documentary family-catalog light.";
+  }
   return LOOKBOOK_SHOT[id] ?? LOOKBOOK_SHOT.tee;
 }
 
@@ -699,7 +712,7 @@ export function composePrompt(
   const lookbook = lens === "lookbook";
   const audienceLine = lookbook
     ? kids
-      ? "KIDSWEAR collection. Age-appropriate children's fashion, ages 4–12. Child in an everyday pose, or hanging / flat garment. Kids fit, playful, family brand. Never adult styling, never provocative."
+      ? "KIDSWEAR lookbook. A REAL child age 6–10 wearing a real youth garment. Documentary catalog photo, skin pores, cotton weave. Not an adult, not a baby, not a CGI child."
       : women
         ? "WOMENSWEAR collection. Female model, women's fit (relaxed, cropped, or oversized fashion). Shot for a women's clothing brand."
         : "MENSWEAR collection. Male model, men's fit (boxy, oversized, dropped shoulder). Shot for a men's clothing brand."
@@ -709,7 +722,7 @@ export function composePrompt(
         ? "Designed for a WOMEN'S clothing shop. Feminine merch energy, thumbnail-bold, original house only."
         : "Designed for a MEN'S clothing shop. Masculine merch energy, thumbnail-bold, original house only.";
   const kidsCraft = kids
-    ? "Kids merch craft 2023–2026: chunky type, rounded geometry, color-block, original animal or mascot, one giant idea. Study Mini Rodini / Bobo Choses / TAO / Primary / Patagonia Kids as composition only. Never copy their marks. No movie characters."
+    ? "Kids merch craft 2023–2026: chunky type, rounded geometry, color-block, original animal or mascot, one giant idea. Study Mini Rodini / Bobo Choses / TAO / Primary / Patagonia Kids as composition only. Never copy their marks. No movie characters, no clipart, no kawaii anime, no Disney proportions."
     : "";
   const church = theme.id === "church";
   const churchCraft = church
@@ -733,10 +746,10 @@ export function composePrompt(
   if (lookbook) {
     const shot = [
       "REAL PHOTOGRAPH of a real human. Catalog fashion photo, 85mm lens, f/2.8, 8k, visible skin pores, cotton weave, stitching, neck tape. Shot on a camera.",
-      "NOT illustration, NOT anime, NOT manga, NOT cartoon, NOT comic, NOT 3D render, NOT digital painting, NOT cel-shading, NOT a drawing.",
+      "NOT illustration, NOT anime, NOT manga, NOT cartoon, NOT comic, NOT 3D render, NOT digital painting, NOT cel-shading, NOT a drawing, NOT Pixar, NOT CGI.",
       `PRODUCT: a real blank ${wear.garment}. ${audienceLine}`,
       "BLANK PRODUCT: empty print area. No graphic, no logo, no letters, no fake print. Unmarked. A real print file will be composited after.",
-      lookbookShot(productId),
+      lookbookShot(productId, brand.audience),
       `SET: ${churchSet}`,
       `Garment color: a real ${garmentLabel || "shop"} ${wear.garment}, solid color ${garmentHex || paper}. Unmarked cloth.`,
       `Attitude: ${brand.vibe.trim() || theme.vibe}.`,

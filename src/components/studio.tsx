@@ -557,8 +557,7 @@ export function Studio() {
 
     const pngUrl =
       nextLens === "lookbook" && artUrl
-        ? await stampPrintOnGarment(photoUrl, artUrl, nextProduct, scale ?? printScale, brand.audience)
-        : nextLens === "lookbook"
+        ? await stampPrintOnGarment(photoUrl, artUrl, nextProduct, scale ?? printScale, brand.audience)        : nextLens === "lookbook"
           ? photoUrl
           : await toTransparentPng(photoUrl, true).catch(() => photoUrl);
     const still: Still = {

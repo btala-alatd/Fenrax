@@ -9,7 +9,7 @@ export function blankKey(input: {
   productId: ProductId;
   colorId: string;
 }) {
-  return `blank:${input.audience}:${input.themeId}:${input.productId}:${input.colorId}`;
+  return `blank:2:${input.audience}:${input.themeId}:${input.productId}:${input.colorId}`;
 }
 
 export async function getBlank(key: string) {
