@@ -12,13 +12,13 @@ type Place = {
 };
 
 const PLACE: Record<ProductId, Place> = {
-  tee: { cx: 0.5, taper: 0.93, collar: 0.24, hem: 0.84, surfaceIn: 20, body: 0.58 },
-  long: { cx: 0.5, taper: 0.93, collar: 0.24, hem: 0.84, surfaceIn: 20, body: 0.56 },
-  tank: { cx: 0.5, taper: 0.94, collar: 0.26, hem: 0.82, surfaceIn: 18, body: 0.52 },
-  hoodie: { cx: 0.5, taper: 0.92, collar: 0.26, hem: 0.68, surfaceIn: 22, body: 0.56 },
-  crew: { cx: 0.5, taper: 0.93, collar: 0.25, hem: 0.8, surfaceIn: 22, body: 0.56 },
+  tee: { cx: 0.5, taper: 0.93, collar: 0.24, hem: 0.84, surfaceIn: 18, body: 0.62 },
+  long: { cx: 0.5, taper: 0.93, collar: 0.24, hem: 0.84, surfaceIn: 18, body: 0.6 },
+  tank: { cx: 0.5, taper: 0.94, collar: 0.26, hem: 0.82, surfaceIn: 16, body: 0.54 },
+  hoodie: { cx: 0.5, taper: 0.92, collar: 0.26, hem: 0.68, surfaceIn: 20, body: 0.58 },
+  crew: { cx: 0.5, taper: 0.93, collar: 0.25, hem: 0.8, surfaceIn: 20, body: 0.58 },
   chest: { cx: 0.36, taper: 0.97, collar: 0.28, hem: 0.5, surfaceIn: 20, body: 0.58 },
-  back: { cx: 0.5, taper: 0.93, collar: 0.22, hem: 0.84, surfaceIn: 20, body: 0.6 },
+  back: { cx: 0.5, taper: 0.93, collar: 0.22, hem: 0.84, surfaceIn: 18, body: 0.64 },
   baby: { cx: 0.5, taper: 0.95, collar: 0.28, hem: 0.8, surfaceIn: 14, body: 0.5 },
   tote: { cx: 0.5, taper: 1, collar: 0.2, hem: 0.88, surfaceIn: 15, body: 0.62 },
   hat: { cx: 0.5, taper: 0.86, collar: 0.3, hem: 0.58, surfaceIn: 7, body: 0.36 },

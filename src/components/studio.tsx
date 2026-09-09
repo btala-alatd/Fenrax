@@ -216,7 +216,7 @@ export function Studio() {
       if (!still) return;
       setCurrent(still);
       setSourceImage(mode === "edit" ? still.dataUrl : null);
-      toast.success(mode === "edit" ? "Edited." : "Printed.", {
+      toast.success(nextLens === "lookbook" ? "Shirt photo. Your print stamped." : mode === "edit" ? "Edited." : "Printed.", {
         action: {
           label: "Zip",
           onClick: () => void zipPack([still], "images"),
@@ -371,7 +371,7 @@ export function Studio() {
       crypto.randomUUID().slice(0, 8),
       nextCategory,
       nextLead,
-      nextAnime,
+      nextLens === "lookbook" ? false : nextAnime,
     );
 
     const googleKey = usePrinter.getState().googleKey.trim() || undefined;
@@ -435,7 +435,7 @@ export function Studio() {
       categoryId: nextCategory,
       leadId: nextLead,
       lens: nextLens,
-      anime: nextAnime,
+      anime: nextLens === "lookbook" ? false : nextAnime,
       dataUrl: pngUrl,
       createdAt: Date.now(),
       mode: edit ? "edit" : "create",
@@ -917,7 +917,7 @@ function PromptDock({
               key={item.id}
               type="button"
               onClick={() => setLens(item.id)}
-              title={item.id === "lookbook" ? "Photo of a real shirt" : "File you upload to Printify"}
+              title={item.id === "lookbook" ? "Photoreal photo. Your print stamped on the garment." : "File you upload to Printify"}
               className={cn(
                 "h-10 rounded-full px-3.5 text-sm font-medium transition-[background-color,color] duration-[var(--motion-quick)] ease-[var(--ease-out)]",
                 lens === item.id
@@ -1024,6 +1024,7 @@ function PromptDock({
             ))}
           </ChipRow>
           <div className="flex flex-wrap items-center gap-2">
+            {lens === "plate" ? (
             <button
               type="button"
               onClick={() => setAnime(!anime)}
@@ -1037,6 +1038,11 @@ function PromptDock({
               <Sparkles className="size-3.5" />
               Anime
             </button>
+            ) : (
+              <p className="text-[11px] font-medium tracking-[0.12em] text-ink-subtle uppercase">
+                Real photo · print stamped
+              </p>
+            )}
             <Button variant="ghost" size="sm" onClick={onPickFile}>
               <ImagePlus className="size-4" />
               Upload to edit

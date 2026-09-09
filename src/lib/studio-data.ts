@@ -656,19 +656,26 @@ export function composePrompt(
     : "";
   const who = kids ? "kids" : women ? "women's" : "men's";
   const wear = productWear(productId);
-  const direction = lookbook
-    ? [
-        `You are a catalog fashion photographer. Shot on an 85mm lens, f/2.8, natural window light plus a soft key. 8k, visible cotton weave, real seams, real drape. No AI mush, no beauty-filter skin, no plastic fabric.`,
-        `PRODUCT LOCK: a real ${wear.garment} only. ${audienceLine}`,
-        `BLANK GARMENT: empty chest and back. No graphic, no logo, no illustration, no letters, no fake print. The fabric is unmarked. A print will be composited later.`,
-        `POSE LOCK: standing square to camera, torso facing camera, arms relaxed at the sides, garment front fully visible and relatively flat so a print can sit on it.`,
-        `Shirt / garment color close to ${paper}. Set and styling follow ${theme.label} for ${who}. ${theme.world}`,
-        `Keep the real scene — studio, street, warehouse, lodge, apartment. Photoreal. Not a mockup generator, not a ghost mannequin.`,
-        `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
-        notes,
-        salt ? `New pose and set ${salt}. Still blank garment, still square to camera.` : "",
-      ]
-    : [
+  if (lookbook) {
+    const shot = [
+      "REAL PHOTOGRAPH of a real human. Catalog fashion photo, 85mm lens, f/2.8, 8k, visible skin pores, cotton weave, stitching, neck tape. Shot on a camera.",
+      "NOT illustration, NOT anime, NOT manga, NOT cartoon, NOT comic, NOT 3D render, NOT digital painting, NOT cel-shading, NOT a drawing.",
+      `PRODUCT: a real blank ${wear.garment}. ${audienceLine}`,
+      "BLANK GARMENT: empty chest and back. No graphic, no logo, no letters, no fake print, no illustration on the fabric. Unmarked cloth. A real print file will be composited after.",
+      "POSE: standing square to camera, torso facing camera, arms relaxed at the sides, garment front flat and fully visible.",
+      `SET: photoreal ${theme.label.toLowerCase()} location only — real street, lodge, studio, or interior. Use that as place and wardrobe, never as a drawing style.`,
+      `Garment color close to ${paper}. Attitude: ${brand.vibe.trim() || theme.vibe}.`,
+      notes,
+      salt ? `New pose and set ${salt}. Still a real photo, still a blank garment.` : "",
+      trimmed
+        ? trimmed
+        : `Photograph a real person in a blank ${wear.garment}. Empty chest.`,
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return shot.slice(0, MAX_COMPOSED);
+  }
+  const direction = [
         `You are a professional merch art director designing a Printify print FILE for ${name}.`,
         `House: ${name}. Mark: ${initials}. Motifs: ${brand.motifs.trim() || theme.motifs}.`,
         `Direction: ${theme.label} for ${who}. ${theme.world} Use that as a starting world, not a cage.`,
@@ -689,15 +696,11 @@ export function composePrompt(
         "Craft bar: flagship drop, sharper than a mall tee.",
         salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
       ];
-  const productBit = lookbook
-    ? ` Blank ${wear.garment}, empty print area, square to camera. ${product?.lookbook ?? ""}`
-    : (product?.suffix ?? "");
+  const productBit = product?.suffix ?? "";
   const suffix = `${anime ? animeSuffix(brand, lens) : ""}${leadSuffix(leadId, brand, lens)}${categorySuffix(categoryId, brand, lens)}${styleSuffix(styleId, brand, lens)}${productBit}`;
   const idea = trimmed
     ? trimmed
-    : lookbook
-      ? `Catalog photo of a blank ${wear.garment}. Empty chest. No graphic.`
-      : `Invent a flagship ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. You are the designer. Full freedom. One unforgettable idea. Do not ask. Just draw.`;
+    : `Invent a flagship ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. You are the designer. Full freedom. One unforgettable idea. Do not ask. Just draw.`;
   const composed = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
   return composed.slice(0, MAX_COMPOSED);
 }
