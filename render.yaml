@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: fenrax
+    runtime: node
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node .output/server/index.mjs
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NITRO_PRESET
+        value: render-com
+      - key: NITRO_HOST
+        value: "0.0.0.0"
+      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+        value: "1"
+      - key: GEMINI_API_KEY
+        sync: false
