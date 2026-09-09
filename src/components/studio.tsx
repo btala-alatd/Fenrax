@@ -10,6 +10,7 @@ import {
   Sparkles,
   Store,
   Trash2,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { applyAudience, applyTheme, AUDIENCES, THEMES, themeOf, useBrand, type Brand } from "@/lib/brand";
 import { printifyPreset, toTransparentPng } from "@/lib/printify";
 import { stampPrintOnGarment } from "@/lib/mockup";
+import { blankKey, rememberBlank } from "@/lib/blanks";
 import { useGallery } from "@/lib/gallery";
 import { readImageFile } from "@/lib/image-file";
 import { zipGeneratedImages, zipListingPack, zipPrintifyPack } from "@/lib/pack";
@@ -187,7 +189,7 @@ export function Studio() {
     return items.find((item) => item.lens === "plate") ?? null;
   }
 
-  async function printPlate() {
+  async function printPlate(reshoot = false) {
     if (pending) return;
     const nextPrompt = prompt.trim();
     if (brand.name.trim().length < 2) {
@@ -226,11 +228,20 @@ export function Studio() {
         edit: nextLens !== "lookbook" && mode === "edit",
         source: nextLens === "lookbook" ? null : sourceImage,
         artUrl: lookbookArt,
+        reshoot,
       });
       if (!still) return;
       setCurrent(still);
       setSourceImage(mode === "edit" ? still.dataUrl : null);
-      toast.success(nextLens === "lookbook" ? "Shirt photo. Your print stamped." : mode === "edit" ? "Edited." : "Printed.", {
+      toast.success(
+        nextLens === "lookbook"
+          ? reshoot
+            ? "New scene. Print stamped."
+            : "Stamped on the saved shot."
+          : mode === "edit"
+            ? "Edited."
+            : "Printed.",
+        {
         action: {
           label: "Zip",
           onClick: () => void zipPack([still], "images"),
@@ -438,6 +449,7 @@ export function Studio() {
     artUrl,
     garmentColorId: shotColor,
     scale,
+    reshoot = false,
   }: {
     prompt: string;
     styleId: StyleId;
@@ -453,6 +465,7 @@ export function Studio() {
     artUrl?: string | null;
     garmentColorId?: GarmentColorId;
     scale?: number;
+    reshoot?: boolean;
   }): Promise<Still | null> {
     const colorId = shotColor ?? garmentColorId;
     const color = GARMENT_COLORS.find((item) => item.id === colorId) ?? GARMENT_COLORS[0];
@@ -493,36 +506,61 @@ export function Studio() {
             },
           });
 
-    let result;
-    try {
-      result = await request();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (/failed to fetch|networkerror|load failed/i.test(message)) {
+    const pull = async () => {
+      try {
+        return await request();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!/failed to fetch|networkerror|load failed/i.test(message)) {
+          toast.error(message || "The printer misfired.");
+          return null;
+        }
         await new Promise((resolve) => setTimeout(resolve, 900));
         try {
-          result = await request();
+          return await request();
         } catch {
           toast.error("Could not reach the printer. Try again.");
           return null;
         }
-      } else {
-        toast.error(message || "The printer misfired.");
+      }
+    };
+
+    let photoUrl = "";
+    if (nextLens === "lookbook" && artUrl) {
+      const key = blankKey({
+        audience: brand.audience,
+        themeId: brand.themeId,
+        productId: nextProduct,
+        colorId,
+      });
+      try {
+        photoUrl = await rememberBlank(key, reshoot, async () => {
+          const made = await pull();
+          if (!made) throw new Error("");
+          if (!made.ok) throw new Error(made.error);
+          return made.dataUrl;
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "";
+        if (message) toast.error(message);
         return null;
       }
-    }
-
-    if (!result.ok) {
-      toast.error(result.error);
-      return null;
+    } else {
+      const result = await pull();
+      if (!result) return null;
+      if (!result.ok) {
+        toast.error(result.error);
+        return null;
+      }
+      photoUrl = result.dataUrl;
     }
 
     const pngUrl =
       nextLens === "lookbook" && artUrl
-        ? await stampPrintOnGarment(result.dataUrl, artUrl, nextProduct, scale ?? printScale)
+        ? await stampPrintOnGarment(photoUrl, artUrl, nextProduct, scale ?? printScale)
         : nextLens === "lookbook"
-          ? result.dataUrl
-          : await toTransparentPng(result.dataUrl, true).catch(() => result.dataUrl);
+          ? photoUrl
+          : await toTransparentPng(photoUrl, true).catch(() => photoUrl);
     const still: Still = {
       id: crypto.randomUUID(),
       prompt: nextPrompt || "Designer pick",
@@ -738,6 +776,7 @@ export function Studio() {
                 : "Optional. Leave blank and the designer invents from your shop."
           }
           onSubmit={() => void printPlate()}
+          onReshoot={() => void printPlate(true)}
           onDropPack={() => void printDrop()}
           onListing={() => void printListing()}
           printScale={printScale}
@@ -945,6 +984,7 @@ function PromptDock({
   promptRef,
   placeholder,
   onSubmit,
+  onReshoot,
   onDropPack,
   onListing,
   printScale,
@@ -985,6 +1025,7 @@ function PromptDock({
   promptRef: React.RefObject<HTMLTextAreaElement | null>;
   placeholder: string;
   onSubmit: () => void;
+  onReshoot: () => void;
   onDropPack: () => void;
   onListing: () => void;
   printScale: number;
@@ -1136,7 +1177,9 @@ function PromptDock({
         className="min-h-24 px-1 py-1 sm:min-h-28"
       />
       <p className="mt-2 text-xs text-muted-foreground">
-        Leave it blank — the designer invents from your shop. Type only if you want a hint.
+        {lens === "lookbook"
+          ? "Same scene is reused. Stamp burns no new photo. New scene only if you want a different shot."
+          : "Leave it blank — the designer invents from your shop. Type only if you want a hint."}
       </p>
 
       <div className="mt-3">
@@ -1204,7 +1247,7 @@ function PromptDock({
               size="lg"
               disabled={pending || packing}
               onClick={onSubmit}
-              title="Make one design"
+              title={lens === "lookbook" ? "Stamp this print on the saved blank" : "Make one design"}
               className="h-11 min-w-0 px-3 text-sm lg:h-12 lg:px-6"
             >
               {pending ? (
@@ -1212,8 +1255,25 @@ function PromptDock({
               ) : (
                 <ArrowUp className="size-4" />
               )}
-              {mode === "edit" ? "Apply" : "1 design"}
+              {mode === "edit" ? "Apply" : lens === "lookbook" ? "Stamp" : "1 design"}
             </Button>
+            {lens === "lookbook" && mode === "create" ? (
+              <Button
+                variant="outline"
+                size="lg"
+                disabled={pending || packing}
+                onClick={onReshoot}
+                title="Shoot a new blank for this product, then stamp"
+                className="h-11 min-w-0 px-3 text-sm lg:h-12 lg:px-6"
+              >
+                {pending ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-4" />
+                )}
+                New scene
+              </Button>
+            ) : null}
             {mode === "create" ? (
               <>
               <Button
