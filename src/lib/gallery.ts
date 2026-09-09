@@ -7,6 +7,7 @@ type GalleryState = {
   items: Still[];
   add: (still: Still) => void;
   remove: (id: string) => void;
+  clear: () => void;
 };
 
 export const useGallery = create<GalleryState>()(
@@ -19,6 +20,7 @@ export const useGallery = create<GalleryState>()(
         });
       },
       remove: (id) => set({ items: get().items.filter((item) => item.id !== id) }),
+      clear: () => set({ items: [] }),
     }),
     {
       name: "fenrax-prints",

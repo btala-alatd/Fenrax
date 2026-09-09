@@ -91,3 +91,14 @@ export async function idbDel(name: string) {
   if (typeof indexedDB === "undefined") return;
   await idbOp("readwrite", (store) => store.delete(name));
 }
+
+export async function idbClearPrefix(prefix: string) {
+  if (typeof indexedDB === "undefined") return;
+  try {
+    const keys = (await idbOp("readonly", (store) => store.getAllKeys())) as IDBValidKey[];
+    const match = keys.map(String).filter((key) => key.startsWith(prefix));
+    for (const key of match) await idbDel(key);
+  } catch {
+    /* ignore */
+  }
+}
