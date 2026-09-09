@@ -249,7 +249,9 @@ async function callGoogleOnce(
   }
 
   let lastError = "Google could not finish that plate.";
+  const sizes = ["4K", "2K"];
   for (const model of models) {
+    for (const imageSize of sizes) {
     let res: Response;
     try {
       res = await fetchJson(
@@ -264,7 +266,7 @@ async function callGoogleOnce(
             contents: [{ role: "user", parts }],
             generationConfig: {
               responseModalities: ["TEXT", "IMAGE"],
-              imageConfig: { aspectRatio: ratio, imageSize: "2K" },
+              imageConfig: { aspectRatio: ratio, imageSize },
             },
           }),
         },
@@ -292,6 +294,7 @@ async function callGoogleOnce(
     const dataUrl = extractGoogleImage(body);
     if (dataUrl) return { ok: true, dataUrl };
     lastError = "Google returned an empty plate.";
+    }
   }
 
   return { ok: false, error: lastError };
@@ -373,7 +376,7 @@ const GENERATE_BODY = {
   model: "grok-imagine-image-2.0",
   n: 1 as const,
   resolution: "2k",
-  quality: "medium",
+  quality: "high",
   response_format: "url",
 };
 

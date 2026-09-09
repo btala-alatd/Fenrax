@@ -388,24 +388,47 @@ function punchFieldHoles(
 
 function knockOut(imageData: ImageData, holes = true) {
   const { data, width, height } = imageData;
+  let trans = 0;
+  let borderN = 0;
+  const tally = (x: number, y: number) => {
+    borderN += 1;
+    if (data[(y * width + x) * 4 + 3] < 16) trans += 1;
+  };
+  for (let x = 0; x < width; x += 2) {
+    tally(x, 0);
+    tally(x, height - 1);
+  }
+  for (let y = 0; y < height; y += 2) {
+    tally(0, y);
+    tally(width - 1, y);
+  }
+  if (borderN && trans / borderN > 0.55) return imageData;
+
   const sampled = sampleBorder(data, width, height);
-  const grounds = [
-    sampled,
-    { r: 242, g: 243, b: 245 },
-    { r: 255, g: 255, b: 255 },
-    { r: 232, g: 232, b: 232 },
-  ];
+  const luma =
+    0.2126 * sampled.r + 0.7152 * sampled.g + 0.0722 * sampled.b;
+  const darkField = luma < 48;
+  const grounds = darkField
+    ? [sampled, { r: 0, g: 0, b: 0 }, { r: 12, g: 12, b: 12 }]
+    : [
+        sampled,
+        { r: 242, g: 243, b: 245 },
+        { r: 255, g: 255, b: 255 },
+        { r: 232, g: 232, b: 232 },
+        { r: 243, g: 234, b: 212 },
+      ];
+  const tols = darkField ? [12, 20, 28] : [28, 40, 54];
 
   let bestMarked: Uint8Array | null = null;
   let bestHits = 0;
   let bestGround = sampled;
   for (const ground of grounds) {
-    for (const tol of [28, 40, 54]) {
+    for (const tol of tols) {
       const marked = floodKnock(imageData, ground, tol);
       let hits = 0;
       for (let i = 0; i < marked.length; i += 1) hits += marked[i];
       const ratio = hits / marked.length;
-      if (ratio < 0.03 || ratio > 0.9) continue;
+      if (ratio < 0.02 || ratio > 0.97) continue;
       if (hits > bestHits) {
         bestHits = hits;
         bestMarked = marked;
@@ -417,14 +440,14 @@ function knockOut(imageData: ImageData, holes = true) {
   let marked = bestMarked;
   let ground = bestGround;
   if (!marked) {
-    marked = floodKnock(imageData, sampled, 48);
+    marked = floodKnock(imageData, sampled, darkField ? 22 : 48);
     ground = sampled;
     let hits = 0;
     for (let i = 0; i < marked.length; i += 1) hits += marked[i];
     if (hits < marked.length * 0.02) return imageData;
   }
 
-  if (holes) punchFieldHoles(imageData, ground, marked, 30);
+  if (holes) punchFieldHoles(imageData, ground, marked, darkField ? 16 : 30);
 
   let knocked = 0;
   for (let idx = 0; idx < marked.length; idx += 1) {
@@ -435,6 +458,169 @@ function knockOut(imageData: ImageData, holes = true) {
   if (knocked < marked.length * 0.02) return imageData;
   defringe(data, width, height, ground, marked);
   despill(data);
+  return imageData;
+}
+
+type Ink = { r: number; g: number; b: number };
+
+function clampInk(n: number) {
+  return Math.max(0, Math.min(255, Math.round(n)));
+}
+
+function inkRange(pixels: Ink[], channel: keyof Ink) {
+  let min = 255;
+  let max = 0;
+  for (const pixel of pixels) {
+    const v = pixel[channel];
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+  return max - min;
+}
+
+function averageInk(pixels: Ink[]): Ink {
+  if (!pixels.length) return { r: 20, g: 20, b: 20 };
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  for (const pixel of pixels) {
+    r += pixel.r;
+    g += pixel.g;
+    b += pixel.b;
+  }
+  const n = pixels.length;
+  return { r: clampInk(r / n), g: clampInk(g / n), b: clampInk(b / n) };
+}
+
+function cutInks(pixels: Ink[], target: number): Ink[] {
+  if (!pixels.length) return [{ r: 20, g: 20, b: 20 }];
+  const buckets: Ink[][] = [pixels.slice()];
+  while (buckets.length < target) {
+    let widest = 0;
+    let range = -1;
+    for (let i = 0; i < buckets.length; i += 1) {
+      const bucket = buckets[i]!;
+      if (bucket.length < 2) continue;
+      const span = Math.max(
+        inkRange(bucket, "r"),
+        inkRange(bucket, "g"),
+        inkRange(bucket, "b"),
+      );
+      if (span > range) {
+        range = span;
+        widest = i;
+      }
+    }
+    if (range <= 14) break;
+    const bucket = buckets[widest]!;
+    const channel: keyof Ink =
+      inkRange(bucket, "r") >= inkRange(bucket, "g") &&
+      inkRange(bucket, "r") >= inkRange(bucket, "b")
+        ? "r"
+        : inkRange(bucket, "g") >= inkRange(bucket, "b")
+          ? "g"
+          : "b";
+    bucket.sort((a, b) => a[channel] - b[channel]);
+    const mid = Math.max(1, Math.floor(bucket.length / 2));
+    buckets.splice(widest, 1, bucket.slice(0, mid), bucket.slice(mid));
+  }
+  return buckets.map(averageInk);
+}
+
+function nearestInk(r: number, g: number, b: number, pal: Ink[]) {
+  let best = pal[0]!;
+  let bestD = Infinity;
+  for (const swatch of pal) {
+    const dr = r - swatch.r;
+    const dg = g - swatch.g;
+    const db = b - swatch.b;
+    const d = 2 * dr * dr + 4 * dg * dg + 3 * db * db;
+    if (d < bestD) {
+      bestD = d;
+      best = swatch;
+    }
+  }
+  return best;
+}
+
+function collectInk(imageData: ImageData) {
+  const { data } = imageData;
+  const pixels: Ink[] = [];
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 16) continue;
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    if (l > 220 && max - min < 18) continue;
+    pixels.push({ r, g, b });
+  }
+  return pixels;
+}
+
+function merchFlatten(imageData: ImageData) {
+  const pixels = collectInk(imageData);
+  if (pixels.length < 40) return imageData;
+  const sampled =
+    pixels.length > 12000
+      ? pixels.filter((_, index) => index % Math.ceil(pixels.length / 12000) === 0)
+      : pixels;
+  const pal = cutInks(sampled, 5);
+  const { data } = imageData;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 16) continue;
+    const swatch = nearestInk(data[i], data[i + 1], data[i + 2], pal);
+    data[i] = swatch.r;
+    data[i + 1] = swatch.g;
+    data[i + 2] = swatch.b;
+    data[i + 3] = 255;
+  }
+  return imageData;
+}
+
+function merchDespeckle(imageData: ImageData) {
+  const { data, width, height } = imageData;
+  const src = new Uint8ClampedArray(data);
+  const at = (x: number, y: number) => (y * width + x) * 4;
+  for (let y = 1; y < height - 1; y += 1) {
+    for (let x = 1; x < width - 1; x += 1) {
+      const i = at(x, y);
+      let opaqueN = 0;
+      const counts = new Map<number, number>();
+      let majority = 0;
+      let majorityN = 0;
+      for (let dy = -1; dy <= 1; dy += 1) {
+        for (let dx = -1; dx <= 1; dx += 1) {
+          if (!dx && !dy) continue;
+          const j = at(x + dx, y + dy);
+          if (src[j + 3] < 16) continue;
+          opaqueN += 1;
+          const key = (src[j] << 16) | (src[j + 1] << 8) | src[j + 2];
+          const n = (counts.get(key) ?? 0) + 1;
+          counts.set(key, n);
+          if (n > majorityN) {
+            majorityN = n;
+            majority = key;
+          }
+        }
+      }
+      if (src[i + 3] >= 16 && opaqueN <= 1) {
+        data[i + 3] = 0;
+        continue;
+      }
+      if (src[i + 3] >= 16 && majorityN >= 5) {
+        const self = (src[i] << 16) | (src[i + 1] << 8) | src[i + 2];
+        const selfN = counts.get(self) ?? 0;
+        if (selfN <= 1) {
+          data[i] = (majority >> 16) & 255;
+          data[i + 1] = (majority >> 8) & 255;
+          data[i + 2] = majority & 255;
+        }
+      }
+    }
+  }
   return imageData;
 }
 
@@ -623,7 +809,21 @@ export async function looksLikePhoto(dataUrl: string) {
 }
 
 export async function finishPrintFile(dataUrl: string) {
-  return toTransparentPng(dataUrl, true);
+  const image = await loadImage(dataUrl);
+  const srcW = image.naturalWidth || image.width;
+  const srcH = image.naturalHeight || image.height;
+  const work = document.createElement("canvas");
+  work.width = srcW;
+  work.height = srcH;
+  const ctx = work.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("Could not finish the print file.");
+  ctx.drawImage(image, 0, 0);
+  const pixels = ctx.getImageData(0, 0, srcW, srcH);
+  knockOut(pixels, true);
+  merchFlatten(pixels);
+  merchDespeckle(pixels);
+  ctx.putImageData(pixels, 0, 0);
+  return canvasToPngDataUrl(trimTransparent(work));
 }
 
 function canvasToPngDataUrl(canvas: HTMLCanvasElement): string {

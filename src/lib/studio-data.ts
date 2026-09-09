@@ -212,7 +212,7 @@ function styleSuffix(styleId: StyleId, brand: Brand): string {
     case "chrome":
       return ` 2026 Y2K chrome. Liquid metal, iridescent, inflatable 3D, cyber highlights, chrome ${initials}. Still clearly ${world}.`;
     case "vintage":
-      return ` Distressed vintage merch print. 90s boxy-tee energy, cracked ink, faded wash, bootleg-poster grit. ${world} motifs aged, not a photo of a shirt.`;
+      return ` Vintage merch LAYOUT only: 90s boxy-tee scale, era type, bootleg-poster composition. Muted flat inks. No crackle, no speckle, no faded-wash texture, no noise overlay. ${world} motifs as clean screen print.`;
     case "type":
       return ` Oversized typography poster. Giant ${name.toUpperCase()} or ${initials} IS the design. Swiss, varsity, or brutal type. ${world} attitude in the lettering.`;
     case "line":
@@ -224,9 +224,9 @@ function styleSuffix(styleId: StyleId, brand: Brand): string {
     case "liquid":
       return ` 3D liquid blob and inflatable supershape. Toy-like volume, chrome drip, sticky 3D, very now. ${initials} as a 3D object in the ${world} world.`;
     case "grunge":
-      return ` Skater grunge. Halftone, xerox, torn edges, 90s zine, dirty on purpose. ${world} graphic with photocopy energy.`;
+      return ` Skater graphic. Bold xerox SHAPES, torn-paper collage as big pieces, 90s zine layout. Fat halftone dots OK. No pixel grain, no dirt overlay. ${world} graphic, clean ink.`;
     case "vector":
-      return ` Flat merch vector lockup, 2–4 hard fills, cracked stone or bone in the mark, lime slash, technical hairlines, stacked wordmark. Screen-print separations. No gradients, no photo, no mockup. ${theme.hook}.`;
+      return ` Flat merch vector lockup, 2–4 hard fills, one accent slash, stacked wordmark. Screen-print separations. Hard edges, solid ink. No grain, no crackle, no distress, no gradients, no photo, no mockup. ${theme.hook}.`;
   }
 }
 
@@ -262,7 +262,7 @@ function categorySuffix(categoryId: CategoryId, brand: Brand): string {
     }
     switch (categoryId) {
       case "lockup":
-        return ` Category LOCKUP — giant ${initials} monogram is the whole design. Cracked bone/stone fills, one accent slash cutting the letters, hairline registration ticks, stacked ${upper} under the mark, tiny catalog line. Flagship merch. Original house only.`;
+        return ` Category LOCKUP — giant ${initials} monogram is the whole design. Solid two-color fills, one accent slash cutting the letters, hairline registration ticks, stacked ${upper} under the mark, tiny catalog line. Flagship merch. Original house only.`;
       case "wordmark":
         return ` Category WORDMARK — the word ${upper} IS the graphic. Custom condensed or brutal type, one accent, kerning as craft. No clipart, no extra icons.`;
       case "box":
@@ -296,7 +296,7 @@ function leadSuffix(leadId: LeadId, brand: Brand): string {
   const name = brand.name.trim() || "the house";
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
   if (leadId === "art") {
-    return ` LEAD ART. The design is the hero — illustration, motif, scene, texture — 90% of the frame. Branding is a whisper: tiny ${initials} or 8pt ${name}, like a woven neck label. No giant wordmark, no chest-spanning name. Genius pass: invent a new image. Risk. One unforgettable idea. Unlimited original invention, never a template.`;
+    return ` LEAD ART. The design is the hero — illustration, motif, scene — 90% of the frame. Branding is a whisper: tiny ${initials} or 8pt ${name}, like a woven neck label. No giant wordmark, no chest-spanning name. Genius pass: invent a new image. Risk. One unforgettable idea. Unlimited original invention, never a template.`;
   }
   return ` LEAD BRAND. ${name} and ${initials} are the hero. The mark is large, owned, readable at a glance.`;
 }
@@ -316,7 +316,7 @@ export const EXAMPLE_TEMPLATES = [
     productId: "tee" as ProductId,
     aspectRatio: "1:1" as AspectRatioId,
     prompt:
-      "{name} vintage {theme} tee: cracked-ink {initials}, faded {motifs}, 90s merch poster",
+      "{name} vintage {theme} tee: era {initials} lockup, flat {motifs}, 90s merch poster, no distress",
   },
   {
     title: "Type lockup",
@@ -421,6 +421,7 @@ export function composePrompt(
     "Centered on a perfectly even matte #F2F3F5 field. Uniform RGB 242,243,245 — no gradient, no vignette, no floor, no drop shadow. The field is empty studio, not part of the design.",
     "Huge empty margin. Art occupies 60–75% of the frame. Billboard-simple. Readable as a 200px thumbnail.",
     "Solid fills, thick strokes. No hairlines. No drop shadow under the art. No paper grain behind it.",
+    "FAIL if the studio field is black or dark. FAIL if you add distress, crackle, speckle, noise, photocopy grain, worn paper, or a faded-wash texture. Ink is flat and opaque. Two or three solid colors only.",
     "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
     "Ultra-sharp merch illustration. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
     "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",

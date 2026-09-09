@@ -41,7 +41,7 @@ export const THEMES = [
     accent: "#3aa6a0",
     motifs: "leaping tarpon, antique lure, tide rings, nautical chart",
     vibe: "saltwater lodge, dawn patrol, lived-in luxury",
-    hook: "lodge fishing graphic, species crest, lure and tide, weathered ink",
+    hook: "lodge fishing graphic, species crest, lure and tide, clean ink",
     world:
       "Fishing lifestyle brand. Saltwater and freshwater lodge culture: fish species as heraldry, vintage lures, tide charts, topographic water, rod-and-reel geometry, dock-house stamps. Feels like a charter captain's shirt, not a fashion week mark.",
     schools:
