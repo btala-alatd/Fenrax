@@ -1,6 +1,5 @@
 import JSZip from "jszip";
 import { brandSlug, themeOf, type Brand } from "@/lib/brand";
-import { rasterToSvgFromArt } from "@/lib/export";
 import { buildEtsyListing } from "@/lib/etsy";
 import { dataUrlToBlob } from "@/lib/image-file";
 import { saveBlob } from "@/lib/save-to";
@@ -118,20 +117,17 @@ async function addPrintifyFolder(
   brand: Brand,
   folder: string,
 ) {
-  const colors = [brand.ink, brand.paper, brand.accent];
   const printFile = true;
   const art = await prepareArt(still.dataUrl, printFile, printFile);
   await yieldTick();
   const print = await buildPrintifyFromArt(art, still.productId, !printFile);
   await yieldTick();
-  const svg = printFile
-    ? await rasterToSvgFromArt(art, colors, still.productId, true).catch(() => null)
-    : null;
   const listing = buildEtsyListing(still, brand);
-  const canvasName = `${print.preset.id}-${print.preset.width}x${print.preset.height}.png`;
-  zip.file(`${folder}/printify/${canvasName}`, print.blob, { compression: "STORE" });
-  zip.file(`${folder}/printify/art.png`, print.artBlob, { compression: "STORE" });
-  if (svg) zip.file(`${folder}/printify/art.svg`, svg);
+  zip.file(`${folder}/printify/printify.png`, print.blob, { compression: "STORE" });
+  zip.file(
+    `${folder}/printify/readme.txt`,
+    "Upload printify.png in Printify Product Creator.\nTransparent graphic only. Place and size it on the garment.\nDo not upload a shirt photo.\n",
+  );
   zip.file(`${folder}/listing/title.txt`, listing.title);
   zip.file(`${folder}/listing/tags.txt`, listing.tags.join("\n"));
   zip.file(`${folder}/listing/description.txt`, listing.description);
@@ -155,7 +151,7 @@ export async function zipPrintifyPack(
   zip.file(
     `${root}/brand/readme.txt`,
     brandReadme(brand, stills.length) +
-      "\n\nprintify/art.png and art.svg go into Printify Product Creator.",
+      "\n\nUPLOAD printify/printify.png in Product Creator. Transparent graphic only.",
   );
 
   const ordered = stills.slice().reverse();

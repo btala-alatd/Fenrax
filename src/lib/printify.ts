@@ -761,6 +761,8 @@ export async function prepareArt(dataUrl: string, knock = true, holes = true) {
   if (knock) {
     const pixels = workCtx.getImageData(0, 0, srcW, srcH);
     knockOut(pixels, holes);
+    merchFlatten(pixels);
+    merchDespeckle(pixels);
     workCtx.putImageData(pixels, 0, 0);
     return trimTransparent(work);
   }
@@ -809,21 +811,7 @@ export async function looksLikePhoto(dataUrl: string) {
 }
 
 export async function finishPrintFile(dataUrl: string) {
-  const image = await loadImage(dataUrl);
-  const srcW = image.naturalWidth || image.width;
-  const srcH = image.naturalHeight || image.height;
-  const work = document.createElement("canvas");
-  work.width = srcW;
-  work.height = srcH;
-  const ctx = work.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("Could not finish the print file.");
-  ctx.drawImage(image, 0, 0);
-  const pixels = ctx.getImageData(0, 0, srcW, srcH);
-  knockOut(pixels, true);
-  merchFlatten(pixels);
-  merchDespeckle(pixels);
-  ctx.putImageData(pixels, 0, 0);
-  return canvasToPngDataUrl(trimTransparent(work));
+  return toTransparentPng(dataUrl, true);
 }
 
 function canvasToPngDataUrl(canvas: HTMLCanvasElement): string {
@@ -833,47 +821,23 @@ function canvasToPngDataUrl(canvas: HTMLCanvasElement): string {
 export async function buildPrintifyFromArt(
   art: HTMLCanvasElement,
   productId: ProductId,
-  opaque = false,
+  _opaque = false,
 ): Promise<PrintifyBuild> {
   const preset = printifyPreset(productId);
-  const { dpi, grade } = evaluateArtworkResolution(art.width, art.height, preset);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = preset.width;
-  canvas.height = preset.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Could not build the Printify canvas.");
-
-  const innerW = preset.width * (1 - PAD * 2);
-  const innerH = preset.height * (1 - PAD * 2);
-  const fit = Math.min(innerW / art.width, innerH / art.height);
-  const dw = art.width * fit;
-  const dh = art.height * fit;
-  const dx = (preset.width - dw) / 2;
-  const dy = (preset.height - dh) / 2;
-  if (opaque) {
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, preset.width, preset.height);
-  } else {
-    ctx.clearRect(0, 0, preset.width, preset.height);
-  }
-  ctx.imageSmoothingEnabled = fit > 1;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(art, dx, dy, dw, dh);
-
-  const png = withDpi(await canvasToPng(canvas), DPI);
+  const { dpi, grade, scale } = evaluateArtworkResolution(art.width, art.height, preset);
   const artPng = withDpi(await canvasToPng(art), DPI);
+  const artBlob = new Blob([artPng], { type: "image/png" });
   return {
-    blob: new Blob([png], { type: "image/png" }),
-    artBlob: new Blob([artPng], { type: "image/png" }),
+    blob: artBlob,
+    artBlob,
     preset,
     previewUrl: canvasToPngDataUrl(art),
     artWidth: art.width,
     artHeight: art.height,
-    scale: fit,
+    scale,
     dpi,
     grade,
-    transparent: !opaque,
+    transparent: true,
   };
 }
 

@@ -51,18 +51,9 @@ export function ExportButtons({
     if (blocked) return;
     setBusy("png");
     try {
-      const next = await buildPrintifyPng(
-        still.dataUrl,
-        still.productId,
-        true,
-      );
-      await saveBlob(next.blob, `${base}.png`);
-      await saveBlob(next.artBlob, `${base}-art.png`);
-      toast.success(
-        next.grade === "print"
-          ? `PNG saved at ${next.preset.width}×${next.preset.height} · 300 DPI.`
-          : `PNG saved at ${next.artWidth}×${next.artHeight} on a ${next.preset.width}×${next.preset.height} canvas.`,
-      );
+      const next = await buildPrintifyPng(still.dataUrl, still.productId, true);
+      await saveBlob(next.blob, `${slug}-${preset.id}-printify.png`);
+      toast.success("Printify PNG saved — transparent graphic, drop it on the shirt.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save PNG.");
     } finally {
@@ -103,17 +94,11 @@ export function ExportButtons({
   async function confirmFiles(next: PrintifyBuild) {
     setBusy("printify");
     try {
-      await saveBlob(next.blob, `${base}.png`);
-      await saveBlob(next.artBlob, `${base}-art.png`);
-      await downloadSvg(still.dataUrl, `${base}-art.svg`, colors, still.productId, true);
-      toast.success(
-        next.grade === "print"
-          ? "Saved Printify PNG, transparent art PNG, and SVG."
-          : `Saved. ${GRADE_COPY[next.grade]}`,
-      );
+      await saveBlob(next.blob, `${slug}-${preset.id}-printify.png`);
+      toast.success("Printify PNG saved. Upload that file — not a shirt photo.");
       setPack(null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save Printify files.");
+      toast.error(error instanceof Error ? error.message : "Could not save Printify file.");
     } finally {
       setBusy(null);
     }
@@ -130,7 +115,7 @@ export function ExportButtons({
       disabled={blocked}
       onClick={() => void openPrintify()}
       className={cn(dock && "h-11 min-w-0 px-3 text-sm lg:h-12 lg:px-6")}
-      title="Check transparency, then zip Printify files"
+      title="Download a transparent PNG for Printify"
     >
       <Save className="size-4" />
       {busy === "printify" ? "Cleaning" : "Printify"}
@@ -249,7 +234,7 @@ function PrintifySheet({
             Printify
           </p>
           <p className="text-sm text-muted-foreground">
-            Check the clean file, then zip the pack.
+            Transparent graphic only. Upload this in Printify Product Creator and place it on the shirt.
           </p>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
@@ -272,26 +257,23 @@ function PrintifySheet({
         </div>
         <div className="space-y-1">
           <p className="text-sm font-medium">
-            {pack.artWidth}×{pack.artHeight} art → {pack.preset.width}×{pack.preset.height} · {pack.dpi} DPI · {pack.grade}
+            {pack.artWidth}×{pack.artHeight} transparent PNG · {pack.dpi} DPI if you fill a {pack.preset.inches} {pack.preset.label.toLowerCase()}
           </p>
           <p className="text-sm text-muted-foreground">{GRADE_COPY[pack.grade]}</p>
           <p className="text-sm text-muted-foreground">
-            {pack.preset.label} · {pack.preset.inches} · {PRINTIFY_CATALOG[pack.preset.id]}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Zip folders: brand / printify (art.png + art.svg + canvas) / listing / prompt.
+            {PRINTIFY_CATALOG[pack.preset.id]}. No background. No mockup. One file.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button className="flex-1" disabled={busy} onClick={onFiles}>
+            {busy ? "Saving" : "Download PNG"}
+          </Button>
           {canZip ? (
-            <Button className="flex-1" disabled={busy} onClick={onZip}>
+            <Button variant="outline" disabled={busy} onClick={onZip}>
               <Archive className="size-4" />
               {busy ? "Zipping" : "Zip pack"}
             </Button>
           ) : null}
-          <Button variant="outline" disabled={busy} onClick={onFiles}>
-            {busy ? "Saving" : "Loose files"}
-          </Button>
           {canZipAll ? (
             <Button variant="outline" disabled={busy} onClick={onZipAll}>
               Zip all
