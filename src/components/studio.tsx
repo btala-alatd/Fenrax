@@ -165,16 +165,19 @@ export function Studio() {
     }
   }
 
+  function resolvePrintArt() {
+    if (current?.lens === "plate") return current.dataUrl;
+    const plate = items.find((item) => item.lens === "plate");
+    if (plate) return plate.dataUrl;
+    return sourceImage;
+  }
+
   async function printPlate() {
     if (pending) return;
     const nextPrompt = prompt.trim();
     if (brand.name.trim().length < 2) {
       toast.error("Name your shop first.");
       setBrandOpen(true);
-      return;
-    }
-    if (mode === "edit" && !sourceImage) {
-      toast.error("Choose an image to edit, or switch back to Create.");
       return;
     }
 
@@ -184,6 +187,15 @@ export function Studio() {
     const nextCategory = coerceCategoryId(categoryId);
     const nextLead = coerceLeadId(leadId);
     const nextLens = coerceLensId(lens);
+    if (mode === "edit" && !sourceImage && nextLens !== "lookbook") {
+      toast.error("Choose an image to edit, or switch back to Create.");
+      return;
+    }
+    const lookbookArt = nextLens === "lookbook" ? resolvePrintArt() : null;
+    if (nextLens === "lookbook" && !lookbookArt) {
+      toast.error("Print a graphic first. Shirt photos wear that file on the product you pick.");
+      return;
+    }
     setPending(true);
     try {
       const still = await runPrint({
@@ -196,7 +208,8 @@ export function Studio() {
         aspectRatio: nextRatio,
         anime,
         note: "",
-        edit: mode === "edit",
+        edit: nextLens === "lookbook" || mode === "edit",
+        source: nextLens === "lookbook" ? lookbookArt : sourceImage,
       });
       if (!still) return;
       setCurrent(still);
@@ -236,27 +249,47 @@ export function Studio() {
     const nextRatio = coerceAspectRatioId(aspectRatio);
     const nextProduct = coerceProductId(productId);
     const nextLens = coerceLensId(lens);
-    const slots = dropSlots(nextLens);
+    const poses = dropSlots(nextLens);
+    const plates = items.filter((item) => item.lens === "plate");
+    if (nextLens === "lookbook" && plates.length === 0 && !sourceImage) {
+      toast.error("Print graphics first. A drop of shirt photos wears those files.");
+      return;
+    }
+    const jobs =
+      nextLens === "lookbook"
+        ? plates.length >= 2
+          ? plates.slice(0, poses.length).map((plate, index) => ({
+              ...poses[index % poses.length]!,
+              source: plate.dataUrl,
+              edit: true,
+            }))
+          : poses.map((slot) => ({
+              ...slot,
+              source: plates[0]?.dataUrl ?? sourceImage,
+              edit: true,
+            }))
+        : poses.map((slot) => ({ ...slot, source: null as string | null, edit: false }));
     setPending(true);
     let printed = 0;
     let last: Still | null = null;
     try {
-      for (let i = 0; i < slots.length; i += 2) {
-        const batch = slots.slice(i, i + 2);
-        setDropStep(Math.min(i + batch.length, slots.length));
+      for (let i = 0; i < jobs.length; i += 2) {
+        const batch = jobs.slice(i, i + 2);
+        setDropStep(Math.min(i + batch.length, jobs.length));
         const results = await Promise.all(
-          batch.map((slot) =>
+          batch.map((job) =>
             runPrint({
               prompt: nextPrompt,
               styleId: nextStyle,
               productId: nextProduct,
-              categoryId: slot.categoryId,
-              leadId: slot.leadId,
+              categoryId: job.categoryId,
+              leadId: job.leadId,
               lens: nextLens,
               aspectRatio: nextRatio,
               anime,
-              note: slot.note,
-              edit: false,
+              note: job.note,
+              edit: job.edit,
+              source: job.source,
             }),
           ),
         );
@@ -302,6 +335,7 @@ export function Studio() {
     anime: nextAnime,
     note,
     edit,
+    source,
   }: {
     prompt: string;
     styleId: StyleId;
@@ -313,6 +347,7 @@ export function Studio() {
     anime: boolean;
     note: string;
     edit: boolean;
+    source?: string | null;
   }): Promise<Still | null> {
     const seed = [nextPrompt.trim(), note.trim()].filter(Boolean).join(". ");
     const composedPrompt = composePrompt(
@@ -329,11 +364,11 @@ export function Studio() {
 
     const googleKey = usePrinter.getState().googleKey.trim() || undefined;
     const request = async () =>
-      edit && sourceImage
+      edit && source
         ? editStill({
             data: {
               prompt: composedPrompt,
-              imageDataUrl: sourceImage,
+              imageDataUrl: source,
               aspectRatio: nextRatio,
               styleId: nextStyle,
               googleKey,
@@ -586,7 +621,9 @@ export function Studio() {
           placeholder={
             mode === "edit"
               ? "Optional — leave blank and the designer will invent the edit…"
-              : "Optional. Leave blank and the designer invents from your shop."
+              : lens === "lookbook"
+                ? "Optional pose or set. The selected print goes on this product."
+                : "Optional. Leave blank and the designer invents from your shop."
           }
           onSubmit={() => void printPlate()}
           onDropPack={() => void printDrop()}
@@ -899,6 +936,21 @@ function PromptDock({
         ))}
       </div>
 
+      <ChipRow label="Product">
+        {PRODUCTS.map((item) => (
+          <Chip
+            key={item.id}
+            pressed={productId === item.id}
+            onClick={() => {
+              setProductId(item.id);
+              setAspectRatio(printifyPreset(item.id).aspect);
+            }}
+          >
+            {item.label}
+          </Chip>
+        ))}
+      </ChipRow>
+
       <Textarea
         ref={promptRef}
         value={prompt}
@@ -934,20 +986,6 @@ function PromptDock({
                 key={item.id}
                 pressed={categoryId === item.id}
                 onClick={() => setCategoryId(item.id)}
-              >
-                {item.label}
-              </Chip>
-            ))}
-          </ChipRow>
-          <ChipRow label="Product">
-            {PRODUCTS.map((item) => (
-              <Chip
-                key={item.id}
-                pressed={productId === item.id}
-                onClick={() => {
-                  setProductId(item.id);
-                  setAspectRatio(printifyPreset(item.id).aspect);
-                }}
               >
                 {item.label}
               </Chip>

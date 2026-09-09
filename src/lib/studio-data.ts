@@ -167,6 +167,88 @@ export const PRODUCTS = [
 
 export type ProductId = (typeof PRODUCTS)[number]["id"];
 
+export const PRODUCT_WEAR: Record<
+  ProductId,
+  { garment: string; place: string }
+> = {
+  tee: {
+    garment: "heavyweight short-sleeve t-shirt",
+    place: "full-front DTG print, centered on the chest",
+  },
+  back: {
+    garment: "heavyweight t-shirt or hoodie, photographed from behind",
+    place: "large full-back DTG print",
+  },
+  chest: {
+    garment: "heavyweight t-shirt",
+    place: "small left-chest print or embroidery",
+  },
+  long: {
+    garment: "long-sleeve t-shirt",
+    place: "full-front print on the body",
+  },
+  tank: {
+    garment: "tank top",
+    place: "front chest print",
+  },
+  hoodie: {
+    garment: "heavyweight pullover hoodie with kangaroo pocket and cords",
+    place: "front print above the pocket",
+  },
+  crew: {
+    garment: "crewneck sweatshirt",
+    place: "chest print",
+  },
+  tote: {
+    garment: "canvas tote bag",
+    place: "print on the face of the bag",
+  },
+  hat: {
+    garment: "structured baseball cap",
+    place: "front-panel embroidery",
+  },
+  mug: {
+    garment: "11oz ceramic mug",
+    place: "wrap print on the mug",
+  },
+  tumbler: {
+    garment: "20oz tumbler",
+    place: "wrap print on the tumbler",
+  },
+  sticker: {
+    garment: "die-cut sticker on a real surface",
+    place: "the sticker is the locked art, full size",
+  },
+  poster: {
+    garment: "poster in a real interior",
+    place: "the poster is the locked art on a wall or board",
+  },
+  pillow: {
+    garment: "throw pillow",
+    place: "print on the face of the pillow",
+  },
+  phone: {
+    garment: "phone case on a real phone",
+    place: "the case print is the locked art",
+  },
+  baby: {
+    garment: "baby onesie",
+    place: "small chest print",
+  },
+  canvas: {
+    garment: "gallery canvas on a real wall",
+    place: "the canvas is the locked art",
+  },
+  repeat: {
+    garment: "all-over-print shirt or camp shirt",
+    place: "the locked art as a repeating fabric print",
+  },
+};
+
+export function productWear(id: ProductId) {
+  return PRODUCT_WEAR[id] ?? PRODUCT_WEAR.tee;
+}
+
 export const LENSES = [
   { id: "lookbook", label: "Photo" },
   { id: "plate", label: "Graphic" },
@@ -225,16 +307,16 @@ export const DROP_SLOTS = {
     { categoryId: "issue", leadId: "art", note: "SKU 10 catalog issue. Numbered drop energy." },
   ],
   lookbook: [
-    { categoryId: "lockup", leadId: "brand", note: "SKU 01 cyclorama, left-chest mark, three-quarter, 8k campaign." },
-    { categoryId: "wordmark", leadId: "brand", note: "SKU 02 oversized tee, giant wordmark on chest, high-key studio." },
-    { categoryId: "box", leadId: "brand", note: "SKU 03 hanging shot, boxed mark on heavyweight cotton." },
-    { categoryId: "tour", leadId: "brand", note: "SKU 04 back graphic tour list, model walking, side light." },
-    { categoryId: "coords", leadId: "art", note: "SKU 05 flat lay on raw concrete, locale graphic, overhead." },
-    { categoryId: "crest", leadId: "brand", note: "SKU 06 female model arms crossed, crest at left chest, rim light." },
-    { categoryId: "slogan", leadId: "brand", note: "SKU 07 large back print slogan, warehouse, cinematic grade." },
-    { categoryId: "blueprint", leadId: "art", note: "SKU 08 window light, technical print, model on a stool." },
-    { categoryId: "trail", leadId: "art", note: "SKU 09 in motion on outdoor stairs, trail graphic." },
-    { categoryId: "issue", leadId: "art", note: "SKU 10 campaign pair, numbered issue print, desaturated set." },
+    { categoryId: "lockup", leadId: "brand", note: "Three-quarter on-model, campaign studio light." },
+    { categoryId: "wordmark", leadId: "brand", note: "Straight-on hero, garment filling the frame." },
+    { categoryId: "box", leadId: "brand", note: "Hanging garment on a rail, print readable." },
+    { categoryId: "tour", leadId: "brand", note: "Model walking, side light, print in motion." },
+    { categoryId: "coords", leadId: "art", note: "Overhead flat lay on a real surface." },
+    { categoryId: "crest", leadId: "brand", note: "Cropped three-quarter, print at the heart." },
+    { categoryId: "slogan", leadId: "brand", note: "Turned away or from behind if the print can read." },
+    { categoryId: "blueprint", leadId: "art", note: "Window light, model on a stool." },
+    { categoryId: "trail", leadId: "art", note: "In motion outdoors or on stairs." },
+    { categoryId: "issue", leadId: "art", note: "Lifestyle still life or paired campaign frame." },
   ],
 } as const;
 
@@ -260,25 +342,25 @@ function styleSuffix(styleId: StyleId, brand: Brand, lens: LensId): string {
   if (lens === "lookbook") {
     switch (styleId) {
       case "drop":
-        return ` Campaign hero. One garment, one mark, one light. ${theme.hook}.`;
+        return ` Campaign hero light. One garment, one locked print, one light.`;
       case "chrome":
-        return ` Chrome hardware and metallic ink on a real garment. Futuristic lookbook light.`;
+        return ` Futuristic campaign light, metallic hardware on a real garment. Do not restyle the print.`;
       case "vintage":
-        return ` Vintage-wash garment. Cracked print in the fabric, distressed collar, lived-in merch.`;
+        return ` Vintage-wash garment, lived-in cotton. The locked print sits in the fabric, slightly cracked. Do not draw a new graphic.`;
       case "type":
-        return ` Typography as the garment graphic. Giant ${name.toUpperCase()} or ${initials} printed or embroidered on cloth.`;
+        return ` Editorial type-driven merch photo. The locked print is the type. Do not rewrite it.`;
       case "line":
-        return ` Fine line-art print or tonal embroidery. Quiet, editorial, lots of fabric showing.`;
+        return ` Quiet editorial light, lots of fabric showing around the locked print.`;
       case "tattoo":
-        return ` Tattoo-flash print on a real tee. Bold ink sitting in the cotton.`;
+        return ` Bold merch photo, warehouse grit. The locked print is already the flash.`;
       case "floral":
-        return ` Botanical or all-over print on a real camp shirt or tee. Fabric moving.`;
+        return ` Soft fashion light. The locked print is the botanical. Do not invent new flowers.`;
       case "liquid":
-        return ` Sculptural 3D-looking graphic printed on cloth, still a real garment.`;
+        return ` Sculptural fashion light on a real garment. Keep the locked print.`;
       case "grunge":
-        return ` Skater lookbook. Xerox print on a boxy tee, warehouse grit.`;
+        return ` Skater lookbook, warehouse grit. The locked print is already the zine graphic.`;
       case "vector":
-        return ` Clean two-color print, sharp on heavyweight cotton.`;
+        return ` Clean studio light, sharp cotton. The locked print stays two-color and exact.`;
     }
   }
   switch (styleId) {
@@ -359,7 +441,7 @@ function categorySuffix(categoryId: CategoryId, brand: Brand, lens: LensId): str
     }
   })();
   if (lens === "lookbook") {
-    return `${graphic} That category is the print on the real garment. Flagship campaign, not a cheap mockup.`;
+    return ` Photo only — do not invent a new ${categoryId} graphic. The attached print is already the art.`;
   }
   return graphic;
 }
@@ -370,14 +452,17 @@ function animeSuffix(brand: Brand, lens: LensId): string {
   const core =
     ` ANIME MODE. Original anime / manga merch for ${name}. Cel-shaded, bold ink line, fashion-forward 2026 J-streetwear. Invented character, creature, or scene that belongs to this house — ${initials} as a quiet mark. Never copy Naruto, Dragon Ball, One Piece, Ghibli, Demon Slayer, or any existing IP. Thumbnail-bold. Limited house palette.`;
   if (lens === "lookbook") {
-    return `${core} Photoreal garment wearing that original anime print. Real fabric, real light. The print is anime; the photo is fashion.`;
+    return `${core} Photoreal garment wearing the locked print. If that print is already anime, keep it. Do not draw a new character. The photo is fashion; the print stays the attached file.`;
   }
   return `${core} Isolated 2D anime graphic, print-ready, huge margin.`;
 }
 
-function leadSuffix(leadId: LeadId, brand: Brand): string {
+function leadSuffix(leadId: LeadId, brand: Brand, lens: LensId = "plate"): string {
   const name = brand.name.trim() || "the house";
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
+  if (lens === "lookbook") {
+    return ` The attached print file is the only graphic on the garment. Do not add extra marks.`;
+  }
   if (leadId === "art") {
     return ` LEAD ART. The design is the hero — illustration, motif, scene, texture — 90% of the frame. Branding is a whisper: tiny ${initials} or 8pt ${name}, like a woven neck label. No giant wordmark, no chest-spanning name. Genius pass: invent a new image. Risk. One unforgettable idea. Unlimited original invention, never a template.`;
   }
@@ -570,22 +655,20 @@ export function composePrompt(
     ? "Kids merch craft 2023–2026: chunky type, rounded geometry, color-block, original animal or mascot, one giant idea. Study Mini Rodini / Bobo Choses / TAO / Primary / Patagonia Kids as composition only. Never copy their marks. No movie characters."
     : "";
   const who = kids ? "kids" : women ? "women's" : "men's";
+  const wear = productWear(productId);
   const direction = lookbook
     ? [
-        `You are a professional fashion designer and campaign photographer shooting the ${name} collection.`,
-        "Think garment first: weight, stitch, neck tape, embroidery vs print, fit (boxy, oversized, dropped shoulder), then graphic, then light.",
-        "Photoreal fashion image of a real garment — on a model, hanging, or flat lay as specified. Visible fabric, seams, drape, labels. 8k lookbook. Not a cheap T-shirt mockup generator, not a ghost mannequin, not a floating PNG on a blank canvas.",
-        "Keep the real scene: studio, street, warehouse, apartment, or location. Models, set, and background stay in the photo. Do not key or delete the backdrop.",
-        `Brand: ${name}. Mark: ${initials}, ${brand.motifs.trim() || theme.motifs}.`,
-        `Palette: ink ${ink}, paper ${paper}, accent ${accent}.`,
-        `Direction: ${theme.label} for ${who}. ${theme.world} Use that as a starting world, not a cage. Invent freely.`,
+        `You are a fashion photographer shooting existing ${name} merch. You are not designing a new graphic.`,
+        `PRODUCT LOCK: the subject MUST be a real ${wear.garment}. Not a different product. Not a mockup generator. Real fabric, seams, drape, labels.`,
+        `ART LOCK: the attached image is the print file. Place that EXACT graphic as a ${wear.place}. Keep lettering, colors, and layout identical. Do not invent, replace, restyle, or add a new design.`,
+        "Photoreal campaign photo. On-model, hanging, or still life. 8k fashion. Keep the real scene — studio, street, warehouse, apartment. Do not delete the backdrop.",
+        `Brand: ${name}.`,
+        `Direction: ${theme.label} for ${who}. ${theme.world} Use that as set and styling, not a new graphic.`,
         audienceLine,
         `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
         notes,
-        kidsCraft,
-        `Invent original ${name} merch in that ${theme.label.toLowerCase()} feeling. Full designer freedom. Never copy a known logo or trademark.`,
-        "Craft bar: flagship merch. Sharper than a mall drop.",
-        salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
+        "Craft bar: flagship campaign of the existing drop.",
+        salt ? `New pose and set ${salt}. Same garment, same locked print.` : "",
       ]
     : [
         `You are a professional merch art director designing a Printify print FILE for ${name}.`,
@@ -608,11 +691,15 @@ export function composePrompt(
         "Craft bar: flagship drop, sharper than a mall tee.",
         salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
       ];
-  const productBit = lookbook ? (product?.lookbook ?? "") : (product?.suffix ?? "");
-  const suffix = `${anime ? animeSuffix(brand, lens) : ""}${leadSuffix(leadId, brand)}${categorySuffix(categoryId, brand, lens)}${styleSuffix(styleId, brand, lens)}${productBit}`;
+  const productBit = lookbook
+    ? ` Wear a real ${wear.garment} with the locked print as a ${wear.place}. ${product?.lookbook ?? ""}`
+    : (product?.suffix ?? "");
+  const suffix = `${anime ? animeSuffix(brand, lens) : ""}${leadSuffix(leadId, brand, lens)}${categorySuffix(categoryId, brand, lens)}${styleSuffix(styleId, brand, lens)}${productBit}`;
   const idea = trimmed
     ? trimmed
-    : `Invent a flagship ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. You are the designer. Full freedom. One unforgettable idea. Do not ask. Just draw.`;
+    : lookbook
+      ? `Shoot the locked print on the ${wear.garment}. New pose, real scene. Do not draw a new graphic.`
+      : `Invent a flagship ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. You are the designer. Full freedom. One unforgettable idea. Do not ask. Just draw.`;
   const composed = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
   return composed.slice(0, MAX_COMPOSED);
 }
