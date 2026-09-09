@@ -269,28 +269,8 @@ export const AUDIENCES = [
   { id: "kids" as const, label: "Kids", hint: "Kids clothing shop" },
 ];
 
-const THEME_AUDIENCE: Record<ThemeId, AudienceId[]> = {
-  street: ["men", "women", "kids"],
-  resort: ["women", "kids"],
-  fishing: ["men", "kids"],
-  hunt: ["men"],
-  western: ["men", "kids"],
-  coastal: ["men", "women", "kids"],
-  heritage: ["men", "women", "kids"],
-  work: ["men"],
-  celestial: ["women", "kids"],
-  skate: ["men", "women", "kids"],
-  luxe: ["women"],
-  bloom: ["women", "kids"],
-  muse: ["women"],
-  mini: ["kids"],
-  play: ["kids"],
-  cub: ["kids"],
-  buddy: ["kids"],
-};
-
-export function themesFor(audience: AudienceId) {
-  return THEMES.filter((theme) => THEME_AUDIENCE[theme.id].includes(audience));
+export function themesFor(_audience?: AudienceId) {
+  return THEMES;
 }
 
 export function coerceAudience(value: unknown): AudienceId {
@@ -360,12 +340,8 @@ export function suggestInitials(name: string) {
   return (words[0] ?? "").slice(0, 2).toUpperCase();
 }
 
-export function applyAudience(audience: AudienceId, brand: Brand): Partial<Brand> {
-  const allowed = themesFor(audience);
-  const keep = allowed.some((item) => item.id === brand.themeId);
-  if (keep) return { audience };
-  const next = allowed[0] ?? THEMES[0];
-  return { audience, ...applyTheme(next.id) };
+export function applyAudience(audience: AudienceId, _brand: Brand): Partial<Brand> {
+  return { audience };
 }
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -389,10 +365,7 @@ function keepHex(value: string | undefined, fallback: string) {
 
 export function normalizeBrand(value: Partial<Brand> | null | undefined): Brand {
   const audience = coerceAudience(value?.audience);
-  let themeId = coerceThemeId(value?.themeId);
-  if (!THEME_AUDIENCE[themeId]?.includes(audience)) {
-    themeId = themesFor(audience)[0]?.id ?? "street";
-  }
+  const themeId = coerceThemeId(value?.themeId);
   const theme = THEMES.find((item) => item.id === themeId) ?? THEMES[0];
   const name = (value?.name ?? DEFAULT_BRAND.name).slice(0, 40);
   const initialsRaw = (value?.initials ?? "").slice(0, 6);

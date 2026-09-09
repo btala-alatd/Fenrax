@@ -8,7 +8,6 @@ import {
   AUDIENCES,
   normalizeBrand,
   suggestInitials,
-  themesFor,
   THEMES,
   type Brand,
 } from "@/lib/brand";
@@ -141,10 +140,10 @@ export function BrandSheet({
 
         <div className="space-y-1.5">
           <span className="block text-[11px] font-medium tracking-[0.14em] text-ink-subtle uppercase">
-            Look
+            Direction
           </span>
           <div className="flex flex-wrap gap-1.5">
-            {themesFor(draft.audience).map((theme) => (
+            {THEMES.map((theme) => (
               <button
                 key={theme.id}
                 type="button"
@@ -162,7 +161,7 @@ export function BrandSheet({
             ))}
           </div>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            {THEMES.find((item) => item.id === draft.themeId)?.world}
+            {THEMES.find((item) => item.id === draft.themeId)?.world} A starting world — the designer still invents.
           </p>
         </div>
 
@@ -211,7 +210,7 @@ export function BrandSheet({
             variant="ghost"
             className="min-h-12"
             onClick={() => {
-              const theme = themesFor(draft.audience)[0] ?? THEMES[0];
+              const theme = THEMES.find((item) => item.id === draft.themeId) ?? THEMES[0];
               patch({
                 name: "",
                 initials: "",

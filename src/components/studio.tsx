@@ -18,7 +18,7 @@ import { EtsySheet } from "@/components/etsy-sheet";
 import { ExportButtons } from "@/components/export-buttons";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { applyAudience, AUDIENCES, themeOf, useBrand, type Brand } from "@/lib/brand";
+import { applyAudience, applyTheme, AUDIENCES, THEMES, themeOf, useBrand, type Brand } from "@/lib/brand";
 import { printifyPreset, toTransparentPng } from "@/lib/printify";
 import { useGallery } from "@/lib/gallery";
 import { readImageFile } from "@/lib/image-file";
@@ -600,6 +600,7 @@ export function Studio() {
           items={visibleItems}
           packing={packing}
           onAudience={(id) => patchBrand(applyAudience(id, brand))}
+          onTheme={(id) => patchBrand(applyTheme(id))}
           onZip={(pack, kind) => void zipPack(pack, kind)}
           onEtsy={() => {
             if (current) setListing(current);
@@ -798,6 +799,7 @@ function PromptDock({
   items,
   packing,
   onAudience,
+  onTheme,
   onZip,
   onEtsy,
 }: {
@@ -832,6 +834,7 @@ function PromptDock({
   items: Still[];
   packing: boolean;
   onAudience: (id: Brand["audience"]) => void;
+  onTheme: (id: Brand["themeId"]) => void;
   onZip: (stills: Still[], kind?: "images" | "printify") => void;
   onEtsy: () => void;
 }) {
@@ -875,6 +878,25 @@ function PromptDock({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+        {THEMES.map((theme) => (
+          <button
+            key={theme.id}
+            type="button"
+            title={theme.hook}
+            onClick={() => onTheme(theme.id)}
+            className={cn(
+              "inline-flex h-9 shrink-0 items-center rounded-full px-3 text-xs font-semibold transition-[background-color,color,box-shadow] duration-[var(--motion-fast)] ease-[var(--ease-out)]",
+              brand.themeId === theme.id
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground shadow-[var(--shadow-border)] hover:text-foreground",
+            )}
+          >
+            {theme.label}
+          </button>
+        ))}
       </div>
 
       <Textarea
