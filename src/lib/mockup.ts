@@ -11,14 +11,14 @@ type Place = {
 };
 
 const PLACE: Record<ProductId, Place> = {
-  tee: { cx: 0.5, taper: 0.95, width: 0.78, drop: 0.15, cover: 0.78 },
-  long: { cx: 0.5, taper: 0.95, width: 0.76, drop: 0.15, cover: 0.78 },
-  tank: { cx: 0.5, taper: 0.96, width: 0.74, drop: 0.16, cover: 0.76 },
-  hoodie: { cx: 0.5, taper: 0.94, width: 0.76, drop: 0.16, cover: 0.58 },
-  crew: { cx: 0.5, taper: 0.95, width: 0.76, drop: 0.15, cover: 0.72 },
-  chest: { cx: 0.3, taper: 0.98, width: 0.24, drop: 0.14, cover: 0.28 },
-  back: { cx: 0.5, taper: 0.95, width: 0.8, drop: 0.12, cover: 0.8 },
-  baby: { cx: 0.5, taper: 0.96, width: 0.72, drop: 0.16, cover: 0.74 },
+  tee: { cx: 0.5, taper: 0.95, width: 0.78, drop: 0.11, cover: 0.78 },
+  long: { cx: 0.5, taper: 0.95, width: 0.76, drop: 0.11, cover: 0.78 },
+  tank: { cx: 0.5, taper: 0.96, width: 0.74, drop: 0.12, cover: 0.76 },
+  hoodie: { cx: 0.5, taper: 0.94, width: 0.76, drop: 0.12, cover: 0.58 },
+  crew: { cx: 0.5, taper: 0.95, width: 0.76, drop: 0.11, cover: 0.72 },
+  chest: { cx: 0.3, taper: 0.98, width: 0.24, drop: 0.11, cover: 0.28 },
+  back: { cx: 0.5, taper: 0.95, width: 0.8, drop: 0.1, cover: 0.8 },
+  baby: { cx: 0.5, taper: 0.96, width: 0.72, drop: 0.12, cover: 0.74 },
   tote: { cx: 0.5, taper: 1, width: 0.8, drop: 0.08, cover: 0.82 },
   hat: { cx: 0.5, taper: 0.86, width: 0.62, drop: 0.12, cover: 0.5 },
   mug: { cx: 0.48, taper: 0.9, width: 0.7, drop: 0.1, cover: 0.7 },
@@ -207,7 +207,7 @@ function fitArt(areaW: number, areaH: number, artW: number, artH: number) {
     w,
     h,
     x: Math.round((areaW - w) / 2),
-    y: Math.round((areaH - h) * 0.34),
+    y: Math.round((areaH - h) * 0.1),
   };
 }
 
