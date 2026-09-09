@@ -75,19 +75,46 @@ function isField(r: number, g: number, b: number, a: number) {
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const L = (r + g + b) / 3;
-  return L > 210 && max - min < 48;
+  return L > 175 && max - min < 62;
+}
+
+function chinY(image: ImageData) {
+  const { width, height, data } = image;
+  const x0 = Math.floor(width * 0.32);
+  const x1 = Math.floor(width * 0.68);
+  const y1 = Math.floor(height * 0.58);
+  let lowest = 0;
+  let hits = 0;
+  for (let y = Math.floor(height * 0.06); y < y1; y += 2) {
+    let row = 0;
+    for (let x = x0; x < x1; x += 2) {
+      const i = (y * width + x) * 4;
+      if (!isSkin(data[i], data[i + 1], data[i + 2])) continue;
+      row += 1;
+    }
+    if (row < (x1 - x0) * 0.08) continue;
+    lowest = y;
+    hits += 1;
+  }
+  return hits > 4 ? lowest : 0;
 }
 
 function fabricKey(image: ImageData) {
   const { width, height, data } = image;
-  for (const fy of [0.42, 0.5, 0.58]) {
-    const i = (Math.floor(height * fy) * width + Math.floor(width * 0.5)) * 4;
+  const chin = chinY(image);
+  const start = chin > 0 ? Math.min(0.78, chin / height + 0.08) : 0.56;
+  for (const fy of [start, start + 0.06, start + 0.12, 0.64, 0.7]) {
+    const y = Math.min(height - 2, Math.floor(height * fy));
+    const i = (y * width + Math.floor(width * 0.5)) * 4;
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
-    if (!isSkin(r, g, b)) return [r, g, b] as const;
+    if (isSkin(r, g, b)) continue;
+    const L = (r + g + b) / 3;
+    if (L > 248) continue;
+    return [r, g, b] as const;
   }
-  const i = (Math.floor(height * 0.52) * width + Math.floor(width * 0.5)) * 4;
+  const i = (Math.floor(height * 0.62) * width + Math.floor(width * 0.5)) * 4;
   return [data[i], data[i + 1], data[i + 2]] as const;
 }
 
@@ -104,11 +131,13 @@ function isFabric(
 function garmentBox(image: ImageData) {
   const { width, height, data } = image;
   const key = fabricKey(image);
+  const chin = chinY(image);
+  const startY = chin > 0 ? Math.min(height - 8, chin + Math.round(height * 0.03)) : Math.floor(height * 0.28);
   const step = Math.max(1, Math.floor(height / 160));
   let top = height;
   let bottom = 0;
   let best = { y: 0, left: 0, right: 0, w: 0 };
-  for (let y = 0; y < height; y += step) {
+  for (let y = startY; y < height; y += step) {
     let left = -1;
     let right = -1;
     for (let x = 2; x < width - 2; x += 2) {
@@ -124,7 +153,7 @@ function garmentBox(image: ImageData) {
     if (w > best.w) best = { y, left, right, w };
   }
   if (best.w < width * 0.16 || bottom - top < height * 0.18) return null;
-  const chestY = Math.min(bottom, top + Math.round((bottom - top) * 0.22));
+  const chestY = Math.min(bottom, top + Math.round((bottom - top) * 0.4));
   let left = best.left;
   let right = best.right;
   const mid = (chestY * width + Math.floor(width / 2)) * 4;
@@ -143,7 +172,7 @@ function garmentBox(image: ImageData) {
     }
   }
   return {
-    collar: top,
+    collar: Math.max(top, startY),
     hem: bottom,
     left,
     right,
@@ -259,8 +288,11 @@ function apparelArea(image: ImageData, productId: ProductId, scale: number, audi
   const place = placeOf(productId, audience);
   const grow = Math.min(1.12, Math.max(0.85, scale));
   const { width, height } = image;
+  const chin = chinY(image);
+  const belowFace = chin > 0 ? chin + Math.round(height * (kids ? 0.08 : 0.05)) : 0;
   const shirt = garmentBox(image);
-  const collar = shirt?.collar ?? Math.floor(height * 0.28);
+  const collarFallback = kids ? Math.floor(height * 0.44) : Math.floor(height * 0.28);
+  const collar = Math.max(shirt?.collar ?? collarFallback, belowFace, kids ? Math.floor(height * 0.4) : 0);
   const hem = shirt?.hem ?? Math.floor(height * 0.82);
   const chest = shirt?.chest ?? Math.floor(width * 0.42);
   const left = shirt?.left ?? Math.floor((width - chest) / 2);
@@ -268,11 +300,13 @@ function apparelArea(image: ImageData, productId: ProductId, scale: number, audi
   const chestIn = kids ? 16 : 20;
   const pxPerIn = chest / chestIn;
   const gap = Math.round(place.gapIn * pxPerIn);
-  let top = collar + gap;
-  const chestFloor = collar + Math.round(shirtH * (kids ? 0.32 : 0.38));
+  const minGap = kids ? Math.round(shirtH * 0.18) : gap;
+  let top = collar + Math.max(gap, minGap);
+  const chestFloor = collar + Math.round(shirtH * (kids ? 0.36 : 0.38));
   if (top > chestFloor) top = chestFloor;
   let w = place.widthIn * pxPerIn * grow;
   let h = place.maxHIn * pxPerIn * grow;
+  if (kids) h = Math.min(h, shirtH * 0.34);
   const pocket =
     productId === "hoodie" || productId === "crew"
       ? collar + Math.round((kids ? 9.5 : 12.2) * pxPerIn)
@@ -283,7 +317,11 @@ function apparelArea(image: ImageData, productId: ProductId, scale: number, audi
     h = maxH;
     w *= s;
   }
-  if (top + h > pocket) top = Math.max(collar + Math.min(gap, shirtH * 0.18), pocket - h);
+  if (top + h > pocket) {
+    const floor = collar + (kids ? Math.round(shirtH * 0.16) : Math.min(gap, shirtH * 0.2));
+    top = Math.max(floor, pocket - h);
+  }
+  top = Math.max(top, belowFace, collar);
   let x = left + chest * place.cx - w / 2;
   x = Math.max(4, Math.min(x, width - w - 4));
   const y = Math.max(0, Math.min(top, height - h));
@@ -334,6 +372,10 @@ function punchLightField(source: HTMLCanvasElement) {
     push(x + 1, y);
     push(x, y - 1);
     push(x, y + 1);
+  }
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 12) continue;
+    if (isField(data[i], data[i + 1], data[i + 2], data[i + 3])) data[i + 3] = 0;
   }
   ctx.putImageData(image, 0, 0);
   return source;
@@ -483,6 +525,7 @@ function sitInFabric(photo: ImageData, overlay: ImageData, ox: number, oy: numbe
       const fr = pd[pi];
       const fg = pd[pi + 1];
       const fb = pd[pi + 2];
+      if (isSkin(fr, fg, fb)) continue;
       const light = 0.66 + 0.34 * ((fr + fg + fb) / 765);
       const ia = Math.min(1, a * 0.94);
       pd[pi] = Math.round(fr * (1 - ia) + od[oi] * light * ia);
