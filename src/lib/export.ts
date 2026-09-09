@@ -1,5 +1,5 @@
 import ImageTracer from "imagetracerjs";
-import { dataUrlToBlob, toPngDataUrl } from "@/lib/image-file";
+import { dataUrlToBlob, loadImage, toPngDataUrl } from "@/lib/image-file";
 import { saveBlob } from "@/lib/save-to";
 import { prepareArt, printifyPreset } from "@/lib/printify";
 import type { ProductId } from "@/lib/studio-data";
@@ -188,7 +188,7 @@ export async function rasterToSvgFromArt(
   const dx = (outW - dw) / 2;
   const dy = (outH - dh) / 2;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${outH}" viewBox="0 0 ${outW} ${outH}" fill="none"><g transform="translate(${dx.toFixed(1)} ${dy.toFixed(1)}) scale(${fit.toFixed(4)})">${inner}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${outH}" viewBox="0 0 ${outW} ${outH}" fill="none">${""}<g transform="translate(${dx.toFixed(1)} ${dy.toFixed(1)}) scale(${fit.toFixed(4)})">${inner}</g></svg>`;
 }
 
 export async function downloadSvg(

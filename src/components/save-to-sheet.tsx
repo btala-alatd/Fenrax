@@ -21,7 +21,10 @@ export function SaveToButton({ className }: { className?: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={cn("text-left text-xs text-muted-foreground", className)}
+        className={cn(
+          "text-left text-xs text-muted-foreground",
+          className,
+        )}
       >
         Save to <span className="font-semibold text-foreground">{label}</span>
       </button>
@@ -63,8 +66,12 @@ function SaveToSheet({ onClose }: { onClose: () => void }) {
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div>
-          <p className="font-display text-xl font-extrabold tracking-[-0.04em]">Where to save</p>
-          <p className="text-sm text-muted-foreground">Zips and Printify files go here.</p>
+          <p className="font-display text-xl font-extrabold tracking-[-0.04em]">
+            Where to save
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Zips and Printify files go here.
+          </p>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
           <X className="size-5" />

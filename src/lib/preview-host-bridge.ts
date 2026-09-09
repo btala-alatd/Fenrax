@@ -66,7 +66,7 @@ export function installPreviewHostBridge(
   if (typeof window === "undefined") return () => {};
 
   const ancestorOrigin =
-    typeof location.ancestorOrigins !== "undefined" && location.ancestorOrigins.length > 0
+    typeof location.ancestorOrigins !== 'undefined' && location.ancestorOrigins.length > 0
       ? location.ancestorOrigins[0]
       : null;
   const parentOrigin = resolveParentEmbedderOrigin(

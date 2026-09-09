@@ -13,3 +13,7 @@ artifacts
 .nitro
 .tanstack
 .cache
+
+.project_id
+.node_modules.lock
+.grok/status

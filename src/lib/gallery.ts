@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { idbStorage } from "@/lib/idb";
 import type { Still } from "@/lib/studio-data";
 
-export type GalleryState = {
+type GalleryState = {
   items: Still[];
   add: (still: Still) => void;
   remove: (id: string) => void;
