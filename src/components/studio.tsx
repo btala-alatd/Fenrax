@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   ArrowUp,
+  ChevronDown,
   ImagePlus,
   Layers,
   LoaderCircle,
@@ -915,9 +916,21 @@ function PromptDock({
         <button
           type="button"
           onClick={() => setMore((open) => !open)}
-          className="text-xs font-semibold tracking-[0.12em] text-ink-subtle uppercase"
+          aria-expanded={more}
+          className={cn(
+            "flex h-11 w-full items-center justify-between rounded-full px-4 text-sm font-semibold transition-[background-color,color,box-shadow] duration-[var(--motion-quick)] ease-[var(--ease-out)]",
+            more
+              ? "bg-primary text-primary-foreground"
+              : "bg-raised text-foreground shadow-[var(--shadow-border)] hover:shadow-[var(--shadow-border-hover)]",
+          )}
         >
           {more ? "Hide extra" : "More options"}
+          <ChevronDown
+            className={cn(
+              "size-4 shrink-0 transition-transform duration-[var(--motion-quick)] ease-[var(--ease-out)]",
+              more && "rotate-180",
+            )}
+          />
         </button>
         {more ? (
           <div className="mt-2 space-y-2">
