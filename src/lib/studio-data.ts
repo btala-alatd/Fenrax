@@ -395,7 +395,7 @@ export function composePrompt(
     .replace(/[^A-Z0-9]+/g, "")
     .split("")
     .join("-");
-  const typeLaw = `TYPE LAW. Spell ${name.toUpperCase()} exactly, letter by letter: ${spelled || initials}. Every letter, in order, none extra, none missing, none cropped off the edge. If you set a slogan or Scripture, write every word in full — LOVE ONE ANOTHER not OVE ONE ANO HER; WALK IN LOVE not WALK N LOVE. Never dummy latin. Never scramble. If a phrase will not fit, use fewer complete words on a straight line — never a tight arch that clips letters. Letter holes in O A R D P B stay open.`;
+  const typeLaw = `TYPE LAW. The only letters the image may contain are the initials ${initials} inside a crest, or ${name.toUpperCase()} (${spelled || initials}) if this is a wordmark. Do not paint Bible verses, psalm numbers, citations, slogans, or sentences. No arch type. No dummy latin. Fenrax sets all other copy in production.`;
   const churchCraft = church
     ? kids
       ? `CHURCH is direction, not a cage. Kids Sunday merch: joyful, age-appropriate. ${typeLaw} Reverent and fun. Never scary, never sarcasm about God.`

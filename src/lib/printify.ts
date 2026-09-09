@@ -635,6 +635,13 @@ function merchDespeckle(imageData: ImageData) {
           }
         }
       }
+      if (src[i + 3] < 16 && opaqueN >= 6 && majorityN >= 5) {
+        data[i] = (majority >> 16) & 255;
+        data[i + 1] = (majority >> 8) & 255;
+        data[i + 2] = majority & 255;
+        data[i + 3] = 255;
+        continue;
+      }
       if (src[i + 3] >= 16 && opaqueN <= 2) {
         data[i + 3] = 0;
         continue;

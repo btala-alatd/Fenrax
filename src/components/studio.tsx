@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { applyAudience, applyTheme, AUDIENCES, THEMES, themeOf, useBrand, type Brand } from "@/lib/brand";
 import { printifyPreset, finishPrintFile, looksLikePhoto } from "@/lib/printify";
+import { letterPlate, plateCopy } from "@/lib/letter";
 import { useGallery } from "@/lib/gallery";
 import { readImageFile } from "@/lib/image-file";
 import { zipGeneratedImages, zipPrintifyPack } from "@/lib/pack";
@@ -369,6 +370,8 @@ export function Studio() {
       if (retry?.ok && !(await looksLikePhoto(retry.dataUrl))) result = retry;
     }
     const pngUrl = await finishPrintFile(result.dataUrl).catch(() => result!.dataUrl);
+    const copy = plateCopy(brand, nextPrompt, nextCategory);
+    const lettered = await letterPlate(pngUrl, copy, brand.ink, brand.accent).catch(() => pngUrl);
     const still: Still = {
       id: crypto.randomUUID(),
       prompt: nextPrompt || "Designer pick",
@@ -380,7 +383,7 @@ export function Studio() {
       leadId: nextLead,
       lens: "plate",
       anime: nextAnime,
-      dataUrl: pngUrl,
+      dataUrl: lettered,
       createdAt: Date.now(),
       mode: edit ? "edit" : "create",
     };
