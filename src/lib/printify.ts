@@ -1,0 +1,583 @@
+import { downloadBlob, loadImage } from "@/lib/image-file";
+import type { AspectRatioId, ProductId } from "@/lib/studio-data";
+
+const DPI = 300;
+const PAD = 0.08;
+
+export type PrintifyPreset = {
+  id: ProductId;
+  label: string;
+  width: number;
+  height: number;
+  inches: string;
+  aspect: AspectRatioId;
+  note: string;
+};
+
+export const PRINTIFY_PRESETS: Record<ProductId, PrintifyPreset> = {
+  tee: {
+    id: "tee",
+    label: "Tee front",
+    width: 4500,
+    height: 5400,
+    inches: "15×18",
+    aspect: "3:4",
+    note: "Full-front DTG. Printify working canvas for most tees.",
+  },
+  back: {
+    id: "back",
+    label: "Tee / hoodie back",
+    width: 4500,
+    height: 5400,
+    inches: "15×18",
+    aspect: "3:4",
+    note: "Full-back DTG. Same canvas as the front.",
+  },
+  chest: {
+    id: "chest",
+    label: "Left chest",
+    width: 1800,
+    height: 1800,
+    inches: "6×6",
+    aspect: "1:1",
+    note: "Left-chest / pocket. Thick marks only.",
+  },
+  long: {
+    id: "long",
+    label: "Long sleeve front",
+    width: 4500,
+    height: 5400,
+    inches: "15×18",
+    aspect: "3:4",
+    note: "Long-sleeve front. Same DTG canvas as a tee.",
+  },
+  tank: {
+    id: "tank",
+    label: "Tank front",
+    width: 3600,
+    height: 4800,
+    inches: "12×16",
+    aspect: "3:4",
+    note: "Tank / racerback front print area.",
+  },
+  hoodie: {
+    id: "hoodie",
+    label: "Hoodie front",
+    width: 4500,
+    height: 5400,
+    inches: "15×18",
+    aspect: "3:4",
+    note: "Hoodie front at 300 DPI. Keep art above the pocket.",
+  },
+  crew: {
+    id: "crew",
+    label: "Crewneck front",
+    width: 4500,
+    height: 5400,
+    inches: "15×18",
+    aspect: "3:4",
+    note: "Crewneck / sweatshirt front.",
+  },
+  tote: {
+    id: "tote",
+    label: "Tote face",
+    width: 4200,
+    height: 4800,
+    inches: "14×16",
+    aspect: "3:4",
+    note: "Canvas tote print. Centered, durable fills.",
+  },
+  hat: {
+    id: "hat",
+    label: "Cap front",
+    width: 1800,
+    height: 1200,
+    inches: "6×4",
+    aspect: "16:9",
+    note: "Printed cap panel. For embroidery, keep strokes thick.",
+  },
+  mug: {
+    id: "mug",
+    label: "Mug wrap 11oz",
+    width: 2700,
+    height: 1125,
+    inches: "9×3.75",
+    aspect: "16:9",
+    note: "11oz wrap. Keep important art away from the handle gap.",
+  },
+  tumbler: {
+    id: "tumbler",
+    label: "Tumbler wrap 20oz",
+    width: 2700,
+    height: 2400,
+    inches: "9×8",
+    aspect: "4:3",
+    note: "20oz tumbler wrap. Center the art; edges wrap.",
+  },
+  sticker: {
+    id: "sticker",
+    label: "Sticker 6×6",
+    width: 1800,
+    height: 1800,
+    inches: "6×6",
+    aspect: "1:1",
+    note: "Die-cut sticker. Transparent edge required.",
+  },
+  poster: {
+    id: "poster",
+    label: "Poster 12×16",
+    width: 3600,
+    height: 4800,
+    inches: "12×16",
+    aspect: "3:4",
+    note: "Art print. Printify can scale this to other poster sizes.",
+  },
+  pillow: {
+    id: "pillow",
+    label: "Pillow 16×16",
+    width: 4800,
+    height: 4800,
+    inches: "16×16",
+    aspect: "1:1",
+    note: "Throw pillow face. Square, full-bleed friendly.",
+  },
+  phone: {
+    id: "phone",
+    label: "Phone case",
+    width: 1800,
+    height: 3200,
+    inches: "6×10.7",
+    aspect: "9:16",
+    note: "Phone case. Center the art; camera area is cropped in Product Creator.",
+  },
+  baby: {
+    id: "baby",
+    label: "Baby onesie",
+    width: 3600,
+    height: 4800,
+    inches: "12×16",
+    aspect: "3:4",
+    note: "Baby bodysuit front. Keep the mark simple and thick.",
+  },
+  canvas: {
+    id: "canvas",
+    label: "Canvas 16×20",
+    width: 4800,
+    height: 6000,
+    inches: "16×20",
+    aspect: "4:5",
+    note: "Gallery canvas. Full-bleed friendly.",
+  },
+  repeat: {
+    id: "repeat",
+    label: "AOP panel",
+    width: 4500,
+    height: 5400,
+    inches: "15×18",
+    aspect: "1:1",
+    note: "All-over panel. Tile-safe. Check Product Creator for cut files.",
+  },
+};
+
+export function printifyPreset(productId: ProductId): PrintifyPreset {
+  return PRINTIFY_PRESETS[productId] ?? PRINTIFY_PRESETS.tee;
+}
+
+export const PRINTIFY_CATALOG: Record<ProductId, string> = {
+  tee: "Bella+Canvas 3001 / Gildan 64000 — large front",
+  back: "Tee or hoodie — large back",
+  chest: "Left chest / pocket print",
+  long: "Long sleeve tee — large front",
+  tank: "Unisex tank / racerback — front",
+  hoodie: "Gildan 18500 hoodie — front, above pocket",
+  crew: "Gildan 18000 crewneck — front",
+  tote: "Canvas tote — front face",
+  hat: "Printed cap panel / dad hat",
+  mug: "11 oz ceramic mug wrap",
+  tumbler: "20 oz tumbler wrap",
+  sticker: "Kiss-cut / die-cut sticker 6×6",
+  poster: "Matte poster 12×16 (scales to other sizes)",
+  pillow: "Throw pillow 16×16",
+  phone: "Tough / slim phone case",
+  baby: "Baby short-sleeve onesie — front",
+  canvas: "Gallery canvas 16×20",
+  repeat: "All-over print — use Product Creator template",
+};
+
+function dist(r: number, g: number, b: number, key: { r: number; g: number; b: number }) {
+  const dr = r - key.r;
+  const dg = g - key.g;
+  const db = b - key.b;
+  return Math.sqrt(dr * dr + dg * dg + db * db);
+}
+
+function sampleBorder(data: Uint8ClampedArray, width: number, height: number) {
+  const rs: number[] = [];
+  const gs: number[] = [];
+  const bs: number[] = [];
+  const take = (x: number, y: number) => {
+    const i = (y * width + x) * 4;
+    rs.push(data[i]);
+    gs.push(data[i + 1]);
+    bs.push(data[i + 2]);
+  };
+  for (let x = 0; x < width; x += 2) {
+    take(x, 0);
+    take(x, 1);
+    take(x, height - 1);
+    take(x, height - 2);
+  }
+  for (let y = 0; y < height; y += 2) {
+    take(0, y);
+    take(1, y);
+    take(width - 1, y);
+    take(width - 2, y);
+  }
+  const mid = (arr: number[]) => {
+    const sorted = arr.slice().sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)] ?? 240;
+  };
+  return { r: mid(rs), g: mid(gs), b: mid(bs) };
+}
+
+function isMagenta(r: number, g: number, b: number) {
+  return Math.min(r, b) - g > 28 && r > 80 && b > 80;
+}
+
+function isSaturated(r: number, g: number, b: number) {
+  return Math.max(r, g, b) - Math.min(r, g, b) > 32;
+}
+
+function isTick(r: number, g: number, b: number) {
+  if (isMagenta(r, g, b)) return false;
+  return isSaturated(r, g, b);
+}
+
+function floodKnock(imageData: ImageData, ground: { r: number; g: number; b: number }, tol: number) {
+  const { data, width, height } = imageData;
+  const n = width * height;
+  const marked = new Uint8Array(n);
+  const qx = new Int32Array(n);
+  const qy = new Int32Array(n);
+  let head = 0;
+  let tail = 0;
+
+  const push = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const idx = y * width + x;
+    if (marked[idx]) return;
+    const i = idx * 4;
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    if (isTick(r, g, b)) return;
+    if (dist(r, g, b, ground) > tol && !isMagenta(r, g, b)) return;
+    marked[idx] = 1;
+    qx[tail] = x;
+    qy[tail] = y;
+    tail += 1;
+  };
+
+  for (let x = 0; x < width; x += 1) {
+    push(x, 0);
+    push(x, height - 1);
+  }
+  for (let y = 0; y < height; y += 1) {
+    push(0, y);
+    push(width - 1, y);
+  }
+
+  while (head < tail) {
+    const x = qx[head];
+    const y = qy[head];
+    head += 1;
+    push(x - 1, y);
+    push(x + 1, y);
+    push(x, y - 1);
+    push(x, y + 1);
+  }
+
+  return marked;
+}
+
+function defringe(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  ground: { r: number; g: number; b: number },
+  marked: Uint8Array,
+) {
+  const n = width * height;
+  for (let idx = 0; idx < n; idx += 1) {
+    if (marked[idx]) continue;
+    const x = idx % width;
+    const y = (idx / width) | 0;
+    const edge =
+      (x > 0 && marked[idx - 1]) ||
+      (x < width - 1 && marked[idx + 1]) ||
+      (y > 0 && marked[idx - width]) ||
+      (y < height - 1 && marked[idx + width]);
+    if (!edge) continue;
+    const i = idx * 4;
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    if (isTick(r, g, b)) continue;
+    const d = dist(r, g, b, ground);
+    const t = 38;
+    if (d >= t) continue;
+    const a = d / t;
+    if (a < 0.14) {
+      data[i + 3] = 0;
+      continue;
+    }
+    data[i] = Math.max(0, Math.min(255, Math.round((r - (1 - a) * ground.r) / a)));
+    data[i + 1] = Math.max(0, Math.min(255, Math.round((g - (1 - a) * ground.g) / a)));
+    data[i + 2] = Math.max(0, Math.min(255, Math.round((b - (1 - a) * ground.b) / a)));
+    data[i + 3] = Math.round(a * 255);
+  }
+}
+
+function despill(data: Uint8ClampedArray) {
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const mag = Math.min(r, b) - g;
+    if (mag > 10) {
+      data[i] = Math.max(0, r - mag);
+      data[i + 2] = Math.max(0, b - mag);
+      if (g < 50 && mag > 36) data[i + 3] = 0;
+    }
+  }
+}
+
+function knockOut(imageData: ImageData) {
+  const { data, width, height } = imageData;
+  const ground = sampleBorder(data, width, height);
+  let marked = floodKnock(imageData, ground, 32);
+  let hits = 0;
+  for (let i = 0; i < marked.length; i += 1) hits += marked[i];
+  if (hits < marked.length * 0.04) {
+    marked = floodKnock(imageData, ground, 42);
+    hits = 0;
+    for (let i = 0; i < marked.length; i += 1) hits += marked[i];
+  }
+  if (hits > marked.length * 0.92 || hits < marked.length * 0.02) {
+    return imageData;
+  }
+
+  for (let idx = 0; idx < marked.length; idx += 1) {
+    if (!marked[idx]) continue;
+    data[idx * 4 + 3] = 0;
+  }
+  defringe(data, width, height, ground, marked);
+  despill(data);
+  return imageData;
+}
+
+function trimTransparent(source: HTMLCanvasElement) {
+  const ctx = source.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return source;
+  const { width, height } = source;
+  const { data } = ctx.getImageData(0, 0, width, height);
+  let minX = width;
+  let minY = height;
+  let maxX = 0;
+  let maxY = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (data[(y * width + x) * 4 + 3] > 12) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX <= minX || maxY <= minY) return source;
+  const pad = Math.round(Math.max(width, height) * 0.02);
+  minX = Math.max(0, minX - pad);
+  minY = Math.max(0, minY - pad);
+  maxX = Math.min(width - 1, maxX + pad);
+  maxY = Math.min(height - 1, maxY + pad);
+  const w = maxX - minX + 1;
+  const h = maxY - minY + 1;
+  const cut = document.createElement("canvas");
+  cut.width = w;
+  cut.height = h;
+  const cutCtx = cut.getContext("2d");
+  if (!cutCtx) return source;
+  cutCtx.drawImage(source, minX, minY, w, h, 0, 0, w, h);
+  return cut;
+}
+
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(bytes: Uint8Array) {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i += 1) {
+    c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function u32(value: number) {
+  return Uint8Array.of(
+    (value >>> 24) & 0xff,
+    (value >>> 16) & 0xff,
+    (value >>> 8) & 0xff,
+    value & 0xff,
+  );
+}
+
+function withDpi(png: ArrayBuffer, dpi = DPI) {
+  const src = new Uint8Array(png);
+  if (src.length < 33 || src[0] !== 0x89) return src;
+  const ppm = Math.round(dpi / 0.0254);
+  const typeAndData = new Uint8Array(13);
+  typeAndData.set([0x70, 0x48, 0x59, 0x73]);
+  typeAndData.set(u32(ppm), 4);
+  typeAndData.set(u32(ppm), 8);
+  typeAndData[12] = 1;
+  const chunk = new Uint8Array(4 + 13 + 4);
+  chunk.set(u32(9), 0);
+  chunk.set(typeAndData, 4);
+  chunk.set(u32(crc32(typeAndData)), 17);
+  const ihdrEnd = 8 + 4 + 4 + 13 + 4;
+  const out = new Uint8Array(src.length + chunk.length);
+  out.set(src.subarray(0, ihdrEnd), 0);
+  out.set(chunk, ihdrEnd);
+  out.set(src.subarray(ihdrEnd), ihdrEnd + chunk.length);
+  return out;
+}
+
+function canvasToPng(canvas: HTMLCanvasElement): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Could not write PNG."));
+        return;
+      }
+      void blob.arrayBuffer().then(resolve, reject);
+    }, "image/png");
+  });
+}
+
+export type PrintGrade = "print" | "soft" | "draft";
+
+export type PrintifyBuild = {
+  blob: Blob;
+  artBlob: Blob;
+  preset: PrintifyPreset;
+  previewUrl: string;
+  artWidth: number;
+  artHeight: number;
+  scale: number;
+  dpi: number;
+  grade: PrintGrade;
+};
+
+export function evaluateArtworkResolution(
+  artWidth: number,
+  artHeight: number,
+  preset: PrintifyPreset,
+): { dpi: number; scale: number; grade: PrintGrade } {
+  const innerW = preset.width * (1 - PAD * 2);
+  const innerH = preset.height * (1 - PAD * 2);
+  const scale = Math.min(innerW / Math.max(1, artWidth), innerH / Math.max(1, artHeight));
+  const dpi = Math.round(DPI / Math.max(scale, 0.0001));
+  const grade: PrintGrade = dpi >= 240 ? "print" : dpi >= 160 ? "soft" : "draft";
+  return { dpi, scale, grade };
+}
+
+export async function prepareArt(dataUrl: string, knock = true) {
+  const image = await loadImage(dataUrl);
+  const srcW = image.naturalWidth || image.width;
+  const srcH = image.naturalHeight || image.height;
+  const work = document.createElement("canvas");
+  work.width = srcW;
+  work.height = srcH;
+  const workCtx = work.getContext("2d", { willReadFrequently: true });
+  if (!workCtx) throw new Error("Could not prepare the Printify file.");
+  workCtx.drawImage(image, 0, 0);
+  if (knock) {
+    const pixels = workCtx.getImageData(0, 0, srcW, srcH);
+    knockOut(pixels);
+    workCtx.putImageData(pixels, 0, 0);
+    return trimTransparent(work);
+  }
+  return work;
+}
+
+function canvasToPngDataUrl(canvas: HTMLCanvasElement): string {
+  return canvas.toDataURL("image/png");
+}
+
+export async function buildPrintifyFromArt(
+  art: HTMLCanvasElement,
+  productId: ProductId,
+): Promise<PrintifyBuild> {
+  const preset = printifyPreset(productId);
+  const { dpi, scale, grade } = evaluateArtworkResolution(art.width, art.height, preset);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = preset.width;
+  canvas.height = preset.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not build the Printify canvas.");
+  ctx.clearRect(0, 0, preset.width, preset.height);
+  ctx.imageSmoothingEnabled = scale > 1;
+  ctx.imageSmoothingQuality = "high";
+
+  const innerW = preset.width * (1 - PAD * 2);
+  const innerH = preset.height * (1 - PAD * 2);
+  const fit = Math.min(innerW / art.width, innerH / art.height);
+  const dw = art.width * fit;
+  const dh = art.height * fit;
+  const dx = (preset.width - dw) / 2;
+  const dy = (preset.height - dh) / 2;
+  ctx.drawImage(art, dx, dy, dw, dh);
+
+  const png = withDpi(await canvasToPng(canvas), DPI);
+  const artPng = withDpi(await canvasToPng(art), DPI);
+  return {
+    blob: new Blob([png], { type: "image/png" }),
+    artBlob: new Blob([artPng], { type: "image/png" }),
+    preset,
+    previewUrl: canvasToPngDataUrl(art),
+    artWidth: art.width,
+    artHeight: art.height,
+    scale: fit,
+    dpi,
+    grade,
+  };
+}
+
+export async function buildPrintifyPng(
+  dataUrl: string,
+  productId: ProductId,
+  knock = true,
+): Promise<PrintifyBuild> {
+  const art = await prepareArt(dataUrl, knock);
+  return buildPrintifyFromArt(art, productId);
+}
+
+export async function downloadPrintifyPng(
+  dataUrl: string,
+  productId: ProductId,
+  filename: string,
+) {
+  const { blob, preset } = await buildPrintifyPng(dataUrl, productId);
+  downloadBlob(blob, filename);
+  return preset;
+}

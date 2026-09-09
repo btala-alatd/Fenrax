@@ -1,0 +1,487 @@
+import { createServerFn } from "@tanstack/react-start";
+import {
+  MAX_COMPOSED,
+  MAX_SOURCE_BYTES,
+  isAspectRatioId,
+  isStyleId,
+  type AspectRatioId,
+  type StyleId,
+} from "@/lib/studio-data";
+
+export type ImagineResult =
+  | { ok: true; dataUrl: string }
+  | { ok: false; error: string };
+
+type GenerateInput = {
+  prompt: string;
+  aspectRatio: AspectRatioId;
+  styleId: StyleId;
+  googleKey?: string;
+};
+
+type EditInput = {
+  prompt: string;
+  imageDataUrl: string;
+  aspectRatio: AspectRatioId;
+  styleId: StyleId;
+  googleKey?: string;
+};
+
+type ImagineImage = {
+  b64_json?: string;
+  url?: string;
+  mime_type?: string;
+};
+
+type ImagineResponse = {
+  data?: ImagineImage[];
+  error?: { message?: string; code?: string; type?: string };
+};
+
+function readApiKey() {
+  const apiKey = process.env.XAI_API_KEY;
+  if (!apiKey) return null;
+  return apiKey;
+}
+
+function parsePrompt(value: unknown): string {
+  if (typeof value !== "string") throw new Error("Describe what to print.");
+  const prompt = value.trim();
+  if (prompt.length > MAX_COMPOSED) throw new Error("That description is too long.");
+  return prompt || "Invent a flagship merch graphic. Full designer freedom.";
+}
+
+function parseAspect(value: unknown): AspectRatioId {
+  if (typeof value !== "string" || !isAspectRatioId(value)) {
+    throw new Error("Choose a valid frame.");
+  }
+  return value;
+}
+
+function parseStyle(value: unknown): StyleId {
+  if (typeof value !== "string" || !isStyleId(value)) {
+    throw new Error("Choose a valid finish.");
+  }
+  return value;
+}
+
+function parseDataUrl(value: unknown): string {
+  if (typeof value !== "string" || !value.startsWith("data:image/")) {
+    throw new Error("Choose an image to edit.");
+  }
+  if (value.length > MAX_SOURCE_BYTES * 1.4) {
+    throw new Error("That image is too large. Try a smaller file.");
+  }
+  return value;
+}
+
+function parseGoogleKey(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const key = value.trim();
+  if (!key) return undefined;
+  if (key.length < 20 || key.length > 200) throw new Error("That Google key looks wrong.");
+  return key;
+}
+
+function resolveGoogleKey(client?: string) {
+  return (
+    client ||
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    undefined
+  );
+}
+
+function isNetworkError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /failed to fetch|networkerror|load failed|aborted|timeout|econnreset|etimedout|fetch failed/i.test(
+    message,
+  );
+}
+
+function friendlyError(status: number, body: ImagineResponse | null): string {
+  const raw = body?.error?.message?.toLowerCase() ?? "";
+  if (status === 400 && (raw.includes("moderat") || raw.includes("violat") || raw.includes("safety"))) {
+    return "That prompt was blocked. Try a different description.";
+  }
+  if (status === 401 || status === 403) {
+    if (raw.includes("credit") || raw.includes("spending") || raw.includes("subscription")) {
+      return "The built-in printer is out of credits. Add a Google image key in Shop.";
+    }
+    return "The printer is closed right now. Try again in a moment.";
+  }
+  if (status === 429) return "The darkroom is busy. Wait a moment and try again.";
+  if (status >= 500) return "The printer misfired. Try again in a moment.";
+  if (body?.error?.message) return "The printer could not finish that plate.";
+  return `Image generation failed (${status}).`;
+}
+
+async function fetchJson(url: string, init: RequestInit, attempt = 0): Promise<Response> {
+  try {
+    const res = await fetch(url, {
+      ...init,
+      signal: init.signal ?? AbortSignal.timeout(90_000),
+    });
+    return res;
+  } catch (error) {
+    if (attempt < 1 && isNetworkError(error)) {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      return fetchJson(url, init, attempt + 1);
+    }
+    throw error;
+  }
+}
+
+async function urlToDataUrl(url: string, mime = "image/jpeg"): Promise<string> {
+  const downloaded = await fetchJson(url, { method: "GET" });
+  if (!downloaded.ok) {
+    throw new Error("The print arrived but could not be opened.");
+  }
+  const type = downloaded.headers.get("content-type") || mime;
+  const buffer = Buffer.from(await downloaded.arrayBuffer());
+  return `data:${type};base64,${buffer.toString("base64")}`;
+}
+
+function imagineAspect(aspect: AspectRatioId): string {
+  if (aspect === "4:5") return "3:4";
+  return aspect;
+}
+
+function googleAspect(aspect: AspectRatioId): string {
+  if (aspect === "4:5") return "3:4";
+  return aspect;
+}
+
+function splitDataUrl(dataUrl: string): { mime: string; data: string } | null {
+  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(dataUrl);
+  if (!match) return null;
+  return { mime: match[1]!, data: match[2]! };
+}
+
+function asDataUrl(b64: string, mime = "image/png") {
+  const clean = b64.replace(/\s/g, "");
+  return `data:${mime};base64,${clean}`;
+}
+
+function extractGoogleImage(body: unknown): string | null {
+  if (!body || typeof body !== "object") return null;
+  const root = body as Record<string, unknown>;
+
+  const candidates = Array.isArray(root.candidates) ? root.candidates : [];
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== "object") continue;
+    const content = (candidate as { content?: { parts?: unknown[] } }).content;
+    const parts = content?.parts ?? [];
+    for (const part of parts) {
+      if (!part || typeof part !== "object") continue;
+      const record = part as Record<string, unknown>;
+      const inline = (record.inlineData ?? record.inline_data) as
+        | { data?: string; mimeType?: string; mime_type?: string }
+        | undefined;
+      if (inline?.data) {
+        return asDataUrl(inline.data, inline.mimeType || inline.mime_type || "image/png");
+      }
+    }
+  }
+
+  const walk = (value: unknown): string | null => {
+    if (!value || typeof value !== "object") return null;
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const found = walk(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    const record = value as Record<string, unknown>;
+    if (record.type === "image" && typeof record.data === "string" && record.data.length > 80) {
+      const mime = typeof record.mime_type === "string" ? record.mime_type : "image/png";
+      return asDataUrl(record.data, mime);
+    }
+    if (typeof record.b64_json === "string") return asDataUrl(record.b64_json, "image/png");
+    for (const nested of Object.values(record)) {
+      const found = walk(nested);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  return walk(root);
+}
+
+function googleFriendly(status: number, body: unknown): string {
+  const text = JSON.stringify(body ?? {}).toLowerCase();
+  if (status === 400 && (text.includes("api key") || text.includes("api_key"))) {
+    return "That Google key was rejected. Check it in Shop.";
+  }
+  if (status === 403 || status === 401) {
+    if (text.includes("permission") || text.includes("api_key") || text.includes("unauth")) {
+      return "Google said no to that key. Turn on Gemini image in Google AI Studio.";
+    }
+    return "Google blocked that print. Try again, or check the key.";
+  }
+  if (status === 429) return "Google is busy. Wait a moment and try again.";
+  if (text.includes("safety") || text.includes("blocked") || text.includes("prohibit")) {
+    return "Google blocked that prompt. Try a different description.";
+  }
+  if (status >= 500) return "Google misfired. Try again in a moment.";
+  return "Google could not finish that plate.";
+}
+
+async function callGoogleOnce(
+  apiKey: string,
+  prompt: string,
+  aspect: AspectRatioId,
+  imageDataUrl?: string,
+): Promise<ImagineResult> {
+  const models = ["gemini-2.5-flash-image", "gemini-3.1-flash-image"];
+  const ratio = googleAspect(aspect);
+  const source = imageDataUrl ? splitDataUrl(imageDataUrl) : null;
+  const parts: Record<string, unknown>[] = [{ text: prompt }];
+  if (source) {
+    parts.unshift({
+      inline_data: {
+        mime_type: source.mime,
+        data: source.data,
+      },
+    });
+  }
+
+  let lastError = "Google could not finish that plate.";
+  for (const model of models) {
+    let res: Response;
+    try {
+      res = await fetchJson(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts }],
+            generationConfig: {
+              responseModalities: ["TEXT", "IMAGE"],
+              imageConfig: { aspectRatio: ratio },
+            },
+          }),
+        },
+      );
+    } catch (error) {
+      lastError = isNetworkError(error)
+        ? "Could not reach Google. Try again."
+        : "Google misfired. Try again.";
+      continue;
+    }
+
+    let body: unknown = null;
+    try {
+      body = await res.json();
+    } catch {
+      body = null;
+    }
+
+    if (!res.ok) {
+      lastError = googleFriendly(res.status, body);
+      if (res.status === 404 || res.status === 400) continue;
+      return { ok: false, error: lastError };
+    }
+
+    const dataUrl = extractGoogleImage(body);
+    if (dataUrl) return { ok: true, dataUrl };
+    lastError = "Google returned an empty plate.";
+  }
+
+  return { ok: false, error: lastError };
+}
+
+async function callImagineOnce(
+  path: "/v1/images/generations" | "/v1/images/edits",
+  payload: Record<string, unknown>,
+): Promise<ImagineResult> {
+  const apiKey = readApiKey();
+  if (!apiKey) {
+    return { ok: false, error: "Image generation is unavailable right now." };
+  }
+
+  let res: Response;
+  try {
+    res = await fetchJson(`https://api.x.ai${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: isNetworkError(error)
+        ? "Could not reach the printer. Try again."
+        : "The printer misfired. Try again.",
+    };
+  }
+
+  let body: ImagineResponse | null = null;
+  try {
+    body = (await res.json()) as ImagineResponse;
+  } catch {
+    body = null;
+  }
+
+  if (!res.ok) {
+    return { ok: false, error: friendlyError(res.status, body) };
+  }
+
+  const image = body?.data?.[0];
+  try {
+    if (image?.b64_json) {
+      const mime = image.mime_type || "image/jpeg";
+      return { ok: true, dataUrl: `data:${mime};base64,${image.b64_json}` };
+    }
+    if (image?.url) {
+      return { ok: true, dataUrl: await urlToDataUrl(image.url, image.mime_type || "image/jpeg") };
+    }
+  } catch (error) {
+    return {
+      ok: false,
+      error: isNetworkError(error)
+        ? "Could not reach the printer. Try again."
+        : "The print arrived but could not be opened.",
+    };
+  }
+
+  return { ok: false, error: "The printer returned an empty plate." };
+}
+
+async function callImagine(
+  path: "/v1/images/generations" | "/v1/images/edits",
+  payload: Record<string, unknown>,
+): Promise<ImagineResult> {
+  const first = await callImagineOnce(path, payload);
+  if (first.ok) return first;
+  const retryable = /misfired|busy|could not reach/i.test(first.error);
+  if (!retryable) return first;
+  await new Promise((resolve) => setTimeout(resolve, 1200));
+  return callImagineOnce(path, payload);
+}
+
+const GENERATE_BODY = {
+  model: "grok-imagine-image-2.0",
+  n: 1 as const,
+  resolution: "1k",
+  quality: "low",
+  response_format: "url",
+};
+
+async function printWith(
+  googleKey: string | undefined,
+  path: "/v1/images/generations" | "/v1/images/edits",
+  payload: Record<string, unknown>,
+  prompt: string,
+  aspectRatio: AspectRatioId,
+  imageDataUrl?: string,
+): Promise<ImagineResult> {
+  const google = resolveGoogleKey(googleKey);
+  if (google) {
+    const fromGoogle = await callGoogleOnce(google, prompt, aspectRatio, imageDataUrl);
+    if (fromGoogle.ok) return fromGoogle;
+    const xai = await callImagine(path, payload);
+    if (xai.ok) return xai;
+    return fromGoogle;
+  }
+  return callImagine(path, payload);
+}
+
+export const generateStill = createServerFn({ method: "POST" })
+  .validator((input: unknown): GenerateInput => {
+    if (typeof input !== "object" || input === null) {
+      throw new Error("Invalid request.");
+    }
+    const data = input as Record<string, unknown>;
+    return {
+      prompt: parsePrompt(data.prompt),
+      aspectRatio: parseAspect(data.aspectRatio),
+      styleId: parseStyle(data.styleId),
+      googleKey: parseGoogleKey(data.googleKey),
+    };
+  })
+  .handler(async ({ data }): Promise<ImagineResult> => {
+    try {
+      return await printWith(
+        data.googleKey,
+        "/v1/images/generations",
+        {
+          ...GENERATE_BODY,
+          prompt: data.prompt,
+          aspect_ratio: imagineAspect(data.aspectRatio),
+        },
+        data.prompt,
+        data.aspectRatio,
+      );
+    } catch {
+      return { ok: false, error: "The printer misfired. Try again." };
+    }
+  });
+
+export const editStill = createServerFn({ method: "POST" })
+  .validator((input: unknown): EditInput => {
+    if (typeof input !== "object" || input === null) {
+      throw new Error("Invalid request.");
+    }
+    const data = input as Record<string, unknown>;
+    return {
+      prompt: parsePrompt(data.prompt),
+      imageDataUrl: parseDataUrl(data.imageDataUrl),
+      aspectRatio: parseAspect(data.aspectRatio),
+      styleId: parseStyle(data.styleId),
+      googleKey: parseGoogleKey(data.googleKey),
+    };
+  })
+  .handler(async ({ data }): Promise<ImagineResult> => {
+    try {
+      return await printWith(
+        data.googleKey,
+        "/v1/images/edits",
+        {
+          ...GENERATE_BODY,
+          prompt: data.prompt,
+          aspect_ratio: imagineAspect(data.aspectRatio),
+          image: {
+            url: data.imageDataUrl,
+            type: "image_url",
+          },
+        },
+        data.prompt,
+        data.aspectRatio,
+        data.imageDataUrl,
+      );
+    } catch {
+      return { ok: false, error: "The printer misfired. Try again." };
+    }
+  });
+
+export const testPrinter = createServerFn({ method: "POST" })
+  .validator((input: unknown): { googleKey?: string } => {
+    if (typeof input !== "object" || input === null) return {};
+    const data = input as Record<string, unknown>;
+    return { googleKey: parseGoogleKey(data.googleKey) };
+  })
+  .handler(async ({ data }): Promise<ImagineResult> => {
+    const key = resolveGoogleKey(data.googleKey);
+    if (!key) {
+      return { ok: false, error: "Paste a Google Gemini key first." };
+    }
+    try {
+      return await callGoogleOnce(
+        key,
+        "Isolated two-color merch lockup BT on even #F2F3F5 field, huge margin, no garment.",
+        "1:1",
+      );
+    } catch {
+      return { ok: false, error: "Could not reach Google." };
+    }
+  });
