@@ -657,20 +657,20 @@ export function composePrompt(
   const church = theme.id === "church";
   const churchCraft = church
     ? kids
-      ? "CHURCH / KIDS. Original Sunday-school merch, never a gift-shop cartoon. One short true line plus citation that is NOT the usual Amazon kids-faith tropes. Invented dove, stained-glass creature, or house mascot — cute and reverent. Never scary, never crucifixion, never sarcasm, never Disney, never a smiling clipart Jesus."
+      ? "CHURCH is direction, not a cage. Kids Sunday merch: joyful, age-appropriate, a true Bible line plus citation if type is the idea — or an invented faithful picture. Reverent and fun. Never scary, never sarcasm about God."
       : women
-        ? "CHURCH / WOMEN. Original women's faith fashion. Accurate Scripture plus citation, set like a fashion house — not a boutique rack of the same five verses. Ban: Jeremiah 29:11, Phil 4:13, John 3:16, 'coffee and Jesus', rhinestone crosses, 'faith over fear' in that lockup. Find a true, less-printed line (or a distinctive setting of a known one if the user named it). Editorial, feminine, gold and bone. Would wear it without needing the verse to excuse the design."
-        : "CHURCH / MEN. Original men's gospel merch. Accurate Scripture plus citation as a concert poster only this house could have printed. Ban: John 3:16 as the whole idea, Phil 4:13, Jeremiah 29:11, clipart crosses, 'faith over fear', WWJD. Pick a true, less-worn line (Micah 6:8, Isaiah 43:1, Psalm 121, Habakkuk 2:2, 2 Timothy 1:7 — or better, one that fits this house). Heavy type, revival ink, invented geometry. If the user named a verse, use that verse accurately."
+        ? "CHURCH is direction, not a cage. Women's shop: Scripture and faith as fashion. Accurate verse plus citation if you set type, or invented stained-glass / dove / house mark. Editorial, feminine, joyful, reverent. You pick the line and the picture."
+        : "CHURCH is direction, not a cage. Men's shop: Scripture and faith as merch. Accurate verse plus citation if you set type, or invented revival geometry. Masculine, joyful, reverent. You pick the line and the picture."
     : "";
   const originalLock =
-    "ORIGINALITY LOCK: Nothing generic. If it looks like Amazon bulk merch, a mall kiosk, or a clipart pack, throw it away. No EST. year badges, no leaping-bass cliché, no 'I'd rather be fishing', no barbed-wire stamps, no glowing clipart cross, no stock mountain-sun, no generic dino smile. Specific object, specific sentence, specific composition that could only belong to this house. Invented. Unrepeatable.";
+    "Original house only — not generic, not clipart, not a copy. Theme and audience are a compass. Full designer freedom inside that compass.";
   const churchSet = church
     ? kids
-      ? "Photoreal church courtyard or Sunday steps. Child-appropriate, bright, joyful. Real place, not a drawing."
+      ? "Photoreal Sunday place a child would actually stand — courtyard, steps, bright churchyard. Real photo, not a drawing."
       : women
-        ? "Photoreal Sunday after service — chapel light, garden, or quiet sanctuary exterior. Women's styling. Real place, not a drawing."
-        : "Photoreal church steps, brick sanctuary, or gospel-night street. Men's styling. Real place, not a drawing."
-    : `Photoreal ${theme.label.toLowerCase()} location only — real street, lodge, studio, or interior. Use that as place and wardrobe, never as a drawing style.`;
+        ? "Photoreal Sunday place for a women's lookbook — chapel light, garden, or street after service. Real photo, not a drawing."
+        : "Photoreal Sunday place for a men's lookbook — church steps, brick sanctuary, or night street. Real photo, not a drawing."
+    : `Photoreal ${theme.label.toLowerCase()} location only — real street, lodge, studio, or interior. Place and wardrobe, never a drawing style.`;
   const who = kids ? "kids" : women ? "women's" : "men's";
   const wear = productWear(productId);
   if (lookbook) {
@@ -711,23 +711,15 @@ export function composePrompt(
         "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
         "Ultra-sharp merch illustration. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
         "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",
-        `Invent original ${name} merch in that ${theme.label.toLowerCase()} ${who} feeling. Full designer freedom. Never copy a known logo or trademark.`,
-        church
-          ? "Craft bar: the best original church tee in the shop. Fashion-first. Scripture true. Nothing you have seen on a rack."
-          : "Craft bar: flagship original drop. Sharper than a mall tee. Nothing generic.",
+        `Invent original ${name} merch. Compass: ${theme.label} × ${who}. Full designer freedom inside that. Never copy a known logo or trademark.`,
+        "Craft bar: flagship, original, sharper than a mall tee.",
         salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
       ];
   const productBit = product?.suffix ?? "";
   const suffix = `${anime ? animeSuffix(brand, lens) : ""}${leadSuffix(leadId, brand, lens)}${categorySuffix(categoryId, brand, lens)}${styleSuffix(styleId, brand, lens)}${productBit}`;
   const idea = trimmed
     ? trimmed
-    : church
-      ? kids
-        ? `Invent an original kids church graphic for ${name}. True Bible line plus citation that is not the usual gift-shop verse. Joyful, specific, this house only. Do not ask. Just draw.`
-        : women
-          ? `Invent an original women's church tee for ${name}. Accurate Scripture plus citation, editorial, not the five verses every shop prints. Fashion-first. Do not ask. Just draw.`
-          : `Invent an original men's church tee for ${name}. Accurate Scripture plus citation, heavy type, a line that is not the Amazon default. Do not ask. Just draw.`
-      : `Invent an original ${theme.label.toLowerCase()} ${who} merch graphic for ${name} now. Specific, unrepeatable, this house only. If it looks generic, invent again. Do not ask. Just draw.`;
+    : `You are the designer. Compass: ${theme.label} for ${who}. Full freedom. One unforgettable original idea. Do not ask. Just draw.`;
   const composed = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
   return composed.slice(0, MAX_COMPOSED);
 }
