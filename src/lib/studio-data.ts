@@ -23,7 +23,7 @@ export const PRODUCTS = [
     id: "tee",
     label: "Tee",
     suffix:
-      " Isolated Printify DTG full-front graphic, 15×18 in canvas. Even #F2F3F5 field, huge empty margin, no garment, no shadow, no mockup.",
+      " Isolated Printify DTG full-front graphic, 15×18 in canvas at maximum resolution. Even #F2F3F5 field, art fills 85–92% of the frame, no garment, no shadow, no mockup.",
   },
   {
     id: "back",
@@ -177,14 +177,7 @@ export type CategoryId = (typeof CATEGORIES)[number]["id"];
 export const DROP_SLOTS = [
     { categoryId: "lockup", leadId: "brand", note: "SKU 01 hero mark. Giant initials. The listing thumbnail." },
     { categoryId: "wordmark", leadId: "brand", note: "SKU 02 wordmark. The house name IS the graphic." },
-    { categoryId: "box", leadId: "brand", note: "SKU 03 boxed mark. Centered bar, two colors." },
-    { categoryId: "tour", leadId: "brand", note: "SKU 04 tour poster. Cities and camps from this house." },
-    { categoryId: "coords", leadId: "art", note: "SKU 05 locale plate. Coordinates and compass ticks." },
-    { categoryId: "crest", leadId: "brand", note: "SKU 06 crest. Invented heraldry for the house." },
-    { categoryId: "slogan", leadId: "brand", note: "SKU 07 manifesto. One sentence as the graphic." },
-    { categoryId: "blueprint", leadId: "art", note: "SKU 08 technical plate. Drafting-table graphic." },
-    { categoryId: "trail", leadId: "art", note: "SKU 09 outdoor stamp. Ridge and topo." },
-    { categoryId: "issue", leadId: "art", note: "SKU 10 catalog issue. Numbered drop energy." },
+    { categoryId: "crest", leadId: "brand", note: "SKU 03 crest. Invented emblem for the house." },
 ] as const;
 
 export const DROP_COUNT = DROP_SLOTS.length;
@@ -423,7 +416,7 @@ export function composePrompt(
     "Solid fills, thick strokes. No hairlines. No drop shadow under the art. No paper grain behind it.",
     "FAIL if the studio field is black or dark. Never fill the canvas with black. Dark ink is only allowed inside the mark. FAIL if you add distress, crackle, speckle, noise, photocopy grain, worn paper, or a faded-wash texture. Ink is flat and opaque. Two or three solid colors only.",
     "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
-    "Ultra-sharp merch illustration. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
+    "Ultra-sharp merch illustration. Maximum resolution 4K print file. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
     "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",
     `Invent original ${name} merch. Compass: ${theme.label} × ${who}. Full designer freedom inside that. Never copy a known logo or trademark.`,
     "Craft bar: flagship Printify art, original, sharper than a mall tee.",

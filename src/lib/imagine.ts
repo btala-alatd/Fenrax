@@ -107,7 +107,7 @@ function longEdge(dataUrl: string) {
   return Math.max(size.width, size.height);
 }
 
-const MIN_PRINT_EDGE = 1600;
+const MIN_PRINT_EDGE = 2000;
 
 function parseGoogleKey(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;

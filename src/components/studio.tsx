@@ -22,7 +22,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { applyAudience, applyTheme, AUDIENCES, THEMES, themeOf, useBrand, type Brand } from "@/lib/brand";
 import { printifyPreset, finishPrintFile, looksLikePhoto } from "@/lib/printify";
 import { useGallery } from "@/lib/gallery";
-import { idbClearPrefix } from "@/lib/idb";
 import { readImageFile } from "@/lib/image-file";
 import { zipGeneratedImages, zipPrintifyPack } from "@/lib/pack";
 import { saveToLabel } from "@/lib/save-to";
@@ -58,7 +57,6 @@ export function Studio() {
   const items = useGallery((state) => state.items);
   const addStill = useGallery((state) => state.add);
   const removeStill = useGallery((state) => state.remove);
-  const clearGallery = useGallery((state) => state.clear);
   const brand = useBrand((state) => state.brand);
   const patchBrand = useBrand((state) => state.patchBrand);
   const [hydrated, setHydrated] = useState(false);
@@ -238,27 +236,22 @@ export function Studio() {
     let printed = 0;
     let last: Still | null = null;
     try {
-      for (let i = 0; i < jobs.length; i += 2) {
-        const batch = jobs.slice(i, i + 2);
-        setDropStep(Math.min(i + batch.length, jobs.length));
-        const results = await Promise.all(
-          batch.map((job) =>
-            runPrint({
-              prompt: nextPrompt,
-              styleId: coerceStyleId(styleId),
-              productId: nextProduct,
-              categoryId: job.categoryId,
-              leadId: job.leadId,
-              aspectRatio: preset.aspect,
-              anime,
-              note: job.note,
-              edit: false,
-              source: null,
-            }),
-          ),
-        );
-        for (const still of results) {
-          if (!still) continue;
+      for (let i = 0; i < jobs.length; i += 1) {
+        const job = jobs[i]!;
+        setDropStep(i + 1);
+        const still = await runPrint({
+          prompt: nextPrompt,
+          styleId: coerceStyleId(styleId),
+          productId: nextProduct,
+          categoryId: job.categoryId,
+          leadId: job.leadId,
+          aspectRatio: preset.aspect,
+          anime,
+          note: job.note,
+          edit: false,
+          source: null,
+        });
+        if (still) {
           printed += 1;
           last = still;
           setCurrent(still);
@@ -430,25 +423,6 @@ export function Studio() {
     }
   }
 
-  async function startOver() {
-    if (pending || packing) return;
-    if (items.length === 0 && !current && !sourceImage) {
-      toast.message("Already empty.");
-      return;
-    }
-    if (!window.confirm("Delete every print on this device and start over? Shop name stays.")) return;
-    clearGallery();
-    setCurrent(null);
-    setLightbox(null);
-    setListing(null);
-    setSourceImage(null);
-    setMode("create");
-    setPrompt("");
-    setLens("plate");
-    await idbClearPrefix("blank:");
-    toast.success("Cleared. Fresh start.");
-  }
-
   return (
     <div className="app-shell flex min-h-dvh flex-col text-foreground">
       <header className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6">
@@ -482,17 +456,6 @@ export function Studio() {
             title="Shop name, who it's for, look"
           >
             Shop
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="relative z-10 min-h-11 px-4"
-            disabled={pending || packing}
-            onClick={() => void startOver()}
-            title="Delete all prints on this device and start over"
-          >
-            <Trash2 className="size-4" />
-            <span className="hidden sm:inline">Start over</span>
           </Button>
           <Button
             variant="outline"
@@ -733,8 +696,8 @@ function EmptyStage({
           {" — "}one transparent print file for Printify.
         </li>
         <li>
-          <span className="font-semibold text-foreground">3. 10 for shop</span>
-          {" — "}ten matching print files, zipped for Printify.
+          <span className="font-semibold text-foreground">3. 3 HD</span>
+          {" — "}three high-resolution print files, zipped for Printify.
         </li>
       </ol>
       <button
@@ -1031,7 +994,7 @@ function PromptDock({
                 size="lg"
                 disabled={pending || packing}
                 onClick={onDropPack}
-                title={`Make ${DROP_COUNT} matching print files and zip them for Printify`}
+                title={`Make ${DROP_COUNT} high-resolution Printify files`}
                 className="h-11 min-w-0 px-3 text-sm lg:h-12 lg:px-6"
               >
                 {pending ? (
@@ -1039,7 +1002,7 @@ function PromptDock({
                 ) : (
                   <Layers className="size-4" />
                 )}
-                10 for shop
+                3 HD
               </Button>
             ) : null}
             {still ? (
