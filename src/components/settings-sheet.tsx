@@ -16,11 +16,14 @@ export function SettingsSheet({
 }) {
   const stored = usePrinter((state) => state.googleKey);
   const storedXai = usePrinter((state) => state.xaiKey);
+  const storedRecraft = usePrinter((state) => state.recraftKey);
   const setGoogleKey = usePrinter((state) => state.setGoogleKey);
   const setXaiKey = usePrinter((state) => state.setXaiKey);
+  const setRecraftKey = usePrinter((state) => state.setRecraftKey);
   const [draft, setDraft] = useState(stored);
   const [xaiDraft, setXaiDraft] = useState(storedXai);
-  const [testing, setTesting] = useState<"google" | "xai" | null>(null);
+  const [recraftDraft, setRecraftDraft] = useState(storedRecraft);
+  const [testing, setTesting] = useState<"google" | "xai" | "recraft" | null>(null);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -33,8 +36,31 @@ export function SettingsSheet({
   function save() {
     setGoogleKey(draft);
     setXaiKey(xaiDraft);
+    setRecraftKey(recraftDraft);
     toast.success("Printer keys saved on this device.");
     onClose();
+  }
+
+  async function testRecraft() {
+    const key = recraftDraft.trim();
+    if (key.length < 16) {
+      toast.error("Paste a Recraft API token first.");
+      return;
+    }
+    setTesting("recraft");
+    try {
+      const result = await testPrinter({ data: { recraftKey: key } });
+      if (result.ok) {
+        setRecraftKey(key);
+        toast.success("Recraft printer is live. It draws the shirts first.");
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not reach Recraft.");
+    } finally {
+      setTesting(null);
+    }
   }
 
   async function testGoogle() {
@@ -102,6 +128,45 @@ export function SettingsSheet({
         <div className="space-y-6">
           <section className="space-y-2">
             <span className="block text-[11px] font-medium tracking-[0.14em] text-ink-subtle uppercase">
+              Recraft — merch printer
+            </span>
+            <input
+              type="password"
+              autoComplete="off"
+              spellCheck={false}
+              value={recraftDraft}
+              placeholder="Token from recraft.ai → Profile"
+              onChange={(event) => setRecraftDraft(event.target.value)}
+              className="h-12 w-full rounded-full bg-card px-4 text-sm text-foreground shadow-[var(--shadow-border)] outline-none placeholder:text-ink-subtle focus-visible:ring-2 focus-visible:ring-ring/70"
+            />
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {recraftDraft.trim()
+                ? `Saved as ${maskKey(recraftDraft)}. First printer — Recraft Pro.`
+                : "Best for logos and print files. Recraft → Profile → Generate API token. Pro units required. Never share it in chat."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => void testRecraft()} disabled={testing !== null}>
+                {testing === "recraft" ? <LoaderCircle className="size-4 animate-spin" /> : null}
+                Test Recraft
+              </Button>
+              {recraftDraft.trim() ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setRecraftDraft("");
+                    setRecraftKey("");
+                    toast.success("Recraft key cleared.");
+                  }}
+                >
+                  Clear
+                </Button>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <span className="block text-[11px] font-medium tracking-[0.14em] text-ink-subtle uppercase">
               Google image key
             </span>
             <input
@@ -115,8 +180,8 @@ export function SettingsSheet({
             />
             <p className="text-xs leading-relaxed text-muted-foreground">
               {draft.trim()
-                ? `Saved as ${maskKey(draft)}. First printer.`
-                : "First printer. Get a Gemini key at aistudio.google.com → Get API key. Never share it in chat."}
+                ? `Saved as ${maskKey(draft)}. Backup if Recraft misses.`
+                : "Backup printer. Get a Gemini key at aistudio.google.com → Get API key."}
             </p>
             <p className="text-xs leading-relaxed text-muted-foreground">
               Each print costs. Raise the monthly spend cap in AI Studio → Spend if you hit $50. Wait ~25s between prints.
@@ -157,8 +222,8 @@ export function SettingsSheet({
             />
             <p className="text-xs leading-relaxed text-muted-foreground">
               {xaiDraft.trim()
-                ? `Saved as ${maskKey(xaiDraft)}. Takes over when Google is busy.`
-                : "Get a key at console.x.ai → API keys. Paste it here. Used when Google throttles."}
+                ? `Saved as ${maskKey(xaiDraft)}. Last backup.`
+                : "Last backup. Get a key at console.x.ai → API keys."}
             </p>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={() => void testXai()} disabled={testing !== null}>

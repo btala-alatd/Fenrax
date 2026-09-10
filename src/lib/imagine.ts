@@ -18,6 +18,7 @@ type GenerateInput = {
   styleId: StyleId;
   googleKey?: string;
   xaiKey?: string;
+  recraftKey?: string;
 };
 
 type EditInput = {
@@ -27,6 +28,7 @@ type EditInput = {
   styleId: StyleId;
   googleKey?: string;
   xaiKey?: string;
+  recraftKey?: string;
 };
 
 type ImagineImage = {
@@ -109,6 +111,18 @@ function longEdge(dataUrl: string) {
 }
 
 const MIN_PRINT_EDGE = 2000;
+
+function parseRecraftKey(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const key = value.trim();
+  if (!key) return undefined;
+  if (key.length < 16 || key.length > 256) throw new Error("That Recraft key looks wrong.");
+  return key;
+}
+
+function resolveRecraftKey(client?: string) {
+  return (client || process.env.RECRAFT_API_KEY || "").trim() || undefined;
+}
 
 function parseXaiKey(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
@@ -463,36 +477,149 @@ const GENERATE_BODY = {
   response_format: "url",
 };
 
+function recraftSize(aspect: AspectRatioId): string {
+  if (aspect === "4:5") return "4:5";
+  if (aspect === "3:2") return "3:2";
+  if (aspect === "4:3") return "4:3";
+  if (aspect === "9:16") return "9:16";
+  if (aspect === "16:9") return "16:9";
+  if (aspect === "1:1") return "1:1";
+  return "3:4";
+}
+
+function recraftFriendly(status: number, body: unknown): string {
+  const text = JSON.stringify(body ?? {}).toLowerCase();
+  if (status === 401 || status === 403) {
+    return "Recraft said no to that key. Generate a new API token in Recraft → Profile.";
+  }
+  if (status === 402 || text.includes("balance") || text.includes("credit") || text.includes("unit")) {
+    return "Recraft is out of units. Top up in Recraft.";
+  }
+  if (status === 429) return "Recraft is busy. Wait a moment and try again.";
+  if (status >= 500) return "Recraft misfired. Try again in a moment.";
+  return "Recraft could not finish that plate.";
+}
+
+function extractRecraftImage(body: unknown): string | null {
+  if (!body || typeof body !== "object") return null;
+  const data = (body as { data?: ImagineImage[] }).data;
+  const image = Array.isArray(data) ? data[0] : undefined;
+  if (image?.b64_json) {
+    const mime = image.mime_type || "image/png";
+    return asDataUrl(image.b64_json, mime);
+  }
+  return null;
+}
+
+async function callRecraftOnce(
+  apiKey: string,
+  prompt: string,
+  aspect: AspectRatioId,
+  imageDataUrl?: string,
+): Promise<ImagineResult> {
+  const size = recraftSize(aspect);
+  const body: Record<string, unknown> = {
+    prompt,
+    model: "recraftv4_1_pro",
+    size,
+    n: 1,
+    response_format: "b64_json",
+    controls: {
+      background_color: { rgb: [242, 243, 245] },
+    },
+  };
+  const path = imageDataUrl
+    ? "https://external.api.recraft.ai/v1/images/imageToImage"
+    : "https://external.api.recraft.ai/v1/images/generations";
+  if (imageDataUrl) {
+    body.image_url = imageDataUrl;
+    body.strength = 0.4;
+  }
+
+  let res: Response;
+  try {
+    res = await fetchJson(path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      error: isNetworkError(error) ? "Could not reach Recraft. Try again." : "Recraft misfired. Try again.",
+    };
+  }
+
+  let json: unknown = null;
+  try {
+    json = await res.json();
+  } catch {
+    json = null;
+  }
+  if (!res.ok) {
+    return { ok: false, error: recraftFriendly(res.status, json) };
+  }
+  const dataUrl = extractRecraftImage(json);
+  if (dataUrl) return { ok: true, dataUrl };
+  const url = Array.isArray((json as { data?: { url?: string }[] })?.data)
+    ? (json as { data: { url?: string }[] }).data[0]?.url
+    : undefined;
+  if (url) {
+    try {
+      return { ok: true, dataUrl: await urlToDataUrl(url, "image/png") };
+    } catch {
+      return { ok: false, error: "Recraft returned a file that could not be opened." };
+    }
+  }
+  return { ok: false, error: "Recraft returned an empty plate." };
+}
+
 async function printWith(
-  googleKey: string | undefined,
-  xaiKey: string | undefined,
+  keys: { google?: string; xai?: string; recraft?: string },
   path: "/v1/images/generations" | "/v1/images/edits",
   payload: Record<string, unknown>,
   prompt: string,
   aspectRatio: AspectRatioId,
   imageDataUrl?: string,
 ): Promise<ImagineResult> {
-  const google = resolveGoogleKey(googleKey);
-  const xai = resolveXaiKey(xaiKey);
-  if (!google && !xai) {
+  const recraft = resolveRecraftKey(keys.recraft);
+  const google = resolveGoogleKey(keys.google);
+  const xai = resolveXaiKey(keys.xai);
+  if (!recraft && !google && !xai) {
     return {
       ok: false,
-      error: "The printer needs a key. Open Settings and paste a Google or xAI image key.",
+      error: "The printer needs a key. Open Settings and paste a Recraft, Google, or xAI key.",
     };
   }
 
-  let googleResult: ImagineResult | null = null;
   let best: ImagineResult | null = null;
   let bestEdge = 0;
-  if (google) {
-    googleResult = await callGoogleOnce(google, prompt, aspectRatio, imageDataUrl, Boolean(xai));
-    if (googleResult.ok) {
-      const edge = longEdge(googleResult.dataUrl);
-      if (edge >= MIN_PRINT_EDGE) return googleResult;
-      best = googleResult;
+
+  if (recraft) {
+    const fromRecraft = await callRecraftOnce(recraft, prompt, aspectRatio, imageDataUrl);
+    if (fromRecraft.ok) {
+      const edge = longEdge(fromRecraft.dataUrl);
+      if (edge >= MIN_PRINT_EDGE) return fromRecraft;
+      best = fromRecraft;
       bestEdge = edge;
     }
   }
+
+  if (google) {
+    const fromGoogle = await callGoogleOnce(google, prompt, aspectRatio, imageDataUrl, Boolean(xai || recraft));
+    if (fromGoogle.ok) {
+      const edge = longEdge(fromGoogle.dataUrl);
+      if (edge >= MIN_PRINT_EDGE) return fromGoogle;
+      if (edge > bestEdge) {
+        best = fromGoogle;
+        bestEdge = edge;
+      }
+    }
+  }
+
   if (xai) {
     const fromXai = await callImagine(path, payload, xai);
     if (fromXai.ok) {
@@ -500,12 +627,15 @@ async function printWith(
       if (edge >= bestEdge) return fromXai;
     }
     if (best) return best;
-    if (!googleResult?.ok) return fromXai;
+    return fromXai;
   }
+
   if (best) return best;
-  return googleResult ?? {
+  return {
     ok: false,
-    error: "The printer could not finish that plate.",
+    error: recraft
+      ? "Recraft could not finish that plate. Google/xAI will try if those keys are saved."
+      : "The printer could not finish that plate.",
   };
 }
 
@@ -521,13 +651,13 @@ export const generateStill = createServerFn({ method: "POST" })
       styleId: parseStyle(data.styleId),
       googleKey: parseGoogleKey(data.googleKey),
       xaiKey: parseXaiKey(data.xaiKey),
+      recraftKey: parseRecraftKey(data.recraftKey),
     };
   })
   .handler(async ({ data }): Promise<ImagineResult> => {
     try {
       return await printWith(
-        data.googleKey,
-        data.xaiKey,
+        { google: data.googleKey, xai: data.xaiKey, recraft: data.recraftKey },
         "/v1/images/generations",
         {
           ...GENERATE_BODY,
@@ -555,13 +685,13 @@ export const editStill = createServerFn({ method: "POST" })
       styleId: parseStyle(data.styleId),
       googleKey: parseGoogleKey(data.googleKey),
       xaiKey: parseXaiKey(data.xaiKey),
+      recraftKey: parseRecraftKey(data.recraftKey),
     };
   })
   .handler(async ({ data }): Promise<ImagineResult> => {
     try {
       return await printWith(
-        data.googleKey,
-        data.xaiKey,
+        { google: data.googleKey, xai: data.xaiKey, recraft: data.recraftKey },
         "/v1/images/edits",
         {
           ...GENERATE_BODY,
@@ -582,16 +712,30 @@ export const editStill = createServerFn({ method: "POST" })
   });
 
 export const testPrinter = createServerFn({ method: "POST" })
-  .validator((input: unknown): { googleKey?: string; xaiKey?: string } => {
+  .validator((input: unknown): { googleKey?: string; xaiKey?: string; recraftKey?: string } => {
     if (typeof input !== "object" || input === null) return {};
     const data = input as Record<string, unknown>;
     return {
       googleKey: parseGoogleKey(data.googleKey),
       xaiKey: parseXaiKey(data.xaiKey),
+      recraftKey: parseRecraftKey(data.recraftKey),
     };
   })
   .handler(async ({ data }): Promise<ImagineResult> => {
-    if (data.xaiKey || (!data.googleKey && resolveXaiKey(data.xaiKey))) {
+    if (data.recraftKey) {
+      const key = resolveRecraftKey(data.recraftKey);
+      if (!key) return { ok: false, error: "Paste a Recraft key first." };
+      try {
+        return await callRecraftOnce(
+          key,
+          "Isolated two-color merch lockup on even #F2F3F5 field, huge margin, no garment.",
+          "1:1",
+        );
+      } catch {
+        return { ok: false, error: "Could not reach Recraft." };
+      }
+    }
+    if (data.xaiKey) {
       const key = resolveXaiKey(data.xaiKey);
       if (!key) return { ok: false, error: "Paste an xAI key first." };
       try {

@@ -346,6 +346,7 @@ export function Studio() {
     const printer = usePrinter.getState();
     const googleKey = printer.googleKey.trim() || undefined;
     const xaiKey = printer.xaiKey.trim() || undefined;
+    const recraftKey = printer.recraftKey.trim() || undefined;
     const request = async () =>
       edit && source
         ? editStill({
@@ -356,6 +357,7 @@ export function Studio() {
               styleId: nextStyle,
               googleKey,
               xaiKey,
+              recraftKey,
             },
           })
         : generateStill({
@@ -365,6 +367,7 @@ export function Studio() {
               styleId: nextStyle,
               googleKey,
               xaiKey,
+              recraftKey,
             },
           });
 
