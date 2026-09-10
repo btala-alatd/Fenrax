@@ -256,7 +256,7 @@ function googleFriendly(status: number, body: unknown): string {
     return "Google blocked that print. Try again, or check the key.";
   }
   if (status === 429) {
-    return "Google's free print quota is used up. Wait an hour, or turn on billing in Google AI Studio for more prints.";
+    return "Google is throttling this key. Wait a full minute, then tap 1 design once. Don’t spam Test or 3 HD.";
   }
   if (text.includes("safety") || text.includes("blocked") || text.includes("prohibit")) {
     return "Google blocked that prompt. Try a different description.";
@@ -320,7 +320,7 @@ async function callGoogleOnce(
   };
 
   const requestWithRetry = async (model: string, imageSize: string) => {
-    for (let attempt = 0; attempt < 4; attempt += 1) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
       let res: Response;
       let body: unknown = null;
       try {
@@ -331,7 +331,7 @@ async function callGoogleOnce(
         lastError = isNetworkError(error)
           ? "Could not reach Google. Try again."
           : "Google misfired. Try again.";
-        if (attempt < 3 && isNetworkError(error)) {
+        if (attempt < 1 && isNetworkError(error)) {
           await sleep(1500 * 2 ** attempt);
           continue;
         }
@@ -339,11 +339,11 @@ async function callGoogleOnce(
       }
       if (res.status === 429) {
         lastError = googleFriendly(429, body);
-        if (attempt < 3) {
+        if (attempt < 1) {
           const retryAfter = Number(res.headers.get("retry-after"));
           const wait = Number.isFinite(retryAfter) && retryAfter > 0
-            ? Math.min(retryAfter, 40) * 1000
-            : 4000 * 2 ** attempt;
+            ? Math.min(retryAfter, 25) * 1000
+            : 8000;
           await sleep(wait);
           continue;
         }

@@ -88,6 +88,7 @@ export function Studio() {
   const fileRef = useRef<HTMLInputElement>(null);
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const restoredRef = useRef(false);
+  const lastPrintAt = useRef(0);
 
   useEffect(() => {
     let alive = true;
@@ -170,8 +171,19 @@ export function Studio() {
     }
   }
 
+  function printerCooling(): boolean {
+    const cool = 25_000 - (Date.now() - lastPrintAt.current);
+    if (cool > 0) {
+      toast.message(`Printer cooling down. ${Math.ceil(cool / 1000)}s so Google doesn’t throttle.`);
+      return true;
+    }
+    lastPrintAt.current = Date.now();
+    return false;
+  }
+
   async function printPlate() {
     if (pending) return;
+    if (printerCooling()) return;
     const nextPrompt = prompt.trim();
     if (brand.name.trim().length < 2) {
       toast.error("Name your shop first.");
@@ -222,6 +234,7 @@ export function Studio() {
 
   async function printDrop() {
     if (pending) return;
+    if (printerCooling()) return;
     const nextPrompt = prompt.trim();
     if (brand.name.trim().length < 2) {
       toast.error("Name your shop first.");
@@ -244,7 +257,7 @@ export function Studio() {
         const job = jobs[i]!;
         setDropStep(i + 1);
         if (i > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 8000));
+          await new Promise((resolve) => setTimeout(resolve, 15000));
         }
         const still = await runPrint({
           prompt: nextPrompt,

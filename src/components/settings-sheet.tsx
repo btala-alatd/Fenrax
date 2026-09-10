@@ -93,7 +93,7 @@ export function SettingsSheet({
                 : "The live printer needs a Google Gemini key. Get one at aistudio.google.com → Get API key, paste it here, tap Test printer. Never share it in chat."}
             </p>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Free keys only allow a few prints. For more: AI Studio → that key → Enable billing (pay as you go). Optional second printer: Render → Environment → add XAI_API_KEY from console.x.ai.
+              Each print costs. You’re on a paid Google key — raise the monthly spend cap in AI Studio → Spend (pencil on $50) if you want more room. Wait ~25s between prints. Don’t tap Test printer over and over.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={() => void test()} disabled={testing}>
