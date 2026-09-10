@@ -197,77 +197,97 @@ const STYLE_ALIASES: Record<string, StyleId> = {
 function styleSuffix(styleId: StyleId, brand: Brand): string {
   const initials = brand.initials.trim() || brand.name.trim().slice(0, 2).toUpperCase() || "mark";
   const name = brand.name.trim() || "the house";
-  const theme = themeOf(brand);
-  const world = theme.label.toLowerCase();
   switch (styleId) {
     case "drop":
-      return ` Hero merch PICTURE. One giant ${world} image, oversized ${initials} as a mark, billboard-simple. Almost no type. ${theme.hook}.`;
+      return ` Billboard merch, one giant simple shape, oversized ${initials}.`;
     case "chrome":
-      return ` 2026 Y2K chrome PICTURE. Liquid metal, iridescent, inflatable 3D, chrome ${initials}. No slogans. Still ${world}.`;
+      return ` Y2K chrome, liquid metal, inflatable 3D, iridescent ${initials}.`;
     case "vintage":
-      return ` Vintage merch LAYOUT: 90s boxy-tee scale, clean era poster. Muted flat inks. No crackle, no speckle, no faded wash, no noise, no engraving lines, no crosshatch shading, no fine stipple — flat screen-print shapes only. ${world} as a clean screen-print picture. Almost no type.`;
+      return ` 90s boxy merch poster, muted flat screen-print inks, no crackle, no grain.`;
     case "type":
-      return ` Typography plate. The ONLY words are ${name.toUpperCase()} or ${initials}, spelled perfectly. No other letters. Swiss / varsity / brutal. ${world} attitude.`;
+      return ` Typography plate. Only ${name.toUpperCase()} or ${initials}, spelled correctly.`;
     case "line":
-      return ` Single-weight line PICTURE. Editorial negative space, contour of ${world} motifs. ${initials} small. No slogans.`;
+      return ` Single-weight line drawing, editorial negative space. Tiny ${initials}.`;
     case "tattoo":
-      return ` Traditional tattoo flash PICTURE. Bold outlines, limited fills. Original ${world} flash. ${initials} as a tiny flash mark. No sentences. Never copy Sailor Jerry.`;
+      return ` Traditional tattoo flash, bold outline, two fills. Tiny ${initials}. Original, not Sailor Jerry.`;
     case "floral":
-      return ` Botanical fashion PICTURE. Florals, leaves, scarf density, original ${world} plants. No words except a tiny ${initials}.`;
+      return ` Botanical fashion print, original plants. Tiny ${initials}.`;
     case "liquid":
-      return ` 3D liquid blob PICTURE. Inflatable volume, chrome drip. ${initials} as a 3D object. No slogans.`;
+      return ` 3D liquid blob, chrome drip. ${initials} as a 3D object.`;
     case "grunge":
-      return ` Skater PICTURE. Bold xerox SHAPES, big collage pieces, 90s zine layout. Fat halftone OK. No dirt overlay, no fake lyrics, no fake band names.`;
+      return ` Skater xerox SHAPES, fat halftone OK, no dirt overlay, no fake lyrics.`;
     case "vector":
-      return ` Flat merch vector PICTURE, 2–4 hard fills, one accent slash. Screen-print separations. Hard edges, solid ink. No grain, no crackle, no distress, no gradients, no photo, no mockup. Almost no type. ${theme.hook}.`;
+      return ` Flat vector merch, 2–4 solid fills, hard edges, screen-print separations.`;
   }
 }
 
-function categorySuffix(categoryId: CategoryId, brand: Brand): string {
+function categorySuffix(categoryId: CategoryId, brand: Brand, hasSubject: boolean): string {
   const name = brand.name.trim() || "the house";
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
   const upper = name.toUpperCase();
+  if (hasSubject) {
+    switch (categoryId) {
+      case "lockup":
+        return ` Layout: that subject locked with giant ${initials} as one mark.`;
+      case "wordmark":
+        return ` Layout: ignore the subject — paint only the letters ${upper}.`;
+      case "box":
+        return ` Layout: that subject inside one heavy box with ${initials}.`;
+      case "crest":
+        return ` Layout: one crest. That subject is the only charge. Small ${initials} inside.`;
+      case "slogan":
+        return ` Layout: that picture, lower third empty. No painted sentence.`;
+      case "tour":
+        return ` Layout: that subject as a map or ticket graphic. Tiny ${initials}. No city names.`;
+      case "coords":
+        return ` Layout: that subject as a compass/locale mark. Tiny ${initials}.`;
+      case "blueprint":
+        return ` Layout: that subject as a technical diagram. Tiny ${initials}.`;
+      case "trail":
+        return ` Layout: that subject as an outdoor stamp. Tiny ${initials}.`;
+      case "issue":
+        return ` Layout: that subject giant, a small 01, tiny ${initials}.`;
+    }
+  }
   const kids = brand.audience === "kids";
   const picture = kids
-    ? "Kids picture: chunky, round, two or three colors, original house creature OK."
-    : "Adult merch picture: bold, thumbnail-simple, two or three colors.";
+    ? "Chunky kids merch, two or three colors."
+    : "Bold adult merch, two or three colors.";
   switch (categoryId) {
     case "lockup":
-      return ` LOCKUP. Giant ${initials} as geometry is the whole design — the ONLY shape in frame, painted once. ${picture} No extra words, no slogan, no verse, no banner, no props resting beside or crossed behind the letters.`;
+      return ` LOCKUP: giant ${initials} as geometry is the whole design. ${picture}`;
     case "wordmark":
-      return ` WORDMARK. Paint ONLY the letters ${upper}. Every letter, in order, none missing, none extra, none cropped. No icons, no slogan, no second line.`;
+      return ` WORDMARK: paint only ${upper}, every letter in order, no icons.`;
     case "box":
-      return ` BOX. ${initials} inside an invented heavy box or bar. Centered. ${picture} No extra words.`;
+      return ` BOX: ${initials} inside one heavy box. ${picture}`;
     case "tour":
-      return ` TOUR. A map, route, or ticket-stub PICTURE for ${upper}. Abstract places, no city names (names get misspelled). Tiny ${initials}. No slogans.`;
+      return ` TOUR: invented map or ticket picture. Tiny ${initials}. No city names.`;
     case "coords":
-      return ` COORDS. Compass, ticks, and invented numbers as a locale PICTURE. Tiny ${initials}. No sentences.`;
+      return ` COORDS: compass picture, invented ticks. Tiny ${initials}.`;
     case "crest":
-      return ` CREST. Invented emblem for ${name}. Shield or seal with ONE motif as the charge — not a collage of motifs, not a display case of separate objects. ${initials} inside, painted once. Never paint ${upper}. ${picture} No slogans, no mottos, no fake latin, no ribbons or banners with lettering, no objects floating outside the shield.`;
+      return ` CREST: one emblem, one motif, ${initials} inside once. Never paint ${upper}. ${picture}`;
     case "slogan":
-      return ` SLOGAN plate. Paint a PICTURE for ${name}. Leave the lower third empty for real type. Do not invent a sentence. Do not paint a slogan.`;
+      return ` Picture for ${name}, lower third empty. Do not paint a slogan.`;
     case "blueprint":
-      return ` BLUEPRINT. Technical diagram PICTURE of an invented ${initials} object. Drafting lines, exploded view. Tiny ${initials}. No sentences.`;
+      return ` BLUEPRINT of an invented ${initials} object. Tiny ${initials}.`;
     case "trail":
-      return ` TRAIL. Outdoor stamp PICTURE: ridge, topo, trail mark. Small ${initials}. No slogans.`;
+      return ` Trail stamp: ridge or topo. Small ${initials}.`;
     case "issue":
-      return ` ISSUE. Catalog drop PICTURE. One giant motif, a small number like 01, tiny ${initials}. No sentences.`;
+      return ` One giant motif, small 01, tiny ${initials}.`;
   }
 }
 
 function animeSuffix(brand: Brand): string {
-  const name = brand.name.trim() || "the house";
-  const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
-  return ` ANIME MODE. Original anime / manga PICTURE for ${name}. Cel-shaded, bold ink, invented character or scene. Tiny ${initials}. No copied IP. No slogans. Isolated 2D graphic.`;
+  const initials = brand.initials.trim() || brand.name.trim().slice(0, 2).toUpperCase() || "FR";
+  return ` Anime/manga cel-shade, original character only. Tiny ${initials}. No copied IP.`;
 }
 
 function leadSuffix(leadId: LeadId, brand: Brand): string {
-  const name = brand.name.trim() || "the house";
-  const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
+  const initials = brand.initials.trim() || brand.name.trim().slice(0, 2).toUpperCase() || "FR";
   if (leadId === "art") {
-    return ` LEAD ART. The design is the hero — illustration, motif, scene — 90% of the frame. Branding is a whisper: tiny ${initials} mark only, like a woven neck label. Do not spell ${name} — only the mark, added afterward. No giant wordmark, no chest-spanning name. Genius pass: invent a new image. Risk. One unforgettable idea. Unlimited original invention, never a template.`;
+    return ` Art leads. Tiny ${initials} like a neck label.`;
   }
-  return ` LEAD BRAND. The ${initials} mark is the hero — large, owned, readable at a glance. Do not spell ${name} — paint the mark only, the full name is added afterward.`;
+  return ` Brand leads. ${initials} is large and readable.`;
 }
 
 export const EXAMPLE_TEMPLATES = [
@@ -351,61 +371,38 @@ export function composePrompt(
   const ink = coerceHex(brand.ink, DEFAULT_BRAND.ink);
   const paper = coerceHex(brand.paper, DEFAULT_BRAND.paper);
   const accent = coerceHex(brand.accent, DEFAULT_BRAND.accent);
-  const notes = brand.notes.trim();
   const product = PRODUCTS.find((item) => item.id === productId);
   const theme = themeOf(brand);
-  const women = brand.audience === "women";
   const kids = brand.audience === "kids";
+  const women = brand.audience === "women";
   const who = kids ? "kids" : women ? "women's" : "men's";
-  const audienceLine = kids
-    ? "Designed for a KIDS clothing shop. Playful, thumbnail-bold, original house only. Age-appropriate. Never copy Disney, Pokémon, Marvel, Paw Patrol, Hello Kitty, Labubu, or any existing character."
-    : women
-      ? "Designed for a WOMEN'S clothing shop. Feminine merch energy, thumbnail-bold, original house only."
-      : "Designed for a MEN'S clothing shop. Masculine merch energy, thumbnail-bold, original house only.";
-  const kidsCraft = kids
-    ? "Kids merch craft: chunky picture, rounded geometry, color-block, original animal or mascot, one giant idea. No movie characters, no clipart, no Disney. Almost no type."
-    : "";
-  const spelled = name
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "")
-    .split("")
-    .join("-");
-  const typeLaw = `COPY LOCK. Allowed letters in the image: ${initials} — painted once, only once — and ${name.toUpperCase()} (${spelled || initials}) only if this is a wordmark. Never spell the house name any other way: no letter-by-letter spelling, no dots, dashes, or spaces between the letters, no ribbon, banner, plaque, or plate carrying the name. No other words. No slogans. No verses. No mottos. No fake latin. No city names. No lyrics. No psalm. No sentences. Never paint the mark twice in the same image. If you need a caption, leave the bottom empty. Picture first.`;
-  const direction = [
-    `You are a professional merch art director designing a Printify print FILE for ${name}.`,
-    `House: ${name}. Mark: ${initials}. Motifs: ${brand.motifs.trim() || theme.motifs}.`,
-    `Direction: ${theme.label} for ${who}. ${theme.world} Use that as a starting world, not a cage.`,
-    `${theme.hook}.`,
-    audienceLine,
-    `Palette only — ink ${ink}, paper ${paper}, accent ${accent}. Two or three colors. No extra hues.`,
-    `Attitude: ${brand.vibe.trim() || theme.vibe}.`,
-    notes,
-    kidsCraft,
-    typeLaw,
-    "Original house only — not generic, not clipart, not a copy. Theme and audience are a compass. Full designer freedom inside that compass.",
-    "PRINT FILE for Printify Product Creator. Isolated 2D graphic only.",
-    "Never a photo. Never a model. Never a body. Never a garment. Never fabric texture. Never a hanger. Never wrinkles. Never a mockup. Never a lifestyle shot. Never a watermark. Never UI chrome.",
-    "Centered on a perfectly even matte #F2F3F5 field. Uniform RGB 242,243,245 — no gradient, no vignette, no floor, no drop shadow. The field is empty studio, not part of the design.",
-    "The graphic fills 85–92% of the frame. Tight crop. Billboard-simple. Readable as a 200px thumbnail.",
-    "Solid fills, thick strokes. No hairlines. No chips in letters. No broken outlines. No stray dots. No drop shadow under the art. No paper grain behind it.",
-    "FAIL if the studio field is black or dark. Never fill the canvas with black. Dark ink is only allowed inside the mark. FAIL if you add distress, crackle, speckle, noise, photocopy grain, worn paper, or a faded-wash texture. Ink is flat and opaque. Two or three solid colors only.",
-    "The gray field will be deleted to a transparent PNG. Letter holes (O, A, R) must be the same even gray so they knock out.",
-    "Ultra-sharp merch illustration. Maximum resolution 4K print file. Crisp ink edges, clean fills, high-frequency linework, no blur, no muddy gradients, no JPEG mush. Print-ready.",
-    "Registration ticks or crosshairs only if they are inked as part of the graphic, never as a gray canvas.",
-    `Invent original ${name} merch. Compass: ${theme.label} × ${who}. Full designer freedom inside that. Never copy a known logo or trademark.`,
-    "Craft bar: flagship Printify art, original, sharper than a mall tee.",
-    salt ? `Genius print ${salt}. New composition, not a repeat.` : "",
+  const motif = (brand.motifs.trim() || theme.motifs).split(",")[0]?.trim() || theme.hook;
+  const subject = trimmed
+    ? `DRAW THIS, highest priority: ${trimmed}. That is the only subject. One object, no extra props, no collage.`
+    : `Invent one ${theme.label.toLowerCase()} merch graphic of ${motif}.`;
+  const mark =
+    categoryId === "wordmark"
+      ? `The only letters in the image are ${name.toUpperCase()}, spelled correctly once.`
+      : `The only letters in the image are ${initials}, painted once. Do not write ${name.toUpperCase()} or any other word.`;
+  const lines = [
+    `Isolated Printify DTG print file for ${name}, a ${who} ${theme.label} shop. 2D graphic only — no shirt, no photo, no mockup, no person.`,
+    subject,
+    trimmed ? "" : leadSuffix(leadId, brand),
+    categorySuffix(categoryId, brand, Boolean(trimmed)),
+    styleSuffix(styleId, brand),
+    anime ? animeSuffix(brand) : "",
+    mark,
+    `Inks: ${ink} and ${accent} on even matte #F2F3F5 (RGB 242,243,245). Paper hex ${paper} is the shop paper, not a drawn background. Two or three flat colors. No black canvas.`,
+    `Look: ${theme.hook}.`,
+    kids
+      ? "Kids merch: chunky, round, original house creature OK. Never copy Disney, Pokémon, Marvel, Paw Patrol, Hello Kitty, or Labubu."
+      : "",
+    brand.notes.trim(),
+    "Centered, fills 85–92% of the frame, thick strokes, hard edges, sticker-like isolation. No distress, grain, gradient, drop shadow, or fine engraving.",
+    product?.suffix ?? "",
+    salt ? `Variation ${salt}. New composition.` : "",
   ];
-  const productBit = product?.suffix ?? "";
-  const suffix = `${anime ? animeSuffix(brand) : ""}${leadSuffix(leadId, brand)}${categorySuffix(categoryId, brand)}${styleSuffix(styleId, brand)}${productBit}`;
-  const idea = trimmed
-    ? `PICTURE direction only — do not paint these words: ${trimmed}`
-    : `Draw one unforgettable ${theme.label.toLowerCase()} PICTURE for ${who}. No words except the mark. Do not ask. Just draw.`;
-  const finalCompliance =
-    " FINAL CHECK before you draw — banned no matter what: a black or dark canvas, any extra text, the spelled house name, a second copy of the mark, letters spelled with dots or dashes between them, ribbons, banners, plaques, coins, stamps, crossed rods, reels, loose hooks or lures beside the mark, gradients, distress. Light gray #F2F3F5 field. ONE clean mark, nothing else in frame.";
-  const body = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
-  const budget = Math.max(0, MAX_COMPOSED - finalCompliance.length);
-  return `${body.slice(0, budget)}${finalCompliance}`;
+  return lines.filter(Boolean).join(" ").replace(/\s+/g, " ").trim().slice(0, MAX_COMPOSED);
 }
 
 export function isAspectRatioId(value: string): value is AspectRatioId {

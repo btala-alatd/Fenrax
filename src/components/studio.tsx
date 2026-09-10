@@ -632,8 +632,8 @@ export function Studio() {
           promptRef={promptRef}
           placeholder={
             mode === "edit"
-              ? "Optional — leave blank and the designer will invent the edit…"
-              : "Optional. Leave blank and the designer invents a Printify file from your shop."
+              ? "What should change? A cleaner lighthouse, thicker lines…"
+              : "What to draw. Example: a leaping tarpon, a lighthouse, a skull. Leave blank and the shop invents it."
           }
           onSubmit={() => void printPlate()}
           onDropPack={() => void printDrop()}
@@ -954,7 +954,7 @@ function PromptDock({
         className="min-h-24 px-1 py-1 sm:min-h-28"
       />
       <p className="mt-2 text-xs text-muted-foreground">
-        Leave it blank — the designer invents a Printify file from your shop. Type only if you want a hint.
+        Type the picture you want. The shop name is added as the brand — don’t type slogans.
       </p>
 
       <div className="mt-3">
