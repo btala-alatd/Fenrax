@@ -6,6 +6,7 @@ export const THEMES = [
   {
     id: "street",
     label: "Street",
+    font: "Anton",
     ink: "#2a2d32",
     paper: "#f4efe6",
     accent: "#c6ff00",
@@ -21,6 +22,7 @@ export const THEMES = [
   {
     id: "resort",
     label: "Resort",
+    font: "Baloo 2",
     ink: "#1a2e28",
     paper: "#f7efd8",
     accent: "#e07a3d",
@@ -36,6 +38,7 @@ export const THEMES = [
   {
     id: "fishing",
     label: "Fishing",
+    font: "Oswald",
     ink: "#0b1c24",
     paper: "#f3ead4",
     accent: "#3aa6a0",
@@ -51,6 +54,7 @@ export const THEMES = [
   {
     id: "hunt",
     label: "Hunt",
+    font: "Bebas Neue",
     ink: "#16110c",
     paper: "#efe6d4",
     accent: "#b4542a",
@@ -66,6 +70,7 @@ export const THEMES = [
   {
     id: "western",
     label: "Western",
+    font: "Rye",
     ink: "#1c120c",
     paper: "#f3e6d0",
     accent: "#c45c2a",
@@ -81,6 +86,7 @@ export const THEMES = [
   {
     id: "coastal",
     label: "Coastal",
+    font: "Poppins",
     ink: "#102436",
     paper: "#eef4f6",
     accent: "#d9a441",
@@ -96,6 +102,7 @@ export const THEMES = [
   {
     id: "heritage",
     label: "Heritage",
+    font: "Abril Fatface",
     ink: "#1a1c28",
     paper: "#f4efe4",
     accent: "#6b1d2a",
@@ -111,6 +118,7 @@ export const THEMES = [
   {
     id: "work",
     label: "Work",
+    font: "Archivo Black",
     ink: "#141414",
     paper: "#e8e2d6",
     accent: "#c9a227",
@@ -126,6 +134,7 @@ export const THEMES = [
   {
     id: "celestial",
     label: "Celestial",
+    font: "Cinzel",
     ink: "#0c0a14",
     paper: "#f4eef8",
     accent: "#c9a8ff",
@@ -141,6 +150,7 @@ export const THEMES = [
   {
     id: "skate",
     label: "Skate",
+    font: "Permanent Marker",
     ink: "#111111",
     paper: "#f2f2f0",
     accent: "#ff3b1f",
@@ -156,6 +166,7 @@ export const THEMES = [
   {
     id: "luxe",
     label: "Luxe",
+    font: "Prata",
     ink: "#111111",
     paper: "#f6f1e8",
     accent: "#c2a36b",
@@ -171,6 +182,7 @@ export const THEMES = [
   {
     id: "bloom",
     label: "Bloom",
+    font: "Italiana",
     ink: "#2a1c22",
     paper: "#f7efe8",
     accent: "#e8a0b0",
@@ -186,6 +198,7 @@ export const THEMES = [
   {
     id: "muse",
     label: "Muse",
+    font: "Unbounded",
     ink: "#1c1820",
     paper: "#f4eef2",
     accent: "#ff4d8d",
@@ -201,6 +214,7 @@ export const THEMES = [
   {
     id: "mini",
     label: "Mini",
+    font: "Fredoka",
     ink: "#1d2430",
     paper: "#f6f1e6",
     accent: "#ff6a3d",
@@ -216,6 +230,7 @@ export const THEMES = [
   {
     id: "play",
     label: "Play",
+    font: "Nunito",
     ink: "#1a2330",
     paper: "#fff6e8",
     accent: "#3d8bfd",
@@ -231,6 +246,7 @@ export const THEMES = [
   {
     id: "cub",
     label: "Cub",
+    font: "Chewy",
     ink: "#1c2418",
     paper: "#efe6d2",
     accent: "#e07a3d",
@@ -246,6 +262,7 @@ export const THEMES = [
   {
     id: "buddy",
     label: "Buddy",
+    font: "Baloo 2",
     ink: "#241820",
     paper: "#fff4ea",
     accent: "#ff5a7a",

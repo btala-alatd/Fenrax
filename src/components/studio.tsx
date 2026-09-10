@@ -373,7 +373,7 @@ export function Studio() {
     }
     const pngUrl = await finishPrintFile(result.dataUrl).catch(() => result!.dataUrl);
     const copy = plateCopy(brand, nextPrompt, nextCategory);
-    const lettered = await letterPlate(pngUrl, copy, brand.ink, brand.accent).catch(() => pngUrl);
+    const lettered = await letterPlate(pngUrl, copy, brand.ink, brand.accent, theme.font).catch(() => pngUrl);
     const still: Still = {
       id: crypto.randomUUID(),
       prompt: nextPrompt || "Designer pick",
@@ -890,47 +890,6 @@ function PromptDock({
         </div>
       </div>
 
-      <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
-        {THEMES.map((theme) => (
-          <button
-            key={theme.id}
-            type="button"
-            title={theme.hook}
-            onClick={() => onTheme(theme.id)}
-            className={cn(
-              "inline-flex h-9 shrink-0 items-center rounded-full px-3 text-xs font-semibold transition-[background-color,color,box-shadow] duration-[var(--motion-fast)] ease-[var(--ease-out)]",
-              brand.themeId === theme.id
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground shadow-[var(--shadow-border)] hover:text-foreground",
-            )}
-          >
-            {theme.label}
-          </button>
-        ))}
-      </div>
-
-      <ChipRow label="Product">
-        {PRODUCTS.map((item) => {
-          const preset = printifyPreset(item.id);
-          return (
-            <Chip
-              key={item.id}
-              pressed={productId === item.id}
-              title={`${preset.label} · ${preset.inches} in · ${preset.note}`}
-              onClick={() => {
-                setProductId(item.id);
-                setAspectRatio(preset.aspect);
-              }}
-            >
-              {item.label}
-              <span className="ml-1.5 text-[10px] font-medium opacity-70">
-                {preset.inches}
-              </span>
-            </Chip>
-          );
-        })}
-      </ChipRow>
-
       <Textarea
         ref={promptRef}
         value={prompt}
@@ -972,6 +931,45 @@ function PromptDock({
         </button>
         {more ? (
           <div className="mt-2 space-y-2">
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+            {THEMES.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                title={item.hook}
+                onClick={() => onTheme(item.id)}
+                className={cn(
+                  "inline-flex h-9 shrink-0 items-center rounded-full px-3 text-xs font-semibold transition-[background-color,color,box-shadow] duration-[var(--motion-fast)] ease-[var(--ease-out)]",
+                  brand.themeId === item.id
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground shadow-[var(--shadow-border)] hover:text-foreground",
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <ChipRow label="Product">
+            {PRODUCTS.map((item) => {
+              const preset = printifyPreset(item.id);
+              return (
+                <Chip
+                  key={item.id}
+                  pressed={productId === item.id}
+                  title={`${preset.label} · ${preset.inches} in · ${preset.note}`}
+                  onClick={() => {
+                    setProductId(item.id);
+                    setAspectRatio(preset.aspect);
+                  }}
+                >
+                  {item.label}
+                  <span className="ml-1.5 text-[10px] font-medium opacity-70">
+                    {preset.inches}
+                  </span>
+                </Chip>
+              );
+            })}
+          </ChipRow>
           <ChipRow label="Kind of design">
             {CATEGORIES.map((item) => (
               <Chip
