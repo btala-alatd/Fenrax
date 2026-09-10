@@ -256,7 +256,7 @@ function googleFriendly(status: number, body: unknown): string {
     return "Google blocked that print. Try again, or check the key.";
   }
   if (status === 429) {
-    return "Google is busy — too many prints in a short time. Wait a minute, then tap 1 design once (not 3 HD).";
+    return "Google's free print quota is used up. Wait an hour, or turn on billing in Google AI Studio for more prints.";
   }
   if (text.includes("safety") || text.includes("blocked") || text.includes("prohibit")) {
     return "Google blocked that prompt. Try a different description.";
@@ -366,7 +366,6 @@ async function callGoogleOnce(
   for (const model of models) {
     const plate = await requestWithRetry(model, "2K");
     if (plate?.ok) return plate;
-    if (/busy|rate/i.test(lastError)) break;
   }
 
   return { ok: false, error: lastError };

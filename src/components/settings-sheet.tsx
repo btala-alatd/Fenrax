@@ -90,7 +90,10 @@ export function SettingsSheet({
             <p className="text-xs leading-relaxed text-muted-foreground">
               {draft.trim()
                 ? `Saved as ${maskGoogleKey(draft)}. Google draws the shirts.`
-                : "The live printer needs a Google Gemini key. Get one at aistudio.google.com → Get API key, paste it here, tap Test printer. You can also set GEMINI_API_KEY on Render. Never share it in chat."}
+                : "The live printer needs a Google Gemini key. Get one at aistudio.google.com → Get API key, paste it here, tap Test printer. Never share it in chat."}
+            </p>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Free keys only allow a few prints. For more: AI Studio → that key → Enable billing (pay as you go). Optional second printer: Render → Environment → add XAI_API_KEY from console.x.ai.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={() => void test()} disabled={testing}>
