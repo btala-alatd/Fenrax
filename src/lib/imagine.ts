@@ -352,7 +352,7 @@ async function callImagineOnce(
 ): Promise<ImagineResult> {
   const apiKey = readApiKey();
   if (!apiKey) {
-    return { ok: false, error: "Image generation is unavailable right now." };
+    return { ok: false, error: "Image generation is unavailable right now. Add a Google key in Settings." };
   }
 
   let res: Response;
@@ -435,24 +435,40 @@ async function printWith(
   imageDataUrl?: string,
 ): Promise<ImagineResult> {
   const google = resolveGoogleKey(googleKey);
+  const hasXai = Boolean(readApiKey());
+  if (!google && !hasXai) {
+    return {
+      ok: false,
+      error: "The printer needs a key. Open Settings and paste a Google Gemini image key.",
+    };
+  }
+
+  let googleResult: ImagineResult | null = null;
   let best: ImagineResult | null = null;
   let bestEdge = 0;
   if (google) {
-    const fromGoogle = await callGoogleOnce(google, prompt, aspectRatio, imageDataUrl);
-    if (fromGoogle.ok) {
-      const edge = longEdge(fromGoogle.dataUrl);
-      if (edge >= MIN_PRINT_EDGE) return fromGoogle;
-      best = fromGoogle;
+    googleResult = await callGoogleOnce(google, prompt, aspectRatio, imageDataUrl);
+    if (googleResult.ok) {
+      const edge = longEdge(googleResult.dataUrl);
+      if (edge >= MIN_PRINT_EDGE) return googleResult;
+      best = googleResult;
       bestEdge = edge;
     }
   }
-  const xai = await callImagine(path, payload);
-  if (xai.ok) {
-    const edge = longEdge(xai.dataUrl);
-    if (edge >= bestEdge) return xai;
+  if (hasXai) {
+    const xai = await callImagine(path, payload);
+    if (xai.ok) {
+      const edge = longEdge(xai.dataUrl);
+      if (edge >= bestEdge) return xai;
+    }
+    if (best) return best;
+    return xai;
   }
   if (best) return best;
-  return xai;
+  return googleResult ?? {
+    ok: false,
+    error: "The printer could not finish that plate.",
+  };
 }
 
 export const generateStill = createServerFn({ method: "POST" })

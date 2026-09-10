@@ -322,6 +322,11 @@ export function Studio() {
       nextAnime,
     );
 
+    try {
+      await usePrinter.persist.rehydrate();
+    } catch {
+      /* storage still empty is fine */
+    }
     const googleKey = usePrinter.getState().googleKey.trim() || undefined;
     const request = async () =>
       edit && source

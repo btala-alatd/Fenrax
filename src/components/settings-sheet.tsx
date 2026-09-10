@@ -90,7 +90,7 @@ export function SettingsSheet({
             <p className="text-xs leading-relaxed text-muted-foreground">
               {draft.trim()
                 ? `Saved as ${maskGoogleKey(draft)}. Google draws the shirts.`
-                : "Optional backup printer. Get a Gemini key at aistudio.google.com → Get API key. On Render, you can also set GEMINI_API_KEY in the dashboard. Never share it in chat."}
+                : "The live printer needs a Google Gemini key. Get one at aistudio.google.com → Get API key, paste it here, tap Test printer. You can also set GEMINI_API_KEY on Render. Never share it in chat."}
             </p>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={() => void test()} disabled={testing}>
