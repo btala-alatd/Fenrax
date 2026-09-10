@@ -17,6 +17,7 @@ type GenerateInput = {
   aspectRatio: AspectRatioId;
   styleId: StyleId;
   googleKey?: string;
+  xaiKey?: string;
 };
 
 type EditInput = {
@@ -25,6 +26,7 @@ type EditInput = {
   aspectRatio: AspectRatioId;
   styleId: StyleId;
   googleKey?: string;
+  xaiKey?: string;
 };
 
 type ImagineImage = {
@@ -38,10 +40,9 @@ type ImagineResponse = {
   error?: { message?: string; code?: string; type?: string };
 };
 
-function readApiKey() {
-  const apiKey = process.env.XAI_API_KEY;
-  if (!apiKey) return null;
-  return apiKey;
+function resolveXaiKey(client?: string) {
+  const key = (client || process.env.XAI_API_KEY || "").trim();
+  return key || undefined;
 }
 
 function parsePrompt(value: unknown): string {
@@ -108,6 +109,14 @@ function longEdge(dataUrl: string) {
 }
 
 const MIN_PRINT_EDGE = 2000;
+
+function parseXaiKey(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const key = value.trim();
+  if (!key) return undefined;
+  if (key.length < 20 || key.length > 256) throw new Error("That xAI key looks wrong.");
+  return key;
+}
 
 function parseGoogleKey(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
@@ -276,6 +285,7 @@ async function callGoogleOnce(
   prompt: string,
   aspect: AspectRatioId,
   imageDataUrl?: string,
+  backupReady = false,
 ): Promise<ImagineResult> {
   const models = ["gemini-2.5-flash-image", "gemini-3.1-flash-image"];
   const ratio = googleAspect(aspect);
@@ -339,7 +349,7 @@ async function callGoogleOnce(
       }
       if (res.status === 429) {
         lastError = googleFriendly(429, body);
-        if (attempt < 1) {
+        if (!backupReady && attempt < 1) {
           const retryAfter = Number(res.headers.get("retry-after"));
           const wait = Number.isFinite(retryAfter) && retryAfter > 0
             ? Math.min(retryAfter, 25) * 1000
@@ -374,10 +384,11 @@ async function callGoogleOnce(
 async function callImagineOnce(
   path: "/v1/images/generations" | "/v1/images/edits",
   payload: Record<string, unknown>,
+  apiKey?: string,
 ): Promise<ImagineResult> {
-  const apiKey = readApiKey();
-  if (!apiKey) {
-    return { ok: false, error: "Image generation is unavailable right now. Add a Google key in Settings." };
+  const key = resolveXaiKey(apiKey);
+  if (!key) {
+    return { ok: false, error: "xAI printer needs a key. Paste it in Settings." };
   }
 
   let res: Response;
@@ -386,7 +397,7 @@ async function callImagineOnce(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify(payload),
     });
@@ -434,13 +445,14 @@ async function callImagineOnce(
 async function callImagine(
   path: "/v1/images/generations" | "/v1/images/edits",
   payload: Record<string, unknown>,
+  apiKey?: string,
 ): Promise<ImagineResult> {
-  const first = await callImagineOnce(path, payload);
+  const first = await callImagineOnce(path, payload, apiKey);
   if (first.ok) return first;
   const retryable = /misfired|busy|could not reach/i.test(first.error);
   if (!retryable) return first;
   await new Promise((resolve) => setTimeout(resolve, 1200));
-  return callImagineOnce(path, payload);
+  return callImagineOnce(path, payload, apiKey);
 }
 
 const GENERATE_BODY = {
@@ -453,6 +465,7 @@ const GENERATE_BODY = {
 
 async function printWith(
   googleKey: string | undefined,
+  xaiKey: string | undefined,
   path: "/v1/images/generations" | "/v1/images/edits",
   payload: Record<string, unknown>,
   prompt: string,
@@ -460,11 +473,11 @@ async function printWith(
   imageDataUrl?: string,
 ): Promise<ImagineResult> {
   const google = resolveGoogleKey(googleKey);
-  const hasXai = Boolean(readApiKey());
-  if (!google && !hasXai) {
+  const xai = resolveXaiKey(xaiKey);
+  if (!google && !xai) {
     return {
       ok: false,
-      error: "The printer needs a key. Open Settings and paste a Google Gemini image key.",
+      error: "The printer needs a key. Open Settings and paste a Google or xAI image key.",
     };
   }
 
@@ -472,7 +485,7 @@ async function printWith(
   let best: ImagineResult | null = null;
   let bestEdge = 0;
   if (google) {
-    googleResult = await callGoogleOnce(google, prompt, aspectRatio, imageDataUrl);
+    googleResult = await callGoogleOnce(google, prompt, aspectRatio, imageDataUrl, Boolean(xai));
     if (googleResult.ok) {
       const edge = longEdge(googleResult.dataUrl);
       if (edge >= MIN_PRINT_EDGE) return googleResult;
@@ -480,14 +493,14 @@ async function printWith(
       bestEdge = edge;
     }
   }
-  if (hasXai) {
-    const xai = await callImagine(path, payload);
-    if (xai.ok) {
-      const edge = longEdge(xai.dataUrl);
-      if (edge >= bestEdge) return xai;
+  if (xai) {
+    const fromXai = await callImagine(path, payload, xai);
+    if (fromXai.ok) {
+      const edge = longEdge(fromXai.dataUrl);
+      if (edge >= bestEdge) return fromXai;
     }
     if (best) return best;
-    return xai;
+    if (!googleResult?.ok) return fromXai;
   }
   if (best) return best;
   return googleResult ?? {
@@ -507,12 +520,14 @@ export const generateStill = createServerFn({ method: "POST" })
       aspectRatio: parseAspect(data.aspectRatio),
       styleId: parseStyle(data.styleId),
       googleKey: parseGoogleKey(data.googleKey),
+      xaiKey: parseXaiKey(data.xaiKey),
     };
   })
   .handler(async ({ data }): Promise<ImagineResult> => {
     try {
       return await printWith(
         data.googleKey,
+        data.xaiKey,
         "/v1/images/generations",
         {
           ...GENERATE_BODY,
@@ -539,12 +554,14 @@ export const editStill = createServerFn({ method: "POST" })
       aspectRatio: parseAspect(data.aspectRatio),
       styleId: parseStyle(data.styleId),
       googleKey: parseGoogleKey(data.googleKey),
+      xaiKey: parseXaiKey(data.xaiKey),
     };
   })
   .handler(async ({ data }): Promise<ImagineResult> => {
     try {
       return await printWith(
         data.googleKey,
+        data.xaiKey,
         "/v1/images/edits",
         {
           ...GENERATE_BODY,
@@ -565,12 +582,32 @@ export const editStill = createServerFn({ method: "POST" })
   });
 
 export const testPrinter = createServerFn({ method: "POST" })
-  .validator((input: unknown): { googleKey?: string } => {
+  .validator((input: unknown): { googleKey?: string; xaiKey?: string } => {
     if (typeof input !== "object" || input === null) return {};
     const data = input as Record<string, unknown>;
-    return { googleKey: parseGoogleKey(data.googleKey) };
+    return {
+      googleKey: parseGoogleKey(data.googleKey),
+      xaiKey: parseXaiKey(data.xaiKey),
+    };
   })
   .handler(async ({ data }): Promise<ImagineResult> => {
+    if (data.xaiKey || (!data.googleKey && resolveXaiKey(data.xaiKey))) {
+      const key = resolveXaiKey(data.xaiKey);
+      if (!key) return { ok: false, error: "Paste an xAI key first." };
+      try {
+        return await callImagine(
+          "/v1/images/generations",
+          {
+            ...GENERATE_BODY,
+            prompt: "Isolated two-color merch lockup on even #F2F3F5 field, huge margin, no garment.",
+            aspect_ratio: "1:1",
+          },
+          key,
+        );
+      } catch {
+        return { ok: false, error: "Could not reach xAI." };
+      }
+    }
     const key = resolveGoogleKey(data.googleKey);
     if (!key) {
       return { ok: false, error: "Paste a Google Gemini key first." };

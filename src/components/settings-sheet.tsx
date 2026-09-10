@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { InstallApp } from "@/components/install-app";
 import { SaveToButton } from "@/components/save-to-sheet";
 import { testPrinter } from "@/lib/imagine";
-import { maskGoogleKey, usePrinter } from "@/lib/printer";
+import { maskKey, usePrinter } from "@/lib/printer";
 
 export function SettingsSheet({
   onClose,
@@ -15,9 +15,12 @@ export function SettingsSheet({
   onStartOver?: () => void;
 }) {
   const stored = usePrinter((state) => state.googleKey);
+  const storedXai = usePrinter((state) => state.xaiKey);
   const setGoogleKey = usePrinter((state) => state.setGoogleKey);
+  const setXaiKey = usePrinter((state) => state.setXaiKey);
   const [draft, setDraft] = useState(stored);
-  const [testing, setTesting] = useState(false);
+  const [xaiDraft, setXaiDraft] = useState(storedXai);
+  const [testing, setTesting] = useState<"google" | "xai" | null>(null);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -29,17 +32,18 @@ export function SettingsSheet({
 
   function save() {
     setGoogleKey(draft);
-    toast.success(draft.trim() ? "Printer key saved on this device." : "Printer key cleared.");
+    setXaiKey(xaiDraft);
+    toast.success("Printer keys saved on this device.");
     onClose();
   }
 
-  async function test() {
+  async function testGoogle() {
     const key = draft.trim();
     if (key.length < 20) {
       toast.error("Paste a Google Gemini key first.");
       return;
     }
-    setTesting(true);
+    setTesting("google");
     try {
       const result = await testPrinter({ data: { googleKey: key } });
       if (result.ok) {
@@ -51,7 +55,29 @@ export function SettingsSheet({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not reach Google.");
     } finally {
-      setTesting(false);
+      setTesting(null);
+    }
+  }
+
+  async function testXai() {
+    const key = xaiDraft.trim();
+    if (key.length < 20) {
+      toast.error("Paste an xAI key first.");
+      return;
+    }
+    setTesting("xai");
+    try {
+      const result = await testPrinter({ data: { xaiKey: key } });
+      if (result.ok) {
+        setXaiKey(key);
+        toast.success("xAI printer is live. It takes over when Google is busy.");
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not reach xAI.");
+    } finally {
+      setTesting(null);
     }
   }
 
@@ -89,16 +115,16 @@ export function SettingsSheet({
             />
             <p className="text-xs leading-relaxed text-muted-foreground">
               {draft.trim()
-                ? `Saved as ${maskGoogleKey(draft)}. Google draws the shirts.`
-                : "The live printer needs a Google Gemini key. Get one at aistudio.google.com → Get API key, paste it here, tap Test printer. Never share it in chat."}
+                ? `Saved as ${maskKey(draft)}. First printer.`
+                : "First printer. Get a Gemini key at aistudio.google.com → Get API key. Never share it in chat."}
             </p>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Each print costs. You’re on a paid Google key — raise the monthly spend cap in AI Studio → Spend (pencil on $50) if you want more room. Wait ~25s between prints. Don’t tap Test printer over and over.
+              Each print costs. Raise the monthly spend cap in AI Studio → Spend if you hit $50. Wait ~25s between prints.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={() => void test()} disabled={testing}>
-                {testing ? <LoaderCircle className="size-4 animate-spin" /> : null}
-                Test printer
+              <Button type="button" variant="outline" onClick={() => void testGoogle()} disabled={testing !== null}>
+                {testing === "google" ? <LoaderCircle className="size-4 animate-spin" /> : null}
+                Test Google
               </Button>
               {draft.trim() ? (
                 <Button
@@ -107,7 +133,46 @@ export function SettingsSheet({
                   onClick={() => {
                     setDraft("");
                     setGoogleKey("");
-                    toast.success("Key cleared.");
+                    toast.success("Google key cleared.");
+                  }}
+                >
+                  Clear
+                </Button>
+              ) : null}
+            </div>
+          </section>
+
+          <section className="space-y-2">
+            <span className="block text-[11px] font-medium tracking-[0.14em] text-ink-subtle uppercase">
+              Second printer — xAI
+            </span>
+            <input
+              type="password"
+              autoComplete="off"
+              spellCheck={false}
+              value={xaiDraft}
+              placeholder="xai-… from console.x.ai"
+              onChange={(event) => setXaiDraft(event.target.value)}
+              className="h-12 w-full rounded-full bg-card px-4 text-sm text-foreground shadow-[var(--shadow-border)] outline-none placeholder:text-ink-subtle focus-visible:ring-2 focus-visible:ring-ring/70"
+            />
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {xaiDraft.trim()
+                ? `Saved as ${maskKey(xaiDraft)}. Takes over when Google is busy.`
+                : "Get a key at console.x.ai → API keys. Paste it here. Used when Google throttles."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => void testXai()} disabled={testing !== null}>
+                {testing === "xai" ? <LoaderCircle className="size-4 animate-spin" /> : null}
+                Test xAI
+              </Button>
+              {xaiDraft.trim() ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setXaiDraft("");
+                    setXaiKey("");
+                    toast.success("xAI key cleared.");
                   }}
                 >
                   Clear

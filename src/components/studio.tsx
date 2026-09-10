@@ -343,7 +343,9 @@ export function Studio() {
     } catch {
       /* storage still empty is fine */
     }
-    const googleKey = usePrinter.getState().googleKey.trim() || undefined;
+    const printer = usePrinter.getState();
+    const googleKey = printer.googleKey.trim() || undefined;
+    const xaiKey = printer.xaiKey.trim() || undefined;
     const request = async () =>
       edit && source
         ? editStill({
@@ -353,6 +355,7 @@ export function Studio() {
               aspectRatio: nextRatio,
               styleId: nextStyle,
               googleKey,
+              xaiKey,
             },
           })
         : generateStill({
@@ -361,6 +364,7 @@ export function Studio() {
               aspectRatio: nextRatio,
               styleId: nextStyle,
               googleKey,
+              xaiKey,
             },
           });
 
