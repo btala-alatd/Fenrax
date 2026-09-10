@@ -2,6 +2,16 @@
 
 Private merch studio. Printify-ready graphics for Men, Women, and Kids shops.
 
+## For Claude / other coding agents
+
+Start here, in order:
+
+1. [CLAUDE.md](./CLAUDE.md) — how to work on this repo
+2. [AGENTS.project.md](./AGENTS.project.md) — product rules that must not regress
+3. [docs/HANDOFF.md](./docs/HANDOFF.md) — full architecture, pipeline, known failures
+
+Repo: https://github.com/btala-alatd/Fenrax
+
 ## Render (use this)
 
 The GitHub repo is **public** so Render can clone it without connecting GitHub.
