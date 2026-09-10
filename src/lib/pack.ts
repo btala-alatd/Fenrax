@@ -7,7 +7,6 @@ import {
   PRINTIFY_CATALOG,
   buildPrintifyFromArt,
   prepareArt,
-  toTransparentPng,
 } from "@/lib/printify";
 import type { Still } from "@/lib/studio-data";
 
@@ -60,8 +59,7 @@ async function addGeneratedImage(
   index: number,
 ) {
   const stem = stillStem(still, index);
-  const png = await toTransparentPng(still.dataUrl, true);
-  const blob = dataUrlToBlob(png);
+  const blob = dataUrlToBlob(still.dataUrl);
   zip.file(`${root}/images/${stem}.png`, blob, { compression: "STORE" });
   zip.file(`${root}/${stem}/image.png`, blob, { compression: "STORE" });
   zip.file(
@@ -117,10 +115,9 @@ async function addPrintifyFolder(
   brand: Brand,
   folder: string,
 ) {
-  const printFile = true;
-  const art = await prepareArt(still.dataUrl, printFile, printFile);
+  const art = await prepareArt(still.dataUrl, false, false);
   await yieldTick();
-  const print = await buildPrintifyFromArt(art, still.productId, !printFile);
+  const print = await buildPrintifyFromArt(art, still.productId);
   await yieldTick();
   const listing = buildEtsyListing(still, brand);
   zip.file(`${folder}/printify/printify.png`, print.blob, { compression: "STORE" });

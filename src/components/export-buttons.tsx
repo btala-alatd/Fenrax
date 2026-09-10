@@ -48,7 +48,7 @@ export function ExportButtons({
     if (blocked) return;
     setBusy("png");
     try {
-      const next = await buildPrintifyPng(still.dataUrl, still.productId, true);
+      const next = await buildPrintifyPng(still.dataUrl, still.productId, false);
       await saveBlob(next.blob, `${slug}-${preset.id}-printify.png`);
       toast.success("Printify PNG saved — transparent graphic, drop it on the shirt.");
     } catch (error) {
@@ -65,7 +65,7 @@ export function ExportButtons({
       const next = await buildPrintifyPng(
         still.dataUrl,
         still.productId,
-        true,
+        false,
       );
       setPack(next);
     } catch (error) {
