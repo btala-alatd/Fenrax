@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LoaderCircle, X } from "lucide-react";
+import { LoaderCircle, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InstallApp } from "@/components/install-app";
@@ -7,7 +7,13 @@ import { SaveToButton } from "@/components/save-to-sheet";
 import { testPrinter } from "@/lib/imagine";
 import { maskGoogleKey, usePrinter } from "@/lib/printer";
 
-export function SettingsSheet({ onClose }: { onClose: () => void }) {
+export function SettingsSheet({
+  onClose,
+  onStartOver,
+}: {
+  onClose: () => void;
+  onStartOver?: () => void;
+}) {
   const stored = usePrinter((state) => state.googleKey);
   const setGoogleKey = usePrinter((state) => state.setGoogleKey);
   const [draft, setDraft] = useState(stored);
@@ -119,6 +125,19 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
               Phone
             </span>
             <InstallApp />
+          </section>
+
+          <section className="space-y-2">
+            <span className="block text-[11px] font-medium tracking-[0.14em] text-ink-subtle uppercase">
+              This phone
+            </span>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Wipe every print stored here. Shop name stays.
+            </p>
+            <Button type="button" variant="danger" className="h-12 w-full" onClick={onStartOver}>
+              <Trash2 className="size-4" />
+              Start over
+            </Button>
           </section>
 
           <Button type="button" className="h-12 w-full" onClick={save}>

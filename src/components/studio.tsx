@@ -23,6 +23,7 @@ import { applyAudience, applyTheme, AUDIENCES, THEMES, themeOf, useBrand, type B
 import { printifyPreset, finishPrintFile, looksLikePhoto } from "@/lib/printify";
 import { letterPlate, plateCopy } from "@/lib/letter";
 import { useGallery } from "@/lib/gallery";
+import { idbClearPrefix } from "@/lib/idb";
 import { readImageFile } from "@/lib/image-file";
 import { zipGeneratedImages, zipPrintifyPack } from "@/lib/pack";
 import { saveToLabel } from "@/lib/save-to";
@@ -58,6 +59,7 @@ export function Studio() {
   const items = useGallery((state) => state.items);
   const addStill = useGallery((state) => state.add);
   const removeStill = useGallery((state) => state.remove);
+  const clearGallery = useGallery((state) => state.clear);
   const brand = useBrand((state) => state.brand);
   const patchBrand = useBrand((state) => state.patchBrand);
   const [hydrated, setHydrated] = useState(false);
@@ -426,6 +428,25 @@ export function Studio() {
     }
   }
 
+  async function startOver() {
+    if (pending || packing) return;
+    if (items.length === 0 && !current && !sourceImage) {
+      toast.message("Already empty.");
+      return;
+    }
+    if (!window.confirm("Delete every print on this device and start over? Shop name stays.")) return;
+    clearGallery();
+    setCurrent(null);
+    setLightbox(null);
+    setListing(null);
+    setSourceImage(null);
+    setMode("create");
+    setPrompt("");
+    setLens("plate");
+    await idbClearPrefix("blank:");
+    toast.success("Cleared. Fresh start.");
+  }
+
   return (
     <div className="app-shell flex min-h-dvh flex-col text-foreground">
       <header className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6">
@@ -459,6 +480,17 @@ export function Studio() {
             title="Shop name, who it's for, look"
           >
             Shop
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            className="relative z-10 min-h-11 px-3"
+            disabled={pending || packing}
+            onClick={() => void startOver()}
+            title="Delete all prints on this device and start over"
+          >
+            <Trash2 className="size-4" />
+            Start over
           </Button>
           <Button
             variant="outline"
@@ -623,7 +655,15 @@ export function Studio() {
         />
       ) : null}
 
-      {settingsOpen ? <SettingsSheet onClose={() => setSettingsOpen(false)} /> : null}
+      {settingsOpen ? (
+        <SettingsSheet
+          onClose={() => setSettingsOpen(false)}
+          onStartOver={() => {
+            setSettingsOpen(false);
+            void startOver();
+          }}
+        />
+      ) : null}
 
       {listing ? (
         <EtsySheet
