@@ -255,12 +255,20 @@ function googleFriendly(status: number, body: unknown): string {
     }
     return "Google blocked that print. Try again, or check the key.";
   }
-  if (status === 429) return "Google is busy. Wait a moment and try again.";
+  if (status === 429) {
+    return "Google is busy — too many prints in a short time. Wait a minute, then tap 1 design once (not 3 HD).";
+  }
   if (text.includes("safety") || text.includes("blocked") || text.includes("prohibit")) {
     return "Google blocked that prompt. Try a different description.";
   }
   if (status >= 500) return "Google misfired. Try again in a moment.";
   return "Google could not finish that plate.";
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 async function callGoogleOnce(
@@ -269,7 +277,7 @@ async function callGoogleOnce(
   aspect: AspectRatioId,
   imageDataUrl?: string,
 ): Promise<ImagineResult> {
-  const models = ["gemini-3.1-flash-image", "gemini-2.5-flash-image"];
+  const models = ["gemini-2.5-flash-image", "gemini-3.1-flash-image"];
   const ratio = googleAspect(aspect);
   const source = imageDataUrl ? splitDataUrl(imageDataUrl) : null;
   const parts: Record<string, unknown>[] = [{ text: prompt }];
@@ -283,66 +291,84 @@ async function callGoogleOnce(
   }
 
   let lastError = "Google could not finish that plate.";
-  let best: ImagineResult | null = null;
-  let bestEdge = 0;
-  const sizes = ["4K", "2K"];
-  for (const model of models) {
-    for (const imageSize of sizes) {
-      let res: Response;
-      try {
-        res = await fetchJson(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey,
-            },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts }],
-              generationConfig: {
-                responseModalities: ["TEXT", "IMAGE"],
-                imageConfig: { aspectRatio: ratio, imageSize },
-              },
-            }),
+
+  const request = async (model: string, imageSize: string) => {
+    const res = await fetchJson(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts }],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"],
+            imageConfig: { aspectRatio: ratio, imageSize },
           },
-        );
+        }),
+      },
+    );
+    let body: unknown = null;
+    try {
+      body = await res.json();
+    } catch {
+      body = null;
+    }
+    return { res, body };
+  };
+
+  const requestWithRetry = async (model: string, imageSize: string) => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      let res: Response;
+      let body: unknown = null;
+      try {
+        const next = await request(model, imageSize);
+        res = next.res;
+        body = next.body;
       } catch (error) {
         lastError = isNetworkError(error)
           ? "Could not reach Google. Try again."
           : "Google misfired. Try again.";
-        continue;
+        if (attempt < 3 && isNetworkError(error)) {
+          await sleep(1500 * 2 ** attempt);
+          continue;
+        }
+        return null;
       }
-
-      let body: unknown = null;
-      try {
-        body = await res.json();
-      } catch {
-        body = null;
+      if (res.status === 429) {
+        lastError = googleFriendly(429, body);
+        if (attempt < 3) {
+          const retryAfter = Number(res.headers.get("retry-after"));
+          const wait = Number.isFinite(retryAfter) && retryAfter > 0
+            ? Math.min(retryAfter, 40) * 1000
+            : 4000 * 2 ** attempt;
+          await sleep(wait);
+          continue;
+        }
+        return null;
       }
-
       if (!res.ok) {
         lastError = googleFriendly(res.status, body);
-        if (res.status === 404 || res.status === 400) continue;
-        continue;
+        return { ok: false as const, status: res.status };
       }
-
       const dataUrl = extractGoogleImage(body);
       if (!dataUrl) {
         lastError = "Google returned an empty plate.";
-        continue;
+        return { ok: false as const, status: res.status };
       }
-      const edge = longEdge(dataUrl);
-      if (edge > bestEdge) {
-        best = { ok: true, dataUrl };
-        bestEdge = edge;
-      }
-      if (edge >= MIN_PRINT_EDGE) return { ok: true, dataUrl };
-      break;
+      return { ok: true as const, dataUrl };
     }
+    return null;
+  };
+
+  for (const model of models) {
+    const plate = await requestWithRetry(model, "2K");
+    if (plate?.ok) return plate;
+    if (/busy|rate/i.test(lastError)) break;
   }
 
-  if (best?.ok) return best;
   return { ok: false, error: lastError };
 }
 

@@ -243,6 +243,9 @@ export function Studio() {
       for (let i = 0; i < jobs.length; i += 1) {
         const job = jobs[i]!;
         setDropStep(i + 1);
+        if (i > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 8000));
+        }
         const still = await runPrint({
           prompt: nextPrompt,
           styleId: coerceStyleId(styleId),
