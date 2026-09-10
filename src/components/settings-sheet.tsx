@@ -142,7 +142,7 @@ export function SettingsSheet({
             <p className="text-xs leading-relaxed text-muted-foreground">
               {recraftDraft.trim()
                 ? `Saved as ${maskKey(recraftDraft)}. First printer — Recraft Pro.`
-                : "Best for logos and print files. Recraft → Profile → Generate API token. Pro units required. Never share it in chat."}
+                : "Pro on the Recraft website is not enough. Buy API units at recraft.ai → Profile → API, tap Generate, paste the token here. Never share it in chat."}
             </p>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" onClick={() => void testRecraft()} disabled={testing !== null}>

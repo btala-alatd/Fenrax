@@ -478,13 +478,13 @@ const GENERATE_BODY = {
 };
 
 function recraftSize(aspect: AspectRatioId): string {
-  if (aspect === "4:5") return "4:5";
-  if (aspect === "3:2") return "3:2";
-  if (aspect === "4:3") return "4:3";
-  if (aspect === "9:16") return "9:16";
-  if (aspect === "16:9") return "16:9";
-  if (aspect === "1:1") return "1:1";
-  return "3:4";
+  if (aspect === "1:1") return "2048x2048";
+  if (aspect === "3:2") return "2560x1664";
+  if (aspect === "4:3") return "2432x1792";
+  if (aspect === "4:5") return "1792x2304";
+  if (aspect === "9:16") return "1536x2688";
+  if (aspect === "16:9") return "2688x1536";
+  return "1792x2432";
 }
 
 function recraftFriendly(status: number, body: unknown): string {
@@ -492,8 +492,8 @@ function recraftFriendly(status: number, body: unknown): string {
   if (status === 401 || status === 403) {
     return "Recraft said no to that key. Generate a new API token in Recraft → Profile.";
   }
-  if (status === 402 || text.includes("balance") || text.includes("credit") || text.includes("unit")) {
-    return "Recraft is out of units. Top up in Recraft.";
+  if (status === 402 || text.includes("balance") || text.includes("credit") || text.includes("unit") || text.includes("quota")) {
+    return "Recraft API units are empty. Pro website credits don’t count — buy API units at Recraft → Profile → API, then generate a token.";
   }
   if (status === 429) return "Recraft is busy. Wait a moment and try again.";
   if (status >= 500) return "Recraft misfired. Try again in a moment.";
