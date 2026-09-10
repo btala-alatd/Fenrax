@@ -306,6 +306,7 @@ export type Brand = {
   motifs: string;
   vibe: string;
   notes: string;
+  ready: boolean;
 };
 
 export const DEFAULT_BRAND: Brand = {
@@ -319,6 +320,7 @@ export const DEFAULT_BRAND: Brand = {
   motifs: "sharp intersecting axis, fractured F, architectural lines",
   vibe: "precision, motion, architecture, premium performance streetwear",
   notes: "",
+  ready: false,
 };
 
 export function isThemeId(value: string): value is ThemeId {
@@ -397,7 +399,14 @@ export function normalizeBrand(value: Partial<Brand> | null | undefined): Brand 
     motifs: (value?.motifs ?? theme.motifs).slice(0, 180),
     vibe: (value?.vibe ?? theme.vibe).slice(0, 140),
     notes: (value?.notes ?? "").slice(0, 400),
+    ready:
+      value?.ready === true ||
+      (name.trim().length >= 2 && name.trim().toLowerCase() !== "fenrax"),
   };
+}
+
+export function shopIsReady(brand: Brand) {
+  return Boolean(brand.ready);
 }
 
 export function brandSlug(brand: Brand) {

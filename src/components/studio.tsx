@@ -19,7 +19,7 @@ import { EtsySheet } from "@/components/etsy-sheet";
 import { ExportButtons } from "@/components/export-buttons";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { applyAudience, applyTheme, AUDIENCES, THEMES, themeOf, useBrand, type Brand } from "@/lib/brand";
+import { applyAudience, applyTheme, AUDIENCES, THEMES, themeOf, shopIsReady, useBrand, type Brand } from "@/lib/brand";
 import { printifyPreset, finishPrintFile, looksLikePhoto } from "@/lib/printify";
 import { letterPlate, plateCopy } from "@/lib/letter";
 import { useGallery } from "@/lib/gallery";
@@ -152,6 +152,7 @@ export function Studio() {
   const stageImage = current?.dataUrl ?? sourceImage;
   const houseName = brand.name.trim() || "the house";
   const theme = themeOf(brand);
+  const ready = shopIsReady(brand);
   const frame = useMemo(
     () => ASPECT_RATIOS.find((item) => item.id === aspectRatio) ?? ASPECT_RATIOS[1],
     [aspectRatio],
@@ -479,7 +480,7 @@ export function Studio() {
             onClick={() => setBrandOpen(true)}
             title="Shop name, who it's for, look"
           >
-            Shop
+            {ready ? "Shop" : "Set up"}
           </Button>
           <Button
             variant="danger"
@@ -512,21 +513,42 @@ export function Studio() {
       <main className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 sm:pb-5">
         <section
           className={cn(
-            "glass-panel relative flex min-h-56 shrink-0 flex-1 items-center justify-center overflow-hidden rounded-[var(--radius-xl)] sm:min-h-96",
+            "glass-panel relative flex min-h-56 shrink-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] sm:min-h-96",
             dragging && "bg-raised",
           )}
-          onDragOver={(event) => {
-            event.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(event) => {
-            event.preventDefault();
-            setDragging(false);
-            const file = event.dataTransfer.files[0];
-            if (file) void acceptFile(file);
-          }}
         >
+          <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-1">
+            <p className="text-[11px] font-semibold tracking-[0.16em] text-ink-subtle uppercase">
+              {pending ? "Printing" : packing ? "Packing" : stageImage ? "Printed" : "Press"}
+            </p>
+            <p className="text-xs tabular-nums text-muted-foreground">
+              {pending
+                ? `${dropStep ? `${dropStep}/${dropTotal} · ` : ""}${elapsed}s`
+                : packing
+                  ? packStep
+                    ? `Zip ${packStep}`
+                    : "Zipping"
+                  : visibleItems.length
+                    ? `${visibleItems.length} on this phone`
+                    : ready
+                      ? "Ready"
+                      : "Set up shop first"}
+            </p>
+          </div>
+          <div
+            className="relative flex min-h-0 flex-1 items-center justify-center"
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              const file = event.dataTransfer.files[0];
+              if (file) void acceptFile(file);
+            }}
+          >
           {stageImage ? (
             <button
               type="button"
@@ -555,34 +577,34 @@ export function Studio() {
             <EmptyStage
               brandName={houseName}
               audience={brand.audience}
+              ready={ready}
               onEditBrand={() => setBrandOpen(true)}
             />
           )}
 
           {pending || packing ? (
-            <div className="pointer-events-none absolute inset-0 flex items-end justify-between p-4 sm:p-5">
-              <p className="text-sm text-muted-foreground">
-                {dropStep
-                  ? `${dropStep}/${dropTotal}`
-                  : packing && packStep
-                    ? `Zip ${packStep}`
-                    : packing
-                      ? "Zipping"
-                      : "Printing"}
-                <span className="ml-2 tabular-nums text-foreground">{elapsed}s</span>
-              </p>
+            <div className="pointer-events-none absolute inset-0 flex items-end justify-end p-4 sm:p-5">
               <LoaderCircle className="size-4 animate-spin text-muted-foreground" />
             </div>
           ) : null}
+          </div>
         </section>
 
         {visibleItems.length > 0 ? (
-          <FilmStrip
-            items={visibleItems}
-            selectedId={selectedId}
-            onSelect={(still) => loadStill(still)}
-            onOpen={(still) => setLightbox(still)}
-          />
+          <section className="glass-panel rounded-[var(--radius-xl)] px-3 py-2">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="text-[11px] font-semibold tracking-[0.16em] text-ink-subtle uppercase">
+                Printed
+              </p>
+              <p className="text-xs tabular-nums text-muted-foreground">{visibleItems.length}</p>
+            </div>
+            <FilmStrip
+              items={visibleItems}
+              selectedId={selectedId}
+              onSelect={(still) => loadStill(still)}
+              onOpen={(still) => setLightbox(still)}
+            />
+          </section>
         ) : null}
 
         <PromptDock
@@ -622,6 +644,7 @@ export function Studio() {
           onPickFile={() => fileRef.current?.click()}
           still={current}
           brand={brand}
+          ready={ready}
           items={visibleItems}
           packing={packing}
           onAudience={(id) => patchBrand(applyAudience(id, brand))}
@@ -708,12 +731,33 @@ export function Studio() {
 function EmptyStage({
   brandName,
   audience,
+  ready,
   onEditBrand,
 }: {
   brandName: string;
   audience: Brand["audience"];
+  ready: boolean;
   onEditBrand: () => void;
 }) {
+  if (ready) {
+    return (
+      <div className="flex max-w-lg flex-col items-start gap-4 px-5 py-6 sm:px-10 sm:py-10">
+        <div className="stage-enter">
+          <h1 className="font-display text-4xl leading-[1.05] font-extrabold tracking-[-0.04em] text-balance sm:text-5xl">
+            Press is clear.
+          </h1>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-pretty text-muted-foreground">
+            {audience === "kids"
+              ? "Kids clothing shop."
+              : audience === "women"
+                ? "Women's clothing shop."
+                : "Men's clothing shop."}{" "}
+            Tap 1 design for one Printify file, or 3 HD for a zip.
+          </p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="flex max-w-lg flex-col items-start gap-5 px-5 py-6 sm:px-10 sm:py-10">
       <div className="stage-enter">
@@ -726,7 +770,7 @@ function EmptyStage({
             : audience === "women"
               ? "Women's clothing shop."
               : "Men's clothing shop."}{" "}
-          Tap 1 design — isolated Printify art. Upload that PNG to your store.
+          Name the shop once. After that this window is only for printing.
         </p>
       </div>
       <ol className="stage-enter w-full space-y-2.5 text-sm text-muted-foreground">
@@ -826,6 +870,7 @@ function PromptDock({
   onPickFile,
   still,
   brand,
+  ready,
   items,
   packing,
   onAudience,
@@ -859,6 +904,7 @@ function PromptDock({
   onPickFile: () => void;
   still: Still | null;
   brand: Brand;
+  ready: boolean;
   items: Still[];
   packing: boolean;
   onAudience: (id: Brand["audience"]) => void;
@@ -869,6 +915,7 @@ function PromptDock({
   const [more, setMore] = useState(false);
   return (
     <section className="glass-panel w-full min-w-0 rounded-[var(--radius-xl)] p-3 sm:p-4">
+      {ready ? null : (
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="flex w-full rounded-full bg-background p-1 shadow-[var(--shadow-border)] sm:w-auto">
           {AUDIENCES.map((item) => (
@@ -889,6 +936,7 @@ function PromptDock({
           ))}
         </div>
       </div>
+      )}
 
       <Textarea
         ref={promptRef}
@@ -931,6 +979,26 @@ function PromptDock({
         </button>
         {more ? (
           <div className="mt-2 space-y-2">
+          {ready ? (
+          <div className="flex w-full rounded-full bg-background p-1 shadow-[var(--shadow-border)]">
+            {AUDIENCES.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onAudience(item.id)}
+                title={item.hint}
+                className={cn(
+                  "h-10 flex-1 rounded-full px-3 text-sm font-semibold transition-[background-color,color] duration-[var(--motion-quick)] ease-[var(--ease-out)]",
+                  brand.audience === item.id
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          ) : null}
           <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
             {THEMES.map((item) => (
               <button

@@ -45,7 +45,7 @@ export function BrandSheet({
       setError("Type your shop name. That’s the brand on the shirts.");
       return;
     }
-    onSave(draft);
+    onSave(normalizeBrand({ ...draft, ready: true }));
     onClose();
   }
 
