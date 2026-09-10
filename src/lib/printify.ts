@@ -440,7 +440,7 @@ function knockOut(imageData: ImageData, holes = true) {
       for (let i = 0; i < marked.length; i += 1) hits += marked[i];
       const ratio = hits / marked.length;
       if (ratio < 0.02) continue;
-      if (darkField ? ratio > 0.994 : ratio > 0.97) continue;
+      if (darkField ? ratio > 0.999 : ratio > 0.97) continue;
       if (hits > bestHits) {
         bestHits = hits;
         bestMarked = marked;
@@ -486,6 +486,50 @@ function knockOut(imageData: ImageData, holes = true) {
     if (extra > retry.length * 0.02) {
       defringe(data, width, height, { r: 0, g: 0, b: 0 }, retry);
     }
+  }
+  stripDarkField(imageData);
+  return imageData;
+}
+
+function isNearBlack(r: number, g: number, b: number) {
+  const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+  return pixelLuma(r, g, b) < 22 && chroma < 16;
+}
+
+function stripDarkField(imageData: ImageData) {
+  const { data, width, height } = imageData;
+  const sample = (x: number, y: number) => {
+    const i = (y * width + x) * 4;
+    return { r: data[i]!, g: data[i + 1]!, b: data[i + 2]!, a: data[i + 3]! };
+  };
+  const cornerDark = (x: number, y: number) => {
+    const p = sample(x, y);
+    return p.a > 200 && pixelLuma(p.r, p.g, p.b) < 40;
+  };
+  let borderDark = 0;
+  let borderN = 0;
+  const tally = (x: number, y: number) => {
+    borderN += 1;
+    const p = sample(x, y);
+    if (p.a > 200 && pixelLuma(p.r, p.g, p.b) < 36) borderDark += 1;
+  };
+  for (let x = 0; x < width; x += 3) {
+    tally(x, 0);
+    tally(x, height - 1);
+  }
+  for (let y = 0; y < height; y += 3) {
+    tally(0, y);
+    tally(width - 1, y);
+  }
+  const corners =
+    cornerDark(0, 0) &&
+    cornerDark(width - 1, 0) &&
+    cornerDark(0, height - 1) &&
+    cornerDark(width - 1, height - 1);
+  if (!corners && !(borderN && borderDark / borderN > 0.55)) return imageData;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3]! < 16) continue;
+    if (isNearBlack(data[i]!, data[i + 1]!, data[i + 2]!)) data[i + 3] = 0;
   }
   return imageData;
 }
@@ -834,22 +878,34 @@ export async function prepareArt(dataUrl: string, knock = true, holes = true) {
   const image = await loadImage(dataUrl);
   const srcW = image.naturalWidth || image.width;
   const srcH = image.naturalHeight || image.height;
-  const work = document.createElement("canvas");
-  work.width = srcW;
-  work.height = srcH;
-  const workCtx = work.getContext("2d", { willReadFrequently: true });
-  if (!workCtx) throw new Error("Could not prepare the Printify file.");
-  workCtx.drawImage(image, 0, 0);
-  if (knock) {
-    const pixels = workCtx.getImageData(0, 0, srcW, srcH);
-    knockOut(pixels, holes);
-    merchFlatten(pixels);
-    merchDespeckle(pixels);
-    dropSmallBlobs(pixels);
+
+  const raster = (width: number, height: number) => {
+    const work = document.createElement("canvas");
+    work.width = width;
+    work.height = height;
+    const workCtx = work.getContext("2d", { willReadFrequently: true });
+    if (!workCtx) throw new Error("Could not prepare the Printify file.");
+    workCtx.drawImage(image, 0, 0, width, height);
+    const pixels = workCtx.getImageData(0, 0, width, height);
+    if (knock) {
+      knockOut(pixels, holes);
+      merchFlatten(pixels);
+      merchDespeckle(pixels);
+      dropSmallBlobs(pixels);
+    }
+    stripDarkField(pixels);
     workCtx.putImageData(pixels, 0, 0);
-    return trimTransparent(work);
+    return knock ? trimTransparent(work) : work;
+  };
+
+  try {
+    return raster(srcW, srcH);
+  } catch {
+    const max = 1600;
+    const scale = max / Math.max(srcW, srcH, 1);
+    if (scale >= 0.98) throw new Error("Could not prepare the Printify file.");
+    return raster(Math.max(1, Math.round(srcW * scale)), Math.max(1, Math.round(srcH * scale)));
   }
-  return work;
 }
 
 export async function toTransparentPng(dataUrl: string, holes = true) {

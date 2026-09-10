@@ -9,8 +9,12 @@ export function plateCopy(
   categoryId: CategoryId,
 ): { name: string; lines: string[] } {
   const name = brand.name.trim().toUpperCase();
-  const showName = categoryId !== "wordmark";
-  return { name: showName ? name : "", lines: [] };
+  const bakedIn =
+    categoryId === "lockup" ||
+    categoryId === "wordmark" ||
+    categoryId === "box" ||
+    categoryId === "crest";
+  return { name: bakedIn ? "" : name, lines: [] };
 }
 
 export async function letterPlate(

@@ -243,7 +243,7 @@ function categorySuffix(categoryId: CategoryId, brand: Brand): string {
     case "coords":
       return ` COORDS. Compass, ticks, and invented numbers as a locale PICTURE. Tiny ${initials}. No sentences.`;
     case "crest":
-      return ` CREST. Invented emblem for ${name}. Shield or seal with ONE motif as the charge — not a collage of motifs, not a display case of separate objects. ${initials} inside, painted once. ${picture} No slogans, no mottos, no fake latin, no ribbons or banners with lettering, no objects floating outside the shield.`;
+      return ` CREST. Invented emblem for ${name}. Shield or seal with ONE motif as the charge — not a collage of motifs, not a display case of separate objects. ${initials} inside, painted once. Never paint ${upper}. ${picture} No slogans, no mottos, no fake latin, no ribbons or banners with lettering, no objects floating outside the shield.`;
     case "slogan":
       return ` SLOGAN plate. Paint a PICTURE for ${name}. Leave the lower third empty for real type. Do not invent a sentence. Do not paint a slogan.`;
     case "blueprint":
@@ -402,7 +402,7 @@ export function composePrompt(
     ? `PICTURE direction only — do not paint these words: ${trimmed}`
     : `Draw one unforgettable ${theme.label.toLowerCase()} PICTURE for ${who}. No words except the mark. Do not ask. Just draw.`;
   const finalCompliance =
-    " FINAL CHECK before you draw — banned no matter what: any extra text, a second copy of the mark, letters spelled with dots or dashes between them, ribbons, banners, plaques, coins, stamps, crossed rods, reels, loose hooks or lures beside the mark, gradients, distress. ONE clean mark, nothing else in frame.";
+    " FINAL CHECK before you draw — banned no matter what: a black or dark canvas, any extra text, the spelled house name, a second copy of the mark, letters spelled with dots or dashes between them, ribbons, banners, plaques, coins, stamps, crossed rods, reels, loose hooks or lures beside the mark, gradients, distress. Light gray #F2F3F5 field. ONE clean mark, nothing else in frame.";
   const body = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
   const budget = Math.max(0, MAX_COMPOSED - finalCompliance.length);
   return `${body.slice(0, budget)}${finalCompliance}`;
