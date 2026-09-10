@@ -35,7 +35,7 @@ export const PRODUCTS = [
     id: "chest",
     label: "Chest",
     suffix:
-      " Isolated Printify left-chest mark, 6×6 in. Compact, thick strokes, even #F2F3F5 field, no hairlines, no garment.",
+      " Isolated Printify left-chest mark, 6×6 in. ONE single compact mark only — no secondary objects, no separate props, no second illustration beside it. Thick strokes, even #F2F3F5 field, no hairlines, no garment.",
   },
   {
     id: "long",
@@ -205,7 +205,7 @@ function styleSuffix(styleId: StyleId, brand: Brand): string {
     case "chrome":
       return ` 2026 Y2K chrome PICTURE. Liquid metal, iridescent, inflatable 3D, chrome ${initials}. No slogans. Still ${world}.`;
     case "vintage":
-      return ` Vintage merch LAYOUT: 90s boxy-tee scale, clean era poster. Muted flat inks. No crackle, no speckle, no faded wash, no noise. ${world} as a clean screen-print picture. Almost no type.`;
+      return ` Vintage merch LAYOUT: 90s boxy-tee scale, clean era poster. Muted flat inks. No crackle, no speckle, no faded wash, no noise, no engraving lines, no crosshatch shading, no fine stipple — flat screen-print shapes only. ${world} as a clean screen-print picture. Almost no type.`;
     case "type":
       return ` Typography plate. The ONLY words are ${name.toUpperCase()} or ${initials}, spelled perfectly. No other letters. Swiss / varsity / brutal. ${world} attitude.`;
     case "line":
@@ -233,7 +233,7 @@ function categorySuffix(categoryId: CategoryId, brand: Brand): string {
     : "Adult merch picture: bold, thumbnail-simple, two or three colors.";
   switch (categoryId) {
     case "lockup":
-      return ` LOCKUP. Giant ${initials} as geometry is the whole design. ${picture} No extra words, no slogan, no verse.`;
+      return ` LOCKUP. Giant ${initials} as geometry is the whole design — the ONLY shape in frame, painted once. ${picture} No extra words, no slogan, no verse, no banner, no props resting beside or crossed behind the letters.`;
     case "wordmark":
       return ` WORDMARK. Paint ONLY the letters ${upper}. Every letter, in order, none missing, none extra, none cropped. No icons, no slogan, no second line.`;
     case "box":
@@ -243,7 +243,7 @@ function categorySuffix(categoryId: CategoryId, brand: Brand): string {
     case "coords":
       return ` COORDS. Compass, ticks, and invented numbers as a locale PICTURE. Tiny ${initials}. No sentences.`;
     case "crest":
-      return ` CREST. Invented emblem for ${name}. Shield or seal, house motifs as arms. ${initials} inside. ${picture} No slogans, no mottos, no fake latin.`;
+      return ` CREST. Invented emblem for ${name}. Shield or seal with ONE motif as the charge — not a collage of motifs, not a display case of separate objects. ${initials} inside, painted once. ${picture} No slogans, no mottos, no fake latin, no ribbons or banners with lettering, no objects floating outside the shield.`;
     case "slogan":
       return ` SLOGAN plate. Paint a PICTURE for ${name}. Leave the lower third empty for real type. Do not invent a sentence. Do not paint a slogan.`;
     case "blueprint":
@@ -265,9 +265,9 @@ function leadSuffix(leadId: LeadId, brand: Brand): string {
   const name = brand.name.trim() || "the house";
   const initials = brand.initials.trim() || name.slice(0, 2).toUpperCase() || "FR";
   if (leadId === "art") {
-    return ` LEAD ART. The design is the hero — illustration, motif, scene — 90% of the frame. Branding is a whisper: tiny ${initials} or 8pt ${name}, like a woven neck label. No giant wordmark, no chest-spanning name. Genius pass: invent a new image. Risk. One unforgettable idea. Unlimited original invention, never a template.`;
+    return ` LEAD ART. The design is the hero — illustration, motif, scene — 90% of the frame. Branding is a whisper: tiny ${initials} mark only, like a woven neck label. Do not spell ${name} — only the mark, added afterward. No giant wordmark, no chest-spanning name. Genius pass: invent a new image. Risk. One unforgettable idea. Unlimited original invention, never a template.`;
   }
-  return ` LEAD BRAND. ${name} and ${initials} are the hero. The mark is large, owned, readable at a glance.`;
+  return ` LEAD BRAND. The ${initials} mark is the hero — large, owned, readable at a glance. Do not spell ${name} — paint the mark only, the full name is added afterward.`;
 }
 
 export const EXAMPLE_TEMPLATES = [
@@ -370,7 +370,7 @@ export function composePrompt(
     .replace(/[^A-Z0-9]+/g, "")
     .split("")
     .join("-");
-  const typeLaw = `COPY LOCK. Allowed letters in the image: ${initials}, and ${name.toUpperCase()} (${spelled || initials}) only if this is a wordmark. No other words. No slogans. No verses. No mottos. No fake latin. No city names. No lyrics. No psalm. No sentences. If you need a caption, leave the bottom empty. Picture first.`;
+  const typeLaw = `COPY LOCK. Allowed letters in the image: ${initials} — painted once, only once — and ${name.toUpperCase()} (${spelled || initials}) only if this is a wordmark. Never spell the house name any other way: no letter-by-letter spelling, no dots, dashes, or spaces between the letters, no ribbon, banner, plaque, or plate carrying the name. No other words. No slogans. No verses. No mottos. No fake latin. No city names. No lyrics. No psalm. No sentences. Never paint the mark twice in the same image. If you need a caption, leave the bottom empty. Picture first.`;
   const direction = [
     `You are a professional merch art director designing a Printify print FILE for ${name}.`,
     `House: ${name}. Mark: ${initials}. Motifs: ${brand.motifs.trim() || theme.motifs}.`,
@@ -401,8 +401,11 @@ export function composePrompt(
   const idea = trimmed
     ? `PICTURE direction only — do not paint these words: ${trimmed}`
     : `Draw one unforgettable ${theme.label.toLowerCase()} PICTURE for ${who}. No words except the mark. Do not ask. Just draw.`;
-  const composed = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
-  return composed.slice(0, MAX_COMPOSED);
+  const finalCompliance =
+    " FINAL CHECK before you draw — banned no matter what: any extra text, a second copy of the mark, letters spelled with dots or dashes between them, ribbons, banners, plaques, coins, stamps, crossed rods, reels, loose hooks or lures beside the mark, gradients, distress. ONE clean mark, nothing else in frame.";
+  const body = `${direction.filter(Boolean).join(" ")} ${idea}${suffix}`;
+  const budget = Math.max(0, MAX_COMPOSED - finalCompliance.length);
+  return `${body.slice(0, budget)}${finalCompliance}`;
 }
 
 export function isAspectRatioId(value: string): value is AspectRatioId {

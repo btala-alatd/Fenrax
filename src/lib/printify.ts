@@ -936,7 +936,7 @@ export async function buildPrintifyFromArt(
   }
 
   if (!made) {
-    const artPng = withDpi(await canvasToPng(art), DPI);
+    const artPng = withDpi(await canvasToPng(art), source.dpi);
     const artBlob = new Blob([artPng], { type: "image/png" });
     return {
       blob: artBlob,
@@ -965,9 +965,9 @@ export async function buildPrintifyFromArt(
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(art, dx, dy, dw, dh);
 
-  const png = withDpi(await canvasToPng(canvas), DPI);
-  const blob = new Blob([png], { type: "image/png" });
   const fileDpi = Math.round(DPI * (width / preset.width));
+  const png = withDpi(await canvasToPng(canvas), fileDpi);
+  const blob = new Blob([png], { type: "image/png" });
   return {
     blob,
     artBlob: blob,
